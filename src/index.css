@@ -1,145 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 3.1%;
-    --surface: 0 0% 5.9%;
-    --foreground: 60 7% 94.1%;
-    --accent: 22 100% 52%;
-    --accent-foreground: 0 0% 100%;
-    --border: 0 0% 18%;
-    --border-strong: 0 0% 100% / 0.13;
-    --muted: 0 0% 60%;
-    --muted-foreground: 0 0% 60%;
-    --input: 0 0% 18%;
-    --ring: 22 100% 52%;
+:root {
+  /* ── New design tokens (verbatim from spec) ── */
+  --bg:              #080808;
+  --bg-raised:       #0f0f0f;
+  --bg-card:         #0d0d0d;
+  --border:          rgba(255,255,255,0.07);
+  --border-strong:   rgba(255,255,255,0.13);
+  --text:            #f0f0ee;
+  --text-dim:        rgba(240,240,238,0.45);
+  --text-muted:      rgba(240,240,238,0.25);
+  --accent:          #ff6308;
+  --mono:            'Space Mono', monospace;
+  --serif:           'Instrument Serif', Georgia, serif;
+  --sans:            'DM Sans', system-ui, sans-serif;
+  --radii-outer:     12px;
+  --radii-inner:     8px;
+  --taxbutton-height: 40px;
+  --emboss-shadow:   0px 1.5px 2px -1px hsla(0,0%,100%,.2) inset;
+  --emboss-shadow-hover: 0px 1.5px 2px -1px hsla(0,0%,100%,.3) inset;
+  --emboss-shadow-less: 0px 1.5px 2px -1px hsla(0,0%,100%,.12) inset;
+  --inset-shadow:    0px 1.5px 1px 0px hsla(0,0%,100%,.06);
+  --ease-back-out:   cubic-bezier(0.34,1.56,0.64,1);
+  --ease-circ-out:   cubic-bezier(0,0.55,0.45,1);
+  --ease-quart-in-out: cubic-bezier(0.77,0,0.175,1);
 
-    --radius-card: 12px;
-    --radius-button: 4px;
-    --radius-input: 2px;
+  /* ── HSL variables for Tailwind / shadcn compatibility ── */
+  --background: 0 0% 3.1%;
+  --surface: 0 0% 5.9%;
+  --foreground: 60 7% 94.1%;
+  --accent-hsl: 22 100% 52%;
+  --accent-foreground: 0 0% 100%;
+  --border-hsl: 0 0% 18%;
+  --border-strong-hsl: 0 0% 100% / 0.13;
+  --muted-hsl: 0 0% 60%;
+  --muted-foreground: 0 0% 60%;
+  --input: 0 0% 18%;
+  --ring: 22 100% 52%;
+  --radius-card: 12px;
+  --radius-button: 4px;
+  --radius-input: 2px;
 
-    --font-headline: 'Instrument Serif', serif;
-    --font-body: 'DM Sans', sans-serif;
-    --font-mono: 'Space Mono', monospace;
-
-    --emboss-shadow: 0px 1.5px 2px -1px hsla(0,0%,100%,.2) inset;
-    --inset-shadow: 0px 1.5px 1px 0px hsla(0,0%,100%,.06);
-  }
-
-  * {
-    border-color: hsl(var(--border));
-  }
-
-  body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    font-family: var(--font-body);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+  --font-headline: 'Instrument Serif', serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'Space Mono', monospace;
 }
+
+* {
+  border-color: hsl(var(--border-hsl));
+}
+
+html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); line-height: 1.6; -moz-osx-font-smoothing: grayscale; }
 
 @layer components {
   .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 40px;
-    padding: 0 24px;
-    border-radius: 100px;
-    background-color: #f0f0ee;
-    color: #080808;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--bg); background: var(--text); border: none;
+    height: var(--taxbutton-height); padding: 0 24px; border-radius: 100px;
+    cursor: pointer; display: inline-flex; align-items: center; white-space: nowrap; text-decoration: none; justify-content: center;
     box-shadow: var(--emboss-shadow), var(--inset-shadow);
-    transition: all 200ms ease;
-    cursor: pointer;
-    border: none;
-    text-decoration: none;
-    white-space: nowrap;
+    transition: background 0.2s var(--ease-circ-out), box-shadow 0.2s;
   }
-  .btn-primary:hover {
-    filter: brightness(1.1);
-  }
-  .btn-primary:active {
-    transform: scale(0.98);
-  }
+  .btn-primary:hover { background: #d4d4d0; box-shadow: var(--emboss-shadow-hover), var(--inset-shadow); }
+  .btn-primary:active { transform: scale(0.98); }
 
   .btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 40px;
-    padding: 0 24px;
-    border-radius: 100px;
-    background-color: transparent;
-    border: 1px solid rgba(255,255,255,0.13);
-    color: rgba(240,240,238,0.45);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    transition: all 200ms ease;
-    cursor: pointer;
-    text-decoration: none;
-    white-space: nowrap;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-dim); background: transparent; border: 1px solid var(--border-strong);
+    height: var(--taxbutton-height); padding: 0 24px; border-radius: 100px;
+    cursor: pointer; display: inline-flex; align-items: center; white-space: nowrap; text-decoration: none; justify-content: center;
+    box-shadow: var(--emboss-shadow-less);
+    transition: color 0.2s var(--ease-circ-out), border-color 0.2s, box-shadow 0.2s;
   }
-  .btn-ghost:hover {
-    background-color: rgba(255,255,255,0.04);
-    color: rgba(240,240,238,0.7);
-  }
+  .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.22); }
 
   .section-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: hsl(var(--accent));
-    margin-bottom: 12px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 56px; display: inline-flex; align-items: center; gap: 4px;
   }
-  .section-label::before {
-    content: '[';
-    color: rgba(240,240,238,0.25);
-  }
-  .section-label::after {
-    content: ']';
-    color: rgba(240,240,238,0.25);
-  }
-
-  .landing-section {
-    padding: 100px 40px;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
-    max-width: 1280px;
-    margin: 0 auto;
-  }
-
-  @media (max-width: 640px) {
-    .landing-section {
-      padding: 60px 20px;
-    }
-  }
+  .section-label::before { content: '['; }
+  .section-label::after  { content: ']'; }
 }
 
 ::selection {
   background-color: hsl(22 100% 52% / 0.3);
-  color: hsl(var(--foreground));
+  color: var(--text);
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: hsl(var(--background));
-}
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
-  border-radius: 3px;
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 3px; }

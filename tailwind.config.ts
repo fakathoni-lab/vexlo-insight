@@ -23,12 +23,12 @@ export default {
         surface: "hsl(var(--surface))",
         foreground: "hsl(var(--foreground))",
         accent: {
-          DEFAULT: "hsl(var(--accent))",
+          DEFAULT: "hsl(var(--accent-hsl))",
           foreground: "hsl(var(--accent-foreground))",
         },
-        border: "hsl(var(--border))",
+        border: "hsl(var(--border-hsl))",
         muted: {
-          DEFAULT: "hsl(var(--muted))",
+          DEFAULT: "hsl(var(--muted-hsl))",
           foreground: "hsl(var(--muted-foreground))",
         },
         input: "hsl(var(--input))",
