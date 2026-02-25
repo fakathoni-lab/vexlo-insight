@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          plan: string | null
+          plan_status: string | null
+          proofs_limit: number | null
+          proofs_used: number | null
+          stripe_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          plan?: string | null
+          plan_status?: string | null
+          proofs_limit?: number | null
+          proofs_used?: number | null
+          stripe_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          plan?: string | null
+          plan_status?: string | null
+          proofs_limit?: number | null
+          proofs_used?: number | null
+          stripe_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       waitlist: {
         Row: {
           created_at: string
