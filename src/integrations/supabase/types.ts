@@ -56,6 +56,56 @@ export type Database = {
         }
         Relationships: []
       }
+      proofs: {
+        Row: {
+          ai_overview: boolean | null
+          created_at: string
+          current_rank: number | null
+          delta_30: number | null
+          domain: string
+          id: string
+          keyword: string
+          narrative: string | null
+          rankings: Json | null
+          score: number
+          user_id: string
+        }
+        Insert: {
+          ai_overview?: boolean | null
+          created_at?: string
+          current_rank?: number | null
+          delta_30?: number | null
+          domain: string
+          id?: string
+          keyword: string
+          narrative?: string | null
+          rankings?: Json | null
+          score: number
+          user_id?: string
+        }
+        Update: {
+          ai_overview?: boolean | null
+          created_at?: string
+          current_rank?: number | null
+          delta_30?: number | null
+          domain?: string
+          id?: string
+          keyword?: string
+          narrative?: string | null
+          rankings?: Json | null
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proofs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       waitlist: {
         Row: {
           created_at: string
