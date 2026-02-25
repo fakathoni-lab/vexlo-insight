@@ -39,7 +39,7 @@ const Navbar = () => {
         className="font-mono text-[13px] uppercase tracking-widest"
         style={{ color: "#f0f0ee" }}
       >
-        Vexlo
+        VEXLO
       </a>
 
       {/* CENTER — Nav links (desktop) */}
@@ -48,7 +48,7 @@ const Navbar = () => {
           <button
             key={link.href}
             onClick={() => handleNavClick(link.href)}
-            className="font-mono text-[10.5px] uppercase tracking-wide px-3.5 py-1.5 rounded transition-colors duration-200 hover:bg-[rgba(255,255,255,0.05)]"
+            className="font-mono text-[10.5px] uppercase tracking-wide px-3.5 py-1.5 rounded-[4px] transition-colors duration-200 hover:bg-[rgba(255,255,255,0.05)]"
             style={{ color: "rgba(240,240,238,0.45)" }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "#f0f0ee")}
             onMouseLeave={(e) =>
@@ -63,14 +63,8 @@ const Navbar = () => {
       {/* RIGHT — CTA + Mobile menu */}
       <div className="flex items-center gap-3">
         <button
-          onClick={() => handleNavClick("#cta")}
-          className="hidden sm:inline-flex items-center justify-center h-10 px-6 rounded-[100px] font-mono text-[10px] uppercase tracking-widest transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
-          style={{
-            backgroundColor: "#f0f0ee",
-            color: "#080808",
-            boxShadow:
-              "0px 1.5px 2px -1px hsla(0,0%,100%,.2) inset, 0px 1.5px 1px 0px hsla(0,0%,100%,.06)",
-          }}
+          onClick={() => handleNavClick("#waitlist")}
+          className="btn-primary hidden md:inline-flex"
         >
           Get Early Access
         </button>
@@ -102,14 +96,8 @@ const Navbar = () => {
                 </button>
               ))}
               <button
-                onClick={() => handleNavClick("#cta")}
-                className="mt-4 h-10 px-6 rounded-[100px] font-mono text-[10px] uppercase tracking-widest transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
-                style={{
-                  backgroundColor: "#f0f0ee",
-                  color: "#080808",
-                  boxShadow:
-                    "0px 1.5px 2px -1px hsla(0,0%,100%,.2) inset, 0px 1.5px 1px 0px hsla(0,0%,100%,.06)",
-                }}
+                onClick={() => handleNavClick("#waitlist")}
+                className="btn-primary mt-4 w-full"
               >
                 Get Early Access
               </button>
