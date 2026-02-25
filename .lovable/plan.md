@@ -1,130 +1,234 @@
 
 
-# Implement Gap Analysis Fixes: globals.css, tailwind.config.ts, and 3 React Hooks
+# Homepage Reconstruction: VEXLO x xAI Design System
 
-Based on the uploaded `vexlo_gap_analysis.docx`, here is what needs to change and what is already handled.
-
----
-
-## Current State Assessment
-
-Before applying the doc blindly, here is what already works:
-
-| Gap Analysis Item | Already Implemented? | Where |
-|---|---|---|
-| Nav scroll blur | YES -- inline in Navbar.tsx | useState + useEffect + scroll listener |
-| Starfield canvas | YES -- inline in Hero.tsx | useRef + useEffect + requestAnimationFrame |
-| Hero gradient/grid/eyebrow | YES -- inline styles in Hero.tsx | JSX with style props |
-| Parallax understand section | NO | Not built yet |
-| Hollow text (.st-line) | NO | Not in any component |
-| Product card corner dots | NO | Not in any component |
-| Orb pulse animation | NO | Not in any component |
-| Bounce scroll icon | NO | Not in Hero |
-| fade-up animation class | NO | Missing from CSS + Tailwind |
-
-Key insight: Many visual effects from xai-redesign.html are already implemented inline in React components. The hooks in the doc would duplicate existing logic. We should only add what is genuinely missing.
+## Scope
+Rebuild the entire VEXLO homepage (`/`) with 10 sections following the brief's structure, fix WCAG contrast violations, restructure navigation, and add new components. This plan covers the homepage only.
 
 ---
 
-## Plan
+## Phase 1: Design Token & Contrast Fixes (index.css)
 
-### 1. Update `tailwind.config.ts` -- Fix content paths + add missing config
+Update CSS custom properties to fix WCAG AA violations:
 
-**Changes:**
-- Remove Next.js-style paths (`./pages/**`, `./components/**`, `./app/**`)
-- Keep `./index.html` and `./src/**/*.{ts,tsx}` (Vite-correct paths)
-- Add missing keyframes: `bounce`, `orb-pulse`, `fade-up`, `ticker-scroll`
-- Add missing animations: `bounce-scroll`, `orb-pulse`, `fade-up`, `ticker`
-- Add missing design token mappings: `boxShadow`, `transitionTimingFunction`, `height.taxbutton`, `borderRadius.outer/inner/button`
-- Keep existing shadcn-compatible color/font mappings (they work)
+| Token | Current | New | Contrast on #080808 |
+|-------|---------|-----|---------------------|
+| `--text-dim` | `rgba(240,240,238,0.45)` | `rgba(240,240,238,0.55)` | ~5.5:1 |
+| `--text-muted` | `rgba(240,240,238,0.25)` | `rgba(240,240,238,0.55)` | ~5.5:1 |
 
-### 2. Update `src/index.css` -- Add missing component CSS classes
-
-**Add these CSS classes** (inside `@layer components`) that are missing from xai-redesign.html:
-- `.hero-bg` -- radial gradient background
-- `.hero-grid` -- 72px grid texture
-- `.hero-canvas` -- canvas positioning
-- `.hero-eyebrow` + `::before` -- eyebrow with orange line
-- `.hero-headline` + `em` -- fluid typography headline
-- `.hero` -- min-height 100svh
-- `.nav` + `.nav.scrolled` -- nav glass effect (CSS-only, components use inline now but this enables class-based approach)
-- `.nav-logo` -- logo styling
-- `.st-line.solid` / `.st-line.hollow` -- hollow text effect
-- `.arrow-link` -- hover gap animation
-- `.product-flagship` / `.corner-dot` -- product card effects
-- `.understand-orb` -- orb pulse styling
-- `.fade-up` -- utility class for scroll reveal
-- `@keyframes bounce`, `spin-ring`, `orb-pulse`, `fade-up` -- missing keyframes
-- Scrollbar + utility classes from spec
-
-**Important:** We will NOT add `@import url(...)` for Google Fonts -- that was already moved to `index.html` `<link>` tags (the correct approach for performance).
-
-### 3. Create `src/hooks/useNavScroll.ts`
-
-Extract the nav scroll detection into a reusable hook (currently duplicated inline in Navbar.tsx):
-
-```typescript
-import { useState, useEffect } from 'react'
-
-export function useNavScroll(threshold = 16) {
-  const [scrolled, setScrolled] = useState(false)
-  useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > threshold)
-    window.addEventListener('scroll', handler, { passive: true })
-    return () => window.removeEventListener('scroll', handler)
-  }, [threshold])
-  return scrolled
-}
+Add new accent tokens to `:root`:
+```
+--accent-proof: #E8FF47    (proof yellow)
+--accent-danger: #FF4747   (risk/problem)
+--accent-success: #47FF8F  (win states)
+--surface: #111111
+--surface-elevated: #1A1A1A
 ```
 
-Then update `Navbar.tsx` to use this hook instead of its inline implementation.
+Add `@media (prefers-reduced-motion: reduce)` block to disable all animations.
 
-### 4. Create `src/hooks/useStarfield.ts`
-
-Extract the starfield canvas logic into a reusable hook (currently inline in Hero.tsx):
-
-```typescript
-import { useEffect, useRef } from 'react'
-
-export function useStarfield(starCount = 100) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  // ... canvas setup, resize, draw loop, cleanup
-  return canvasRef
-}
-```
-
-Then update `Hero.tsx` to use this hook instead of its inline implementation.
-
-### 5. Create `src/hooks/useParallax.ts`
-
-New hook for parallax scroll effect (not yet implemented anywhere):
-
-```typescript
-import { useEffect, useRef, useState } from 'react'
-
-export function useParallax() {
-  const sectionRef = useRef<HTMLElement>(null)
-  const [offset, setOffset] = useState(0)
-  // ... scroll listener, lerp calculation, rAF loop, cleanup
-  return { sectionRef, offset }
-}
-```
-
-This hook will be available for future "Understand" section or any parallax text section.
+Add new CSS classes: `.landing-section` base padding (if missing), `.stats-bar`, `.testimonial-card`, `.proof-score-gauge`, `.typing-animation`.
 
 ---
 
-## File Summary
+## Phase 2: Navbar Reconstruction
+
+**File:** `src/components/layout/Navbar.tsx`
+
+Replace flat 4-link nav with structured dropdown navigation:
+
+- **Left:** VEXLO logo
+- **Center (desktop):** 3 dropdown groups using shadcn Popover:
+  - PRODUK: Instant Proof Engine, AI Overview Impact, Closing Narrative, Domain Intelligence, Pricing
+  - DEVELOPERS: API Docs, Integrations, White-label Setup
+  - COMPANY: Mission, Team, Certified Program, Blog
+- **Right:** Two CTAs:
+  - Primary: "Coba Gratis" (btn-primary)
+  - Secondary: "Agency Sales" (btn-ghost)
+- **Mobile:** Keep Sheet-based menu, add grouped sections
+
+---
+
+## Phase 3: Hero Section Rebuild
+
+**File:** `src/components/sections/Hero.tsx`
+
+Replace current atmospheric hero with information-dense hero:
+
+1. Keep starfield canvas + grid + gradient backgrounds
+2. New content structure:
+   - `[SALES PROOF INTELLIGENCE]` eyebrow label
+   - H1: "Prospek bilang pikir-pikir dulu. Bukan karena hargamu mahal. Karena kamu belum punya bukti."
+   - H2: VEXLO's 30-second proof description
+   - **Proof Score Widget:** Domain input field with animated "generating..." state showing a sample score gauge (0-100 circular)
+   - Below input: "23.847 proof generated. 0 izin diminta."
+   - Trust strip: 4 badges (DataForSEO-powered, AI Overview impact, White-label ready, Domain integration)
+
+**New component:** `src/components/sections/ProofScoreWidget.tsx`
+- Input field + submit button (visual demo only, no real API call)
+- On "submit": animated loading state -> fake Proof Score gauge fills to 23/100
+- Circular gauge component with red/yellow/green color coding
+- Caption below: urgency copy based on score
+
+---
+
+## Phase 4: Pain Amplification Section
+
+**File:** `src/components/sections/PainAmplification.tsx` (new)
+
+Replaces current Problem.tsx with VEXLO's "dead loop" framing:
+
+- Section label: `[DEAD LOOP]`
+- Headline: "Dead loop yang membunuh deal agency manapun."
+- 3-column grid with icons:
+  1. Circular arrow icon: "Butuh akses untuk diagnosa" + body
+  2. Hourglass icon: "Audit manual 30-60 menit" + body
+  3. Disappearing message icon: "'Nanti saya pikir-pikir dulu.'" + body
+- Cards use `.product-flagship` style with `.corner-dot` decorations
+
+---
+
+## Phase 5: Product Demo Section
+
+**File:** `src/components/sections/ProductDemo.tsx` (new)
+
+Animated proof engine demonstration:
+
+- Section label: `[INSTANT PROOF ENGINE]`
+- Shows a mock UI: domain input -> loading pulse -> Proof Score dashboard mockup
+- Closing Narrative output area with typing animation (CSS-only)
+- Caption: "30 detik. Satu domain. Satu bukti yang tidak bisa diabaikan."
+- Power shift quote below
+
+---
+
+## Phase 6: Social Proof Section
+
+**File:** `src/components/sections/SocialProof.tsx` (new)
+
+- Stats bar (horizontal strip, 4 metrics):
+  - 23.847 Proof Generated
+  - $4.2M Deals Closed by Users
+  - less than 30s Average Proof Time
+  - 0 Permissions Required
+- Numbers use animated counter (CSS counter or simple state animation)
+- 2 testimonial cards below (Alex persona + Sam persona)
+- Cards use `.product-flagship` with corner dots
+
+---
+
+## Phase 7: Feature Matrix Section
+
+**File:** `src/components/sections/FeatureMatrix.tsx` (new, replaces Features.tsx)
+
+- Section label: `[PROOF ARSENAL]`
+- 10 feature cards in a responsive grid (2-col on desktop, 1-col mobile)
+- Each card: feature name, "APA YANG DILAKUKAN" description, expandable "MENGAPA PENTING" detail (using shadcn Collapsible)
+- Features listed: Instant Proof Engine, AI Overview Impact Visualizer, Closing Narrative Generator, Proof Score Dashboard, Pitch Intelligence Archive, White-Label Brand Vault, Client-Facing Portal, Shareable Proof Link, Domain Reseller Integration (highlighted badge), Daily Battlefield Intelligence Brief
+
+---
+
+## Phase 8: Segment Selector Section
+
+**File:** `src/components/sections/SegmentSelector.tsx` (new, replaces UseCases.tsx)
+
+- Section label: `[PILIH JALURMU]`
+- 3-column cards:
+  - Freelancer SEO (Sam persona) - "Mulai $39/bln" CTA
+  - Boutique Agency (Alex persona) - "Mulai $79/bln" CTA
+  - Agency Elite - "Hubungi Sales" CTA
+- Each card: persona name, pain point, key benefit, CTA button
+
+---
+
+## Phase 9: AI Overview + Infrastructure Sections
+
+**File:** `src/components/sections/AIOverview.tsx` (new)
+- Full-width dark section with accent-proof (#E8FF47) highlights
+- Headline about AI Overview damage
+- CTA: "Lihat contoh AI Overview Impact Report"
+
+**File:** `src/components/sections/InfrastructureMoat.tsx` (new)
+- "Infrastruktur, Bukan Tool" messaging
+- Lock-in/switching cost visualization (simple comparison cards)
+- LTV uplift metric: "+60% LTV"
+
+---
+
+## Phase 10: Pricing Rebuild
+
+**File:** `src/components/Pricing.tsx` (update)
+
+- Add ROI framing above tiers: "Rata-rata retainer SEO: $1.500/bln. Satu deal yang closed = 19 bulan subscription gratis."
+- Keep 3-tier structure, update copy to Indonesian
+- Add Pay-Per-Proof $12 option as a subtle 4th card
+- Update CTA labels: "Mulai Sekarang" / "Hubungi Sales"
+
+---
+
+## Phase 11: Category Ownership + CTA + Footer
+
+**File:** `src/components/sections/CategoryOwnership.tsx` (new)
+- Proof-First Certified Program section
+- Badge visual + cohort timeline
+- Application CTA
+
+**File:** `src/components/CTA.tsx` (update)
+- Update copy to "Kirim Buktinya. Tutup Dealnya."
+- Keep WaitlistForm integration
+
+**File:** `src/components/Footer.tsx` (update)
+- Add email capture: "Monthly AI Overview Impact Index" newsletter
+- Update link groups to match new nav structure (Produk, Developers, Company, Legal)
+- Add "Need Agency seats? Talk to us" with email field
+
+---
+
+## Phase 12: Index.tsx Page Assembly
+
+**File:** `src/pages/Index.tsx`
+
+New section order:
+1. Navbar
+2. Hero (with ProofScoreWidget)
+3. PainAmplification
+4. Understand (keep existing parallax)
+5. ProductDemo
+6. SocialProof
+7. FeatureMatrix
+8. SegmentSelector
+9. AIOverview
+10. InfrastructureMoat
+11. Pricing
+12. CategoryOwnership
+13. FAQ (keep, update copy)
+14. CTA
+15. Footer
+
+Remove old imports: Problem, HowItWorks, Features, UseCases, Comparison
+
+---
+
+## Files Summary
 
 | File | Action |
-|---|---|
-| `tailwind.config.ts` | Update: fix content paths, add keyframes/animations/tokens |
-| `src/index.css` | Update: add 20+ missing component CSS classes + keyframes |
-| `src/hooks/useNavScroll.ts` | Create: extracted nav scroll hook |
-| `src/hooks/useStarfield.ts` | Create: extracted starfield canvas hook |
-| `src/hooks/useParallax.ts` | Create: new parallax scroll hook |
-| `src/components/layout/Navbar.tsx` | Update: use `useNavScroll` hook |
-| `src/components/sections/Hero.tsx` | Update: use `useStarfield` hook |
+|------|--------|
+| `src/index.css` | Update: contrast tokens, new classes, reduced-motion |
+| `src/components/layout/Navbar.tsx` | Rebuild: dropdown nav + dual CTAs |
+| `src/components/sections/Hero.tsx` | Rebuild: info-dense hero with domain input |
+| `src/components/sections/ProofScoreWidget.tsx` | Create: domain input + gauge animation |
+| `src/components/sections/PainAmplification.tsx` | Create: 3-col dead loop section |
+| `src/components/sections/ProductDemo.tsx` | Create: animated proof engine demo |
+| `src/components/sections/SocialProof.tsx` | Create: stats bar + testimonials |
+| `src/components/sections/FeatureMatrix.tsx` | Create: 10-feature expandable grid |
+| `src/components/sections/SegmentSelector.tsx` | Create: 3 persona path cards |
+| `src/components/sections/AIOverview.tsx` | Create: AI Overview damage section |
+| `src/components/sections/InfrastructureMoat.tsx` | Create: infrastructure moat |
+| `src/components/sections/CategoryOwnership.tsx` | Create: certified program |
+| `src/components/Pricing.tsx` | Update: ROI framing + Indonesian copy |
+| `src/components/CTA.tsx` | Update: Indonesian copy |
+| `src/components/Footer.tsx` | Update: newsletter capture + restructured links |
+| `src/pages/Index.tsx` | Update: new section assembly |
 
-No new dependencies. No breaking changes. All existing inline implementations are preserved functionally -- just refactored into hooks.
+No new dependencies. All interactive UI uses shadcn components (Collapsible, Popover, Input, Button). CSS animations only (max 400ms for interactions, longer for decorative loops). All text meets WCAG AA contrast minimums.
 
