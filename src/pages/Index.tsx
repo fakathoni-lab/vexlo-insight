@@ -1,13 +1,16 @@
 import SEO from "@/components/SEO";
 import Navbar from "@/components/layout/Navbar";
 import Hero from "@/components/sections/Hero";
-import Problem from "@/components/sections/Problem";
+import PainAmplification from "@/components/sections/PainAmplification";
 import Understand from "@/components/sections/Understand";
-import HowItWorks from "@/components/sections/HowItWorks";
-import Features from "@/components/Features";
-import UseCases from "@/components/UseCases";
-import Comparison from "@/components/Comparison";
+import ProductDemo from "@/components/sections/ProductDemo";
+import SocialProof from "@/components/sections/SocialProof";
+import FeatureMatrix from "@/components/sections/FeatureMatrix";
+import SegmentSelector from "@/components/sections/SegmentSelector";
+import AIOverview from "@/components/sections/AIOverview";
+import InfrastructureMoat from "@/components/sections/InfrastructureMoat";
 import Pricing from "@/components/Pricing";
+import CategoryOwnership from "@/components/sections/CategoryOwnership";
 import FAQ from "@/components/FAQ";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
@@ -21,26 +24,35 @@ const Index = () => {
         <div id="hero">
           <Hero />
         </div>
-        <div id="problem">
-          <Problem />
+        <div id="pain">
+          <PainAmplification />
         </div>
         <div id="understand">
           <Understand />
         </div>
-        <div id="how">
-          <HowItWorks />
+        <div id="product-demo">
+          <ProductDemo />
+        </div>
+        <div id="social-proof">
+          <SocialProof />
         </div>
         <div id="features">
-          <Features />
+          <FeatureMatrix />
         </div>
-        <div id="usecases">
-          <UseCases />
+        <div id="segments">
+          <SegmentSelector />
         </div>
-        <div id="compare">
-          <Comparison />
+        <div id="ai-overview">
+          <AIOverview />
+        </div>
+        <div id="infrastructure">
+          <InfrastructureMoat />
         </div>
         <div id="pricing">
           <Pricing />
+        </div>
+        <div id="certified">
+          <CategoryOwnership />
         </div>
         <div id="faq">
           <FAQ />

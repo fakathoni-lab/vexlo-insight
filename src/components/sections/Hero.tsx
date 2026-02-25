@@ -1,24 +1,23 @@
 import { useStarfield } from "@/hooks/useStarfield";
+import ProofScoreWidget from "@/components/sections/ProofScoreWidget";
+import { Database, Eye, Palette, Globe } from "lucide-react";
+
+const trustBadges = [
+  { icon: Database, label: "DataForSEO-powered" },
+  { icon: Eye, label: "AI Overview impact" },
+  { icon: Palette, label: "White-label ready" },
+  { icon: Globe, label: "Domain integration" },
+];
 
 const Hero = () => {
   const canvasRef = useStarfield(100);
 
-  const scrollTo = (id: string) => {
-    document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
     <section className="hero">
-      {/* Layer 1: Canvas starfield */}
       <canvas ref={canvasRef} className="hero-canvas" />
-
-      {/* Layer 2: Radial gradient */}
       <div className="hero-bg" />
-
-      {/* Layer 3: Grid overlay */}
       <div className="hero-grid" />
 
-      {/* Content */}
       <div className="relative z-10 flex flex-col items-center text-center px-5 pb-20">
         <div className="max-w-[900px] mx-auto flex flex-col items-center">
           {/* Eyebrow */}
@@ -27,48 +26,52 @@ const Hero = () => {
           </div>
 
           {/* H1 */}
-          <h1 className="hero-headline">
-            Close More Clients.
+          <h1 className="hero-headline" style={{ fontSize: "clamp(36px, 6vw, 80px)", lineHeight: 1.05 }}>
+            Prospek bilang pikir-pikir dulu.
             <br />
-            <em>with proof they can't ignore.</em>
+            <em>Karena kamu belum punya bukti.</em>
           </h1>
 
-          {/* Subheadline */}
+          {/* H2 */}
           <p
-            className="mt-7 font-body font-light max-w-[520px]"
-            style={{
-              fontSize: 15,
-              color: "rgba(240,240,238,0.45)",
-              lineHeight: 1.65,
-            }}
+            className="mt-7 font-body font-light max-w-[560px]"
+            style={{ fontSize: 15, color: "var(--text-dim)", lineHeight: 1.65 }}
           >
-            Generate a visual SEO proof report for any prospect in 30 seconds.
-            <br />
-            No access required. No awkward asks. Just close.
+            VEXLO menghasilkan visual proof kerentanan SEO prospek dalam &lt;30 detik
+            — tanpa GA4, tanpa GSC, tanpa meminta izin siapapun.
           </p>
 
-          {/* CTA row */}
-          <div className="flex flex-wrap items-center justify-center gap-2.5 mt-10">
-            <button onClick={() => scrollTo("#cta")} className="btn-primary">
-              Get Early Access — Free
-            </button>
-            <button onClick={() => scrollTo("#how")} className="btn-ghost">
-              See How It Works
-            </button>
+          {/* Proof Score Widget */}
+          <div className="mt-10 w-full">
+            <ProofScoreWidget />
           </div>
 
-          {/* Social proof badge */}
-          <div
-            className="mt-8 inline-flex items-center rounded-[100px] font-mono uppercase"
-            style={{
-              fontSize: "8.5px",
-              letterSpacing: "0.16em",
-              color: "hsl(22, 100%, 52%)",
-              border: "1px solid rgba(255,99,8,0.3)",
-              padding: "3px 9px",
-            }}
+          {/* Live counter */}
+          <p
+            className="mt-5 font-mono text-[9px] uppercase tracking-[0.16em]"
+            style={{ color: "var(--text-muted)" }}
           >
-            17 Founding Members Joined
+            23.847 proof generated. 0 izin diminta.
+          </p>
+
+          {/* Trust strip */}
+          <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
+            {trustBadges.map((b) => (
+              <div
+                key={b.label}
+                className="inline-flex items-center gap-1.5 rounded-[100px] font-mono uppercase"
+                style={{
+                  fontSize: "8.5px",
+                  letterSpacing: "0.14em",
+                  color: "var(--text-muted)",
+                  border: "1px solid var(--border)",
+                  padding: "4px 10px",
+                }}
+              >
+                <b.icon className="w-3 h-3" />
+                {b.label}
+              </div>
+            ))}
           </div>
         </div>
       </div>
