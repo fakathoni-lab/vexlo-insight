@@ -1,51 +1,55 @@
 
 
-# Plan: Phase 1B — Setup Design Tokens in `src/index.css`
+# Plan: Refine `src/components/layout/Navbar.tsx`
 
-## Problem
+## Summary
 
-The user's spec replaces the entire `index.css` with new design token variables (`--bg`, `--bg-card`, `--text`, etc.) and updated utility classes. However, the current codebase has **462 usages across 37 files** of Tailwind classes like `bg-background`, `text-foreground`, `text-muted-foreground` that depend on the existing HSL-based CSS variables (`--background`, `--foreground`, `--border`, etc.) consumed through `tailwind.config.ts`.
+The current Navbar is ~90% correct. This plan applies targeted fixes to match the exact spec without touching any other files.
 
-Doing a raw replacement would break every shadcn/ui component and all pages.
+## Changes (single file: `src/components/layout/Navbar.tsx`)
 
-## Solution
+### 1. Fix padding
+- **Current**: `px-5 sm:px-10` (20px mobile, 40px desktop)
+- **New**: `px-5 sm:px-10` is fine for responsive, but spec says `padding: 20px 40px` — update to `py-0 px-5 sm:px-10` (already correct, keep as-is)
 
-Replace `src/index.css` with the user's spec **plus** retain the HSL-based variables needed by Tailwind/shadcn in a `:root` block. This gives us:
+### 2. Nav link border-radius
+- **Current**: `rounded` (default 6px)
+- **New**: `rounded-[4px]` to match spec exactly
 
-- All new design tokens (`--bg`, `--bg-card`, `--text-dim`, `--accent`, `--mono`, `--serif`, `--sans`, easing curves, etc.)
-- Updated `.btn-primary` with proper hover (`#d4d4d0` instead of `filter: brightness`)
-- Updated `.btn-ghost` with `--emboss-shadow-less` and refined hover
-- Updated `.section-label` with `9px` font, `0.2em` tracking, `56px` margin-bottom, `--text-muted` color
-- Preserved HSL variables so `bg-background`, `text-foreground`, `text-accent`, `text-muted-foreground` etc. continue working in all 37 files
+### 3. CTA button — use `.btn-primary` class
+- **Current**: Inline styles for background, color, box-shadow on both desktop and mobile CTA buttons
+- **New**: Replace with `className="btn-primary"` which already defines all the correct styles (pill shape, Space Mono 10px uppercase, emboss shadow, hover state)
+- Remove all redundant inline `style` props
 
-## Single File Change
+### 4. CTA scroll target
+- **Current**: Scrolls to `#cta`
+- **New**: Scrolls to `#waitlist` as specified
+- Note: Index.tsx has `<div id="cta">` wrapping `<CTA />`. A `#waitlist` anchor must exist on the page. The WaitlistForm component or CTA section should have this ID. If not present, we'll keep `#cta` as fallback since the CTA section contains the waitlist form.
 
-**`src/index.css`** — Full replacement with:
+### 5. Desktop CTA visibility
+- **Current**: `hidden sm:inline-flex` (shows at 640px+)
+- **New**: `hidden md:inline-flex` (shows at 768px+, consistent with nav links breakpoint)
 
-1. Font import via `@import url(...)` at top
-2. Tailwind directives
-3. `:root` block containing:
-   - All new design tokens from the user's spec (verbatim)
-   - Existing HSL variables for Tailwind compatibility (`--background`, `--foreground`, `--border` as HSL channels, `--muted`, `--ring`, `--input`, `--accent` as HSL, radius tokens)
-4. `html` and `body` base styles using new variables
-5. Global `*` border-color rule for shadcn compatibility
-6. `.btn-primary`, `.btn-ghost`, `.section-label` exactly as specified
-7. Keep `::selection` and scrollbar styles (updated to use new variables)
-8. Remove the old `.landing-section` class (sections now handle their own padding)
+### 6. Wordmark text
+- Already uppercase via `uppercase` class, but source text is "Vexlo" — change to "VEXLO" for clarity (visual result unchanged since CSS handles it)
 
-## What Changes vs Current
+## What stays the same
+- Fixed positioning, z-50, h-16
+- Scroll detection at 16px threshold
+- Backdrop blur + border on scroll
+- shadcn Sheet for mobile menu
+- Nav link items, colors, hover behavior
+- Menu icon styling
+- `src/index.css` is NOT touched
 
-| Item | Current | New |
-|------|---------|-----|
-| `.btn-primary` hover | `filter: brightness(1.1)` | `background: #d4d4d0` + shadow change |
-| `.btn-ghost` | no shadow | `--emboss-shadow-less` |
-| `.section-label` color | `hsl(var(--accent))` (orange) | `--text-muted` (subtle gray) |
-| `.section-label` margin | `12px` | `56px` |
-| `.section-label` size | `10px` | `9px`, `0.2em` tracking |
-| New variables | -- | `--bg-raised`, `--bg-card`, `--text-dim`, `--text-muted`, `--ease-back-out`, `--ease-circ-out`, `--ease-quart-in-out`, `--emboss-shadow-hover`, `--emboss-shadow-less`, `--taxbutton-height` |
-| Font import | In `index.html` `<link>` | Duplicated via CSS `@import` (belt-and-suspenders) |
+## Technical details
 
-## No Other Files Modified
+The `.btn-primary` class (from `index.css`) provides:
+```
+font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+color: var(--bg); background: var(--text); border: none;
+height: 40px; padding: 0 24px; border-radius: 100px;
+box-shadow: emboss + inset; hover: background #d4d4d0;
+```
 
-Only `src/index.css` is touched. The `tailwind.config.ts` and all component files remain unchanged because the HSL variables they depend on are preserved.
-
+This replaces ~8 lines of inline styles per button with a single class.
