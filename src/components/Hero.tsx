@@ -1,67 +1,59 @@
-import { useState } from "react";
-
 const Hero = () => {
-  const [domain, setDomain] = useState("");
-  const [keyword, setKeyword] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Future: trigger report generation
-    console.log("Generate report for:", domain, keyword);
-  };
-
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center px-6 overflow-hidden">
-      {/* Glow effect */}
+    <section className="relative min-h-screen flex items-center justify-center px-10 max-sm:px-5 overflow-hidden">
+      {/* CSS grid background pattern */}
       <div
-        className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] opacity-20 blur-[120px] pointer-events-none"
-        style={{ background: "hsl(22 100% 52%)" }}
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)",
+          backgroundSize: "64px 64px",
+        }}
       />
 
-      <div className="relative z-10 max-w-[720px] w-full text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-8 border rounded-full text-xs font-mono tracking-wide text-muted-foreground">
+      {/* Glow */}
+      <div
+        className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] opacity-15 blur-[120px] pointer-events-none"
+        style={{ background: "hsl(var(--accent))" }}
+      />
+
+      <div className="relative z-10 max-w-[800px] w-full text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-8 border border-border rounded-full text-xs font-mono tracking-wide text-muted-foreground">
           <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block" />
           No access permissions required
         </div>
 
-        <h1 className="font-headline text-5xl sm:text-6xl md:text-7xl leading-[1.05] mb-6 tracking-tight">
+        <h1
+          className="font-headline leading-[1.05] mb-6 tracking-tight"
+          style={{ fontSize: "clamp(40px, 8vw, 96px)" }}
+        >
           Close more calls with{" "}
           <span className="text-accent italic">visual proof</span>
         </h1>
 
-        <p className="text-muted-foreground text-lg sm:text-xl max-w-[520px] mx-auto mb-12 leading-relaxed">
-          Input a domain and keyword. Get a shareable SEO proof report in under 30 seconds. No logins, no permissions.
+        <p className="text-muted-foreground text-lg sm:text-xl max-w-[560px] mx-auto mb-12 leading-relaxed font-body">
+          Generate shareable SEO proof reports in under 30 seconds. No logins, no permissions, no awkward screen shares.
         </p>
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col sm:flex-row gap-3 max-w-[560px] mx-auto"
-        >
-          <input
-            type="text"
-            placeholder="example.com"
-            value={domain}
-            onChange={(e) => setDomain(e.target.value)}
-            className="flex-1 h-12 px-4 bg-surface border rounded-input text-foreground placeholder:text-muted-foreground text-sm font-body focus:outline-none focus:ring-1 focus:ring-accent transition-all duration-200"
-          />
-          <input
-            type="text"
-            placeholder="target keyword"
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            className="flex-1 h-12 px-4 bg-surface border rounded-input text-foreground placeholder:text-muted-foreground text-sm font-body focus:outline-none focus:ring-1 focus:ring-accent transition-all duration-200"
-          />
-          <button
-            type="submit"
-            className="h-12 px-6 bg-accent text-accent-foreground font-mono text-sm font-bold rounded-button hover:brightness-110 active:brightness-95 transition-all duration-200 whitespace-nowrap"
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a
+            href="#cta"
+            className="h-12 px-8 inline-flex items-center bg-accent text-accent-foreground font-mono text-xs uppercase tracking-widest rounded-button hover:brightness-110 active:scale-[0.98] transition-all duration-200"
           >
-            Get Report →
-          </button>
-        </form>
+            Get Early Access
+          </a>
+          <a
+            href="#demo"
+            className="h-12 px-8 inline-flex items-center border border-accent/25 text-accent font-mono text-xs uppercase tracking-widest rounded-button hover:bg-accent/[0.08] transition-all duration-200"
+          >
+            See Demo
+          </a>
+        </div>
 
-        <p className="text-muted-foreground text-xs mt-4 font-mono">
-          Free • No signup required • Results in &lt;30s
-        </p>
+        <div className="mt-8 inline-flex items-center gap-2 text-muted-foreground text-xs font-mono">
+          <span className="w-2 h-2 rounded-full bg-accent inline-block animate-pulse" />
+          17 Founding Members Joined
+        </div>
       </div>
     </section>
   );

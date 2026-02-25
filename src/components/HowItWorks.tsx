@@ -1,16 +1,21 @@
+import { Globe, ScanSearch, Share2 } from "lucide-react";
+
 const steps = [
   {
     num: "01",
+    icon: Globe,
     title: "Enter domain & keyword",
     desc: "Paste your prospect's website and the keyword they want to rank for.",
   },
   {
     num: "02",
+    icon: ScanSearch,
     title: "We scan in real-time",
     desc: "Vexlo pulls rankings, backlinks, and on-page data — no permissions needed.",
   },
   {
     num: "03",
+    icon: Share2,
     title: "Share visual proof",
     desc: "Get a branded, shareable report that makes your pitch impossible to ignore.",
   },
@@ -18,7 +23,7 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section className="px-6 py-24 max-w-[1000px] mx-auto">
+    <section className="py-20 lg:py-32 px-5 lg:px-10 max-w-[1280px] mx-auto">
       <p className="text-accent font-mono text-xs tracking-widest uppercase mb-3">
         How it works
       </p>
@@ -30,9 +35,10 @@ const HowItWorks = () => {
         {steps.map((step) => (
           <div
             key={step.num}
-            className="group p-6 bg-surface border rounded-card hover:border-accent/40 transition-colors duration-300"
+            className="group p-6 bg-surface border border-border rounded-card hover:border-accent/25 transition-colors duration-200"
           >
-            <span className="text-accent font-mono text-sm font-bold mb-4 block">
+            <step.icon className="w-5 h-5 text-accent mb-4" />
+            <span className="text-accent font-mono text-sm font-bold mb-2 block">
               {step.num}
             </span>
             <h3 className="font-headline text-xl mb-2">{step.title}</h3>
