@@ -56,6 +56,7 @@ html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
 body { background: var(--bg); color: var(--text); font-family: var(--sans); line-height: 1.6; -moz-osx-font-smoothing: grayscale; }
 
 @layer components {
+  /* ── Buttons ── */
   .btn-primary {
     font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
     color: var(--bg); background: var(--text); border: none;
@@ -77,12 +78,136 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); line
   }
   .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.22); }
 
+  /* ── Section label ── */
   .section-label {
     font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
     color: var(--text-muted); margin-bottom: 56px; display: inline-flex; align-items: center; gap: 4px;
   }
   .section-label::before { content: '['; }
   .section-label::after  { content: ']'; }
+
+  /* ── Nav ── */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    height: 64px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; transition: all 0.3s var(--ease-circ-out);
+  }
+  @media (min-width: 640px) { .nav { padding: 0 40px; } }
+  .nav.scrolled {
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    background: rgba(8,8,8,0.88);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .nav-logo {
+    font-family: var(--mono); font-size: 13px; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text); text-decoration: none;
+  }
+
+  /* ── Hero ── */
+  .hero { position: relative; min-height: 100svh; padding-top: 128px; overflow: hidden; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .hero-bg {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255,99,8,0.08), transparent);
+  }
+  .hero-grid {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 20%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 20%, transparent 75%);
+  }
+  .hero-eyebrow {
+    display: flex; align-items: center; gap: 12px;
+    color: hsl(22, 100%, 52%); margin-bottom: 32px;
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em;
+  }
+  .hero-eyebrow::before {
+    content: ''; display: block; width: 28px; height: 1px;
+    background-color: hsl(22, 100%, 52%);
+  }
+  .hero-headline {
+    font-family: var(--serif); color: var(--text);
+    font-size: clamp(52px, 8.5vw, 120px); line-height: 0.93; letter-spacing: -0.025em;
+  }
+  .hero-headline em {
+    font-style: italic; color: rgba(240,240,238,0.42);
+  }
+
+  /* ── Hollow / solid text lines ── */
+  .st-line { font-family: var(--serif); font-size: clamp(40px, 7vw, 96px); line-height: 1; letter-spacing: -0.03em; }
+  .st-line.solid { color: var(--text); }
+  .st-line.hollow {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(240,240,238,0.18);
+  }
+
+  /* ── Arrow link ── */
+  .arrow-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text-dim); text-decoration: none;
+    transition: gap 0.3s var(--ease-back-out), color 0.2s;
+  }
+  .arrow-link:hover { gap: 10px; color: var(--text); }
+
+  /* ── Product card with corner dots ── */
+  .product-flagship {
+    position: relative; border-radius: var(--radii-outer);
+    background: var(--bg-card); border: 1px solid rgba(255,255,255,0.07);
+    padding: 48px; overflow: hidden;
+  }
+  .corner-dot {
+    position: absolute; width: 4px; height: 4px; border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+  }
+  .corner-dot.tl { top: 12px; left: 12px; }
+  .corner-dot.tr { top: 12px; right: 12px; }
+  .corner-dot.bl { bottom: 12px; left: 12px; }
+  .corner-dot.br { bottom: 12px; right: 12px; }
+
+  /* ── Orb pulse ── */
+  .understand-orb {
+    width: 160px; height: 160px; border-radius: 50%;
+    background: radial-gradient(circle, hsl(22,100%,52%) 0%, transparent 70%);
+    opacity: 0.4; filter: blur(40px);
+    animation: orb-pulse 4s ease-in-out infinite;
+  }
+
+  /* ── Fade-up utility ── */
+  .fade-up {
+    opacity: 0; transform: translateY(24px);
+    animation: fade-up 0.6s var(--ease-circ-out) both;
+  }
+
+  /* ── Bounce scroll indicator ── */
+  .bounce-scroll {
+    animation: bounce 2s ease-in-out infinite;
+  }
+}
+
+/* ── Keyframes (outside @layer so Tailwind can reference them) ── */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes orb-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.15); }
+}
+@keyframes fade-up {
+  0% { opacity: 0; transform: translateY(24px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes spin-ring {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 ::selection {
