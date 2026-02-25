@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
+import SEO from "@/components/SEO";
 
 const schema = z.object({
   fullName: z.string().min(1, "Name is required").max(100),
@@ -40,6 +41,7 @@ const Signup = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-5" style={{ backgroundColor: "#080808" }}>
+      <SEO title="Sign Up — VEXLO" description="Create your VEXLO account and start generating SEO proof reports." canonical="https://vexloai.com/signup" />
       <div
         className="w-full max-w-[400px] rounded-[12px] border border-[rgba(255,255,255,0.07)] p-8"
         style={{ backgroundColor: "#0d0d0d" }}
