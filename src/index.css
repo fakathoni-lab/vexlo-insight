@@ -10,9 +10,14 @@
   --border:          rgba(255,255,255,0.07);
   --border-strong:   rgba(255,255,255,0.13);
   --text:            #f0f0ee;
-  --text-dim:        rgba(240,240,238,0.45);
-  --text-muted:      rgba(240,240,238,0.25);
+  --text-dim:        rgba(240,240,238,0.55);
+  --text-muted:      rgba(240,240,238,0.55);
   --accent:          #ff6308;
+  --accent-proof:    #E8FF47;
+  --accent-danger:   #FF4747;
+  --accent-success:  #47FF8F;
+  --surface:         #111111;
+  --surface-elevated: #1A1A1A;
   --mono:            'Space Mono', monospace;
   --serif:           'Instrument Serif', Georgia, serif;
   --sans:            'DM Sans', system-ui, sans-serif;
@@ -218,3 +223,69 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); line
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 3px; }
+
+/* ── Landing section base ── */
+@layer components {
+  .landing-section {
+    padding: 100px 40px;
+    max-width: 1280px;
+    margin: 0 auto;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  @media (max-width: 640px) { .landing-section { padding: 60px 20px; } }
+
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: var(--radii-outer);
+    overflow: hidden;
+  }
+  @media (max-width: 640px) { .stats-bar { grid-template-columns: repeat(2, 1fr); } }
+  .stats-bar > div { background: var(--bg-card); padding: 32px 24px; text-align: center; }
+
+  .testimonial-card {
+    position: relative;
+    border-radius: var(--radii-outer);
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.07);
+    padding: 40px;
+    overflow: hidden;
+  }
+
+  .proof-score-gauge {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .typing-animation::after {
+    content: '|';
+    animation: blink-caret 0.8s step-end infinite;
+  }
+}
+
+@keyframes blink-caret {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes gauge-fill {
+  0% { stroke-dashoffset: 283; }
+}
+
+@keyframes counter-up {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
