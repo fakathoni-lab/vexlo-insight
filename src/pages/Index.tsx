@@ -1,6 +1,6 @@
 import Navbar from "@/components/layout/Navbar";
 import Hero from "@/components/sections/Hero";
-import Problem from "@/components/Problem";
+import Problem from "@/components/sections/Problem";
 import HowItWorks from "@/components/HowItWorks";
 import Features from "@/components/Features";
 import UseCases from "@/components/UseCases";
