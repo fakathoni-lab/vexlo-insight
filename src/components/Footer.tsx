@@ -1,6 +1,8 @@
-const Footer = () => {
+import React from "react";
+
+const Footer = React.forwardRef<HTMLElement>((_, ref) => {
   return (
-    <footer className="py-[100px] px-10 max-sm:py-[60px] max-sm:px-5" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+    <footer ref={ref} className="py-[100px] px-10 max-sm:py-[60px] max-sm:px-5" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
       <div className="max-w-[1280px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
         {/* Brand */}
         <div>
@@ -55,6 +57,8 @@ const Footer = () => {
       </div>
     </footer>
   );
-};
+});
+
+Footer.displayName = "Footer";
 
 export default Footer;
