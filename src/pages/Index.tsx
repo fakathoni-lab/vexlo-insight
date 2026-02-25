@@ -2,6 +2,7 @@ import SEO from "@/components/SEO";
 import Navbar from "@/components/layout/Navbar";
 import Hero from "@/components/sections/Hero";
 import Problem from "@/components/sections/Problem";
+import Understand from "@/components/sections/Understand";
 import HowItWorks from "@/components/sections/HowItWorks";
 import Features from "@/components/Features";
 import UseCases from "@/components/UseCases";
@@ -22,6 +23,9 @@ const Index = () => {
         </div>
         <div id="problem">
           <Problem />
+        </div>
+        <div id="understand">
+          <Understand />
         </div>
         <div id="how">
           <HowItWorks />
