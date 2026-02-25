@@ -23,7 +23,7 @@ const tiers: Tier[] = [
     ],
   },
   {
-    name: "Pro",
+    name: "Agency Pro",
     price: 79,
     desc: "For agencies that pitch weekly.",
     featured: true,
@@ -53,10 +53,8 @@ const tiers: Tier[] = [
 
 const Pricing = () => {
   return (
-    <section className="py-20 lg:py-32 px-5 lg:px-10 max-w-[1280px] mx-auto">
-      <p className="text-accent font-mono text-xs tracking-widest uppercase mb-3">
-        Pricing
-      </p>
+    <section className="landing-section">
+      <p className="section-label">Pricing</p>
       <h2 className="font-headline text-3xl sm:text-4xl mb-16 tracking-tight">
         Simple plans, <span className="italic">serious results</span>
       </h2>
@@ -65,14 +63,18 @@ const Pricing = () => {
         {tiers.map((tier) => (
           <div
             key={tier.name}
-            className={`p-6 rounded-card border transition-colors duration-200 ${
-              tier.featured
-                ? "border-accent bg-accent/[0.04] scale-[1.02]"
-                : "border-border bg-surface hover:border-accent/25"
-            }`}
+            className="p-6 rounded-[12px] transition-colors duration-200"
+            style={{
+              backgroundColor: '#0d0d0d',
+              border: tier.featured
+                ? '1px solid rgba(255,99,8,0.4)'
+                : '1px solid rgba(255,255,255,0.07)',
+              transform: tier.featured ? 'scale(1.02)' : undefined,
+            }}
           >
             {tier.featured && (
-              <span className="inline-block mb-4 px-3 py-1 bg-accent text-accent-foreground text-xs font-mono uppercase tracking-widest rounded-full">
+              <span className="inline-block mb-4 px-3 py-1 text-[8px] font-mono uppercase tracking-widest rounded-full"
+                style={{ backgroundColor: 'hsl(22,100%,52%)', color: '#fff' }}>
                 Most Popular
               </span>
             )}
@@ -89,7 +91,7 @@ const Pricing = () => {
                   {f.included ? (
                     <Check className="w-4 h-4 text-accent shrink-0" />
                   ) : (
-                    <X className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                    <X className="w-4 h-4 shrink-0" style={{ color: 'rgba(240,240,238,0.25)' }} />
                   )}
                   <span className={f.included ? "text-foreground" : "text-muted-foreground"}>
                     {f.label}
@@ -99,12 +101,8 @@ const Pricing = () => {
             </ul>
 
             <a
-              href="#cta"
-              className={`block text-center h-10 leading-10 font-mono text-xs uppercase tracking-widest rounded-button transition-all duration-200 ${
-                tier.featured
-                  ? "bg-accent text-accent-foreground hover:brightness-110"
-                  : "border border-accent/25 text-accent hover:bg-accent/[0.08]"
-              }`}
+              href="#waitlist"
+              className={tier.featured ? "btn-primary w-full text-center" : "btn-ghost w-full text-center"}
             >
               Get Started
             </a>

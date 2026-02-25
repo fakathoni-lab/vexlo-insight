@@ -5,7 +5,6 @@ import HowItWorks from "@/components/sections/HowItWorks";
 import Features from "@/components/Features";
 import UseCases from "@/components/UseCases";
 import Comparison from "@/components/Comparison";
-import Demo from "@/components/Demo";
 import Pricing from "@/components/Pricing";
 import FAQ from "@/components/FAQ";
 import CTA from "@/components/CTA";
@@ -33,9 +32,6 @@ const Index = () => {
         </div>
         <div id="compare">
           <Comparison />
-        </div>
-        <div id="demo">
-          <Demo />
         </div>
         <div id="pricing">
           <Pricing />
