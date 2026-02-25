@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { BarChart3, Zap, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import SEO from "@/components/SEO";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -36,6 +37,7 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-[1080px] mx-auto space-y-6">
+      <SEO title="Dashboard — VEXLO" description="Manage your SEO proof reports." canonical="https://vexloai.com/dashboard" />
       {/* Greeting */}
       <h1 className="font-headline" style={{ fontSize: 28, color: "#f0f0ee" }}>
         Welcome back, {firstName}

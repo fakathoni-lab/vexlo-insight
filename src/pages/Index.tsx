@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import Navbar from "@/components/layout/Navbar";
 import Hero from "@/components/sections/Hero";
 import Problem from "@/components/sections/Problem";
@@ -13,6 +14,7 @@ import Footer from "@/components/Footer";
 const Index = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO />
       <Navbar />
       <main>
         <div id="hero">
