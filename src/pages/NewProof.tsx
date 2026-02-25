@@ -6,7 +6,7 @@ import { Loader2, Check, Copy, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 // ── Schema ──
 const schema = z.object({
@@ -159,7 +159,7 @@ const NewProof = () => {
   const [state, setState] = useState<State>("input");
   const [activeStep, setActiveStep] = useState(0);
   const [result, setResult] = useState(mockResult);
-  const { toast } = useToast();
+  
 
   const {
     register,
@@ -187,7 +187,7 @@ const NewProof = () => {
   const handleCopy = () => {
     const text = `Proof Report: ${result.domain}\nKeyword: ${result.keyword}\nScore: ${result.score}/100\nCurrent Rank: #${result.currentRank}\n30-Day Delta: ${result.delta30}\nAI Overview: ${result.aiOverview ? "Yes" : "No"}\n\n${narrativeText}`;
     navigator.clipboard.writeText(text);
-    toast({ title: "Copied!", description: "Report copied to clipboard." });
+    toast("Copied!", { description: "Report copied to clipboard." });
   };
 
   // ── STATE 1: INPUT ──

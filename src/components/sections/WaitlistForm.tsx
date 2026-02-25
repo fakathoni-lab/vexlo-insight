@@ -5,7 +5,7 @@ import { z } from "zod";
 import { Loader2, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const schema = z.object({
@@ -24,7 +24,7 @@ const WaitlistForm = ({
   placeholder = "you@agency.com",
 }: WaitlistFormProps) => {
   const [submitted, setSubmitted] = useState(false);
-  const { toast } = useToast();
+  
 
   const {
     register,
@@ -41,22 +41,18 @@ const WaitlistForm = ({
 
     if (error) {
       if (error.code === "23505") {
-        toast({
-          title: "Already registered",
+        toast("Already registered", {
           description: "This email is already registered!",
         });
       } else {
-        toast({
-          title: "Error",
+        toast.error("Error", {
           description: "Something went wrong. Please try again.",
-          variant: "destructive",
         });
       }
       return;
     }
 
-    toast({
-      title: "You're on the list!",
+    toast("You're on the list!", {
       description: "Watch your inbox.",
     });
     setSubmitted(true);
