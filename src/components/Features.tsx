@@ -35,10 +35,8 @@ const features = [
 
 const Features = () => {
   return (
-    <section className="py-20 lg:py-32 px-5 lg:px-10 max-w-[1280px] mx-auto">
-      <p className="text-accent font-mono text-xs tracking-widest uppercase mb-3">
-        Why Vexlo
-      </p>
+    <section className="landing-section">
+      <p className="section-label">Why Vexlo</p>
       <h2 className="font-headline text-3xl sm:text-4xl mb-16 tracking-tight">
         Built for agencies that{" "}
         <span className="italic">move fast</span>
@@ -48,7 +46,13 @@ const Features = () => {
         {features.map((f) => (
           <div
             key={f.title}
-            className="p-6 bg-surface border border-border rounded-card hover:border-accent/25 transition-colors duration-200"
+            className="p-6 rounded-[12px] border transition-colors duration-200"
+            style={{
+              backgroundColor: '#0d0d0d',
+              borderColor: 'rgba(255,255,255,0.07)',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.13)')}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)')}
           >
             <f.icon className="w-5 h-5 text-accent mb-4" />
             <h3 className="font-body font-semibold text-base mb-2">{f.title}</h3>
