@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useNavScroll } from "@/hooks/useNavScroll";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -10,14 +11,8 @@ const navLinks = [
 ];
 
 const Navbar = () => {
-  const [scrolled, setScrolled] = useState(false);
+  const scrolled = useNavScroll();
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 16);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   const handleNavClick = (href: string) => {
     setOpen(false);
@@ -26,19 +21,9 @@ const Navbar = () => {
   };
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-5 sm:px-10 transition-all duration-300 ${
-        scrolled
-          ? "backdrop-blur-xl bg-[#080808]/[0.88] border-b border-[rgba(255,255,255,0.07)]"
-          : ""
-      }`}
-    >
+    <nav className={`nav ${scrolled ? "scrolled" : ""}`}>
       {/* LEFT — Wordmark */}
-      <a
-        href="/"
-        className="font-mono text-[13px] uppercase tracking-widest"
-        style={{ color: "#f0f0ee" }}
-      >
+      <a href="/" className="nav-logo">
         VEXLO
       </a>
 
