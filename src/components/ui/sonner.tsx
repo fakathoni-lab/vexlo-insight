@@ -1,9 +1,8 @@
-import React from "react";
 import { Toaster as Sonner, toast } from "sonner";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
-const Toaster = React.forwardRef<HTMLDivElement, ToasterProps>((props, _ref) => {
+const Toaster = (props: ToasterProps) => {
   return (
     <Sonner
       theme="dark"
@@ -20,8 +19,6 @@ const Toaster = React.forwardRef<HTMLDivElement, ToasterProps>((props, _ref) => 
       {...props}
     />
   );
-});
-
-Toaster.displayName = "Toaster";
+};
 
 export { Toaster, toast };
