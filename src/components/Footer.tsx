@@ -7,7 +7,17 @@ const footerLinks = [
     links: [
       { label: "Instant Proof Engine", href: "#product-demo" },
       { label: "AI Overview Impact", href: "#ai-overview" },
-      { label: "Pricing", href: "#pricing" },
+      { label: "Features", href: "#features" },
+      { label: "Pricing", href: "/pricing" },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { label: "Blog", href: "#" },
+      { label: "Case Studies", href: "#" },
+      { label: "FAQ", href: "#faq" },
+      { label: "Help Center", href: "#" },
     ],
   },
   {
@@ -21,16 +31,10 @@ const footerLinks = [
   {
     title: "Company",
     links: [
-      { label: "Mission", href: "#" },
+      { label: "About / Mission", href: "/company" },
+      { label: "Team", href: "/company#team" },
       { label: "Certified Program", href: "#certified" },
-      { label: "Blog", href: "#" },
-    ],
-  },
-  {
-    title: "Legal",
-    links: [
-      { label: "Privacy", href: "#" },
-      { label: "Terms", href: "#" },
+      { label: "Contact", href: "mailto:sales@vexlo.com" },
     ],
   },
 ];
