@@ -79,6 +79,43 @@ function CountUpStat({ stat, delay = 0 }: { stat: typeof statsData[number]; dela
   );
 }
 
+function TrustStrip() {
+  const [visible, setVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold: 0.5 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="flex flex-wrap items-center justify-center gap-3 mt-8">
+      {trustBadges.map((b, i) => (
+        <div
+          key={b.label}
+          className="inline-flex items-center gap-1.5 rounded-[100px] font-mono uppercase"
+          style={{
+            fontSize: "8.5px",
+            letterSpacing: "0.14em",
+            color: "var(--text-muted)",
+            border: "1px solid var(--border)",
+            padding: "4px 10px",
+            opacity: visible ? 1 : 0,
+            transform: visible ? "translateY(0)" : "translateY(12px)",
+            transition: `opacity 400ms ease-out ${i * 100}ms, transform 400ms ease-out ${i * 100}ms`,
+          }}
+        >
+          <b.icon className="w-3 h-3" />
+          {b.label}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const Hero = () => {
   const canvasRef = useStarfield();
 
@@ -117,24 +154,7 @@ const Hero = () => {
           </div>
 
           {/* Trust strip */}
-          <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
-            {trustBadges.map((b) => (
-              <div
-                key={b.label}
-                className="inline-flex items-center gap-1.5 rounded-[100px] font-mono uppercase"
-                style={{
-                  fontSize: "8.5px",
-                  letterSpacing: "0.14em",
-                  color: "var(--text-muted)",
-                  border: "1px solid var(--border)",
-                  padding: "4px 10px",
-                }}
-              >
-                <b.icon className="w-3 h-3" />
-                {b.label}
-              </div>
-            ))}
-          </div>
+          <TrustStrip />
 
           {/* Colossus-style stats strip */}
           {/* Colossus-style stats strip */}
