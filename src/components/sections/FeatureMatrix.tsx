@@ -62,7 +62,7 @@ const FeatureMatrix = () => {
       <p className="section-label">Proof Arsenal</p>
       <h2 className="font-headline text-3xl sm:text-4xl mb-16 tracking-tight" style={{ color: "var(--text)" }}>
         10 senjata untuk{" "}
-        <span className="italic" style={{ color: "rgba(240,240,238,0.42)" }}>menutup deal.</span>
+        <span className="italic" style={{ color: "var(--text-dim)" }}>menutup deal.</span>
       </h2>
 
       <div className="grid sm:grid-cols-2 gap-4">

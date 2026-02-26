@@ -59,7 +59,7 @@ const DashboardLayout = () => {
             activeClassName="bg-[rgba(255,99,8,0.08)] border-l-2 border-[#ff6308]"
             style={{
               fontSize: 9,
-              color: item.accent ? "#ff6308" : "rgba(240,240,238,0.45)",
+              color: item.accent ? "#ff6308" : "var(--text-dim)",
             }}
             onClick={() => setMobileOpen(false)}
           >
@@ -73,14 +73,14 @@ const DashboardLayout = () => {
       <div className="px-4 py-4 border-t border-[rgba(255,255,255,0.07)]">
         <p
           className="font-body text-xs truncate mb-2"
-          style={{ color: "rgba(240,240,238,0.45)" }}
+          style={{ color: "var(--text-dim)" }}
         >
           {user?.email}
         </p>
         <button
           onClick={signOut}
           className="flex items-center gap-2 font-mono uppercase tracking-wide transition-colors duration-200 hover:text-[#f0f0ee]"
-          style={{ fontSize: 9, color: "rgba(240,240,238,0.45)" }}
+          style={{ fontSize: 9, color: "var(--text-dim)" }}
         >
           <LogOut className="w-3.5 h-3.5" />
           Sign Out
@@ -113,7 +113,7 @@ const DashboardLayout = () => {
             <button
               onClick={() => setMobileOpen(false)}
               className="absolute top-4 right-4 p-1"
-              style={{ color: "rgba(240,240,238,0.45)" }}
+              style={{ color: "var(--text-dim)" }}
             >
               <X className="w-5 h-5" />
             </button>
@@ -148,7 +148,7 @@ const DashboardLayout = () => {
             <Badge
               variant="outline"
               className="font-mono uppercase tracking-widest rounded-[100px] border-[rgba(255,255,255,0.13)]"
-              style={{ fontSize: 8, color: "rgba(240,240,238,0.45)", padding: "2px 8px" }}
+              style={{ fontSize: 8, color: "var(--text-dim)", padding: "2px 8px" }}
             >
               {plan}
             </Badge>

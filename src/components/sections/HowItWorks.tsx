@@ -37,7 +37,7 @@ const HowItWorks = () => {
           style={{ fontSize: "clamp(36px, 5vw, 64px)", lineHeight: 1, color: "#f0f0ee" }}
         >
           Three steps to{" "}
-          <span className="italic" style={{ color: "rgba(240,240,238,0.42)" }}>
+          <span className="italic" style={{ color: "var(--text-dim)" }}>
             undeniable proof.
           </span>
         </h2>
@@ -61,7 +61,7 @@ const HowItWorks = () => {
               </p>
               <p
                 className="font-body font-light"
-                style={{ fontSize: 13, lineHeight: 1.65, color: "rgba(240,240,238,0.45)" }}
+                style={{ fontSize: 13, lineHeight: 1.65, color: "var(--text-dim)" }}
               >
                 {step.body}
               </p>

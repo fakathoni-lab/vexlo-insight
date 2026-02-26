@@ -35,7 +35,7 @@ const ProductDemo = () => {
       <p className="section-label">Instant Proof Engine</p>
       <h2 className="font-headline text-3xl sm:text-4xl mb-4 tracking-tight" style={{ color: "var(--text)" }}>
         30 detik. Satu domain.{" "}
-        <span className="italic" style={{ color: "rgba(240,240,238,0.42)" }}>
+        <span className="italic" style={{ color: "var(--text-dim)" }}>
           Satu bukti yang tidak bisa diabaikan.
         </span>
       </h2>

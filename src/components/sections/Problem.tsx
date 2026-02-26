@@ -47,7 +47,7 @@ const Problem = () => {
               <br />
               they have a problem.
               <br />
-              <span className="italic" style={{ color: "rgba(240,240,238,0.42)" }}>
+              <span className="italic" style={{ color: "var(--text-dim)" }}>
                 Until you show them.
               </span>
             </h2>
@@ -56,7 +56,7 @@ const Problem = () => {
               style={{
                 fontSize: 13.5,
                 lineHeight: 1.75,
-                color: "rgba(240,240,238,0.45)",
+                color: "var(--text-dim)",
               }}
             >
               Every lost deal has the same story. Great pitch, solid service, wrong timing.
@@ -74,7 +74,7 @@ const Problem = () => {
               >
                 <span
                   className="block font-mono uppercase tracking-wide mb-2"
-                  style={{ fontSize: 8.5, color: "rgba(240,240,238,0.25)" }}
+                  style={{ fontSize: 8.5, color: "var(--text-muted)" }}
                 >
                   {card.tag}
                 </span>
@@ -86,7 +86,7 @@ const Problem = () => {
                 </p>
                 <p
                   className="font-body font-light"
-                  style={{ fontSize: 13, lineHeight: 1.65, color: "rgba(240,240,238,0.45)" }}
+                  style={{ fontSize: 13, lineHeight: 1.65, color: "var(--text-dim)" }}
                 >
                   {card.body}
                 </p>

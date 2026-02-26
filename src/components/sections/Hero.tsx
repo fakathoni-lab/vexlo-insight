@@ -46,13 +46,27 @@ const Hero = () => {
             <ProofScoreWidget />
           </div>
 
-          {/* Live counter */}
-          <p
-            className="mt-5 font-mono text-[9px] uppercase tracking-[0.16em]"
-            style={{ color: "var(--text-muted)" }}
-          >
-            23.847 proof generated. 0 izin diminta.
-          </p>
+          {/* Colossus-style stats strip */}
+          <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-6 w-full max-w-[600px]">
+            {[
+              { value: "23,847", label: "Proofs Generated" },
+              { value: "< 30s", label: "Avg Proof Time" },
+              { value: "0", label: "Permissions Required" },
+              { value: "$4.2M", label: "Deals Closed" },
+            ].map((stat) => (
+              <div key={stat.label} className="flex flex-col items-center gap-1">
+                <span className="font-mono text-2xl font-bold" style={{ color: "var(--text)" }}>
+                  {stat.value}
+                </span>
+                <span
+                  className="font-mono text-[8px] uppercase tracking-[0.14em]"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  {stat.label}
+                </span>
+              </div>
+            ))}
+          </div>
 
           {/* Trust strip */}
           <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
