@@ -121,7 +121,7 @@ const Hero = () => {
 
   return (
     <section className="hero">
-      <canvas ref={canvasRef} className="hero-canvas" />
+      <canvas ref={canvasRef} className="hero-canvas" aria-hidden="true" />
       <div className="hero-bg" />
       <div className="hero-grid" />
 
@@ -133,7 +133,7 @@ const Hero = () => {
           </div>
 
           {/* H1 */}
-          <h1 className="hero-headline" style={{ fontSize: "clamp(36px, 6vw, 80px)", lineHeight: 1.05, opacity: 0, transform: "translateY(12px)", animation: "heroFadeIn 400ms ease-out 250ms forwards" }}>
+          <h1 className="hero-headline" style={{ opacity: 0, transform: "translateY(12px)", animation: "heroFadeIn 400ms ease-out 250ms forwards" }}>
             Prospek bilang pikir-pikir dulu.
             <br />
             <em>Karena kamu belum punya bukti.</em>
