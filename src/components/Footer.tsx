@@ -34,7 +34,7 @@ const footerLinks = [
       { label: "About / Mission", href: "/company" },
       { label: "Team", href: "/company#team" },
       { label: "Certified Program", href: "#certified" },
-      { label: "Contact", href: "mailto:sales@vexlo.com" },
+      { label: "Contact", href: "mailto:sales@vexloai.com" },
     ],
   },
 ];
@@ -102,8 +102,8 @@ const Footer = () => {
         <div className="text-center mb-10">
           <p className="font-mono text-[10px] uppercase tracking-widest mb-2" style={{ color: "var(--text-muted)" }}>
             Need Agency seats? Talk to us →{" "}
-            <a href="mailto:sales@vexlo.com" className="underline" style={{ color: "var(--accent)" }}>
-              sales@vexlo.com
+            <a href="mailto:sales@vexloai.com" className="underline" style={{ color: "var(--accent)" }}>
+              sales@vexloai.com
             </a>
           </p>
         </div>
@@ -111,7 +111,7 @@ const Footer = () => {
         {/* Copyright */}
         <div className="pt-8" style={{ borderTop: "1px solid var(--border)" }}>
           <p className="font-mono text-xs text-center" style={{ color: "var(--text-muted)" }}>
-            © {new Date().getFullYear()} Vexlo. All rights reserved.
+            © 2026 VEXLO — All rights reserved
           </p>
         </div>
       </div>
