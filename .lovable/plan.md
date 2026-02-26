@@ -1,59 +1,113 @@
 
 
-# Replace index.css with Complete xai-redesign Stylesheet
+# Sprint 1 — Critical Fixes (4 Tasks)
 
-## The Problem
+Following the one-feature-at-a-time build approach, here is the sequenced plan. Each task is independent and will be implemented in separate turns.
 
-The user provided a complete CSS file to replace `src/index.css`. However, a direct copy-paste would **break the app** because the provided CSS is missing several critical pieces that the current file has.
+---
 
-## What the Provided CSS is Missing
+## Task 1: Enhance Social Proof Section (Logo Bar)
+**Impact:** Trust transformation | **Effort:** ~1 day
 
-1. **Tailwind directives** -- The current file starts with `@tailwind base; @tailwind components; @tailwind utilities;`. Without these, all Tailwind utility classes and shadcn/ui components stop working entirely.
+The current `SocialProof.tsx` has animated stats and 2 testimonial cards but is **missing a logo bar** — the most common trust signal on SaaS landing pages.
 
-2. **HSL variables for shadcn compatibility** -- The current file has `--background`, `--foreground`, `--accent-hsl`, `--border-hsl`, `--muted-hsl`, `--input`, `--ring`, `--radius-card`, `--radius-button`, `--radius-input`, `--font-headline`, `--font-body`, `--font-mono` (shadcn variant). These are required by shadcn components.
-
-3. **VEXLO-specific accent tokens** -- `--accent-proof: #E8FF47`, `--accent-danger: #FF4747`, `--accent-success: #47FF8F`, `--surface`, `--surface-elevated` are used by existing components (ProductDemo gauge, SocialProof stats, etc.).
-
-4. **WCAG-compliant opacity values** -- The provided CSS uses `--text-dim: rgba(240,240,238,0.45)` and `--text-muted: rgba(240,240,238,0.25)` which fail WCAG AA. The current file already fixed these to `0.55`.
-
-5. **Component-specific styles** -- `.landing-section`, `.stats-bar`, `.testimonial-card`, `.proof-score-gauge`, `.typing-animation`, `.fade-up`, `.bounce-scroll` are used by existing components.
-
-6. **Existing keyframes** -- `blink-caret`, `gauge-fill`, `counter-up`, `ticker-scroll` are used by components.
-
-7. **`::selection` styles and `* { border-color }` reset** for shadcn.
-
-8. **The `@layer components` wrapper** -- Current styles are inside `@layer components {}` which gives them proper Tailwind layer ordering. The provided CSS has no layer wrapping.
-
-## Implementation Plan
-
-Replace the entire `src/index.css` with a merged version that:
-
-1. **Keeps** the 3 Tailwind directives at the top
-2. **Adds** the Google Fonts `@import` from the provided CSS
-3. **Adds** the universal reset (`*, *::before, *::after { box-sizing... }`)
-4. **Merges `:root` tokens:** Takes the provided structure but keeps:
-   - WCAG-fixed opacities (`0.55` not `0.45`/`0.25`)
-   - All HSL shadcn variables (`--background`, `--foreground`, etc.)
-   - VEXLO accent tokens (`--accent-proof`, `--accent-danger`, `--accent-success`, `--surface`, `--surface-elevated`)
-   - Font aliases (`--mono`, `--serif`, `--sans`) alongside the new `--font-mono/serif/sans`
-   - Mini radii tokens
-5. **Keeps** the `* { border-color }` rule and `::selection`
-6. **Replaces** base `html`/`body` with the provided version
-7. **Wraps all component styles** inside `@layer components {}` for proper Tailwind ordering
-8. **Takes all component styles from the provided CSS** (nav, buttons, hero, products, understand, supergrok, statement, news, footer, utility classes) -- these are the canonical xai-redesign versions
-9. **Adds back** the VEXLO-specific component styles that the provided CSS doesn't have: `.landing-section`, `.stats-bar`, `.testimonial-card`, `.proof-score-gauge`, `.typing-animation`, `.fade-up`, `.bounce-scroll`, `.nav-cta`
-10. **Merges keyframes:** Takes the provided set + adds back `blink-caret`, `gauge-fill`, `counter-up`, `ticker-scroll`
-11. **Keeps** `prefers-reduced-motion` media query and scrollbar styles
-
-## Single File Change
-
+### Changes
 | File | Action |
 |------|--------|
-| `src/index.css` | Full replacement with merged content (~550 lines) |
+| `src/components/sections/SocialProof.tsx` | Add logo/partner bar above stats, add 1-2 more testimonials |
+| `src/index.css` | Add `.logo-bar` styles (grayscale logos, auto-scroll on mobile) |
 
-## Key Decisions
+### What gets added
+- A horizontal row of 6-8 placeholder agency/partner logos (grayscale, opacity 0.4, hover to 0.7)
+- "Dipercaya oleh 200+ agency" label above the logos using `.section-label` pattern
+- Optional: ticker-scroll animation on mobile using existing `ticker-scroll` keyframe
+- 1-2 additional testimonial cards for more social weight
 
-- **Font variable naming:** Keep both `--mono`/`--serif`/`--sans` (used by existing components) AND `--font-mono`/`--font-serif`/`--font-sans` (from provided CSS) as aliases pointing to the same values
-- **`.st-line` font:** Use `var(--font-sans)` with `font-weight: 300` as specified in the provided CSS (matching xai-redesign reference). The `Understand.tsx` component already has an inline `fontFamily` override.
-- **WCAG compliance:** Override the provided `0.45`/`0.25` opacity with `0.55` to maintain AA contrast
+---
 
+## Task 2: Create Dedicated /pricing Page
+**Impact:** SEO capture + conversion clarity | **Effort:** ~1 day
+
+Currently Pricing is an inline component on the homepage. A dedicated `/pricing` route improves SEO (captures "vexlo pricing" queries) and lets the nav link directly to it.
+
+### Changes
+| File | Action |
+|------|--------|
+| `src/pages/PricingPage.tsx` | New page wrapping existing `Pricing` component with Navbar, Footer, SEO, and FAQ |
+| `src/App.tsx` | Add `/pricing` route |
+| `src/components/layout/Navbar.tsx` | Update "Pricing" link from `#pricing` to `/pricing` |
+| `src/components/Pricing.tsx` | Minor: add optional `showFAQ` prop for reuse |
+
+### Page structure
+```text
+SEO (title: "Pricing — VEXLO")
+Navbar
+Pricing (existing component, reused)
+FAQ (filtered to pricing-related questions)
+CTA
+Footer
+```
+
+---
+
+## Task 3: Restructure Nav into 4 Groups
+**Impact:** IA clarity | **Effort:** ~0.5 day
+
+Current nav has 3 groups (Produk, Developers, Company). Adding a 4th "Resources" group improves information architecture.
+
+### Changes
+| File | Action |
+|------|--------|
+| `src/components/layout/Navbar.tsx` | Restructure `navGroups` into 4 groups, update items |
+| `src/components/Footer.tsx` | Mirror the 4-group structure in footer links |
+
+### New nav structure
+```text
+Produk          Resources        Developers       Company
+- Proof Engine  - Blog           - API Docs       - About / Mission
+- AI Overview   - Case Studies   - Integrations   - Team
+- Features      - FAQ            - White-label     - Certified Program
+- Pricing (/pricing)  - Help Center                - Contact
+```
+
+---
+
+## Task 4: Create /company Page with Team Section
+**Impact:** Trust signal | **Effort:** ~1 day
+
+No `/company` page exists. This adds a public-facing page with mission statement and team/leadership cards.
+
+### Changes
+| File | Action |
+|------|--------|
+| `src/pages/Company.tsx` | New page with mission + team sections |
+| `src/App.tsx` | Add `/company` route |
+| `src/components/layout/Navbar.tsx` | Update "Mission" and "Team" links to `/company` and `/company#team` |
+
+### Page structure
+```text
+SEO (title: "Company — VEXLO")
+Navbar
+Mission section (hero-style statement with .st-line typography)
+Team grid (4-6 cards with name, role, photo placeholder, LinkedIn)
+Company values (3 cards: Transparency, Speed, Proof-First)
+CTA
+Footer
+```
+
+### Team card design
+- Uses `.bg-card` + `.border` tokens
+- Avatar placeholder (initials in a circle, accent border)
+- Name in `font-headline`, role in `font-mono` uppercase
+- Follows existing card pattern from Pricing component
+
+---
+
+## Recommended Build Order
+
+1. **Task 3** first (nav restructure) — smallest change, unblocks link targets for Tasks 2 and 4
+2. **Task 1** (social proof logos) — standalone, no dependencies
+3. **Task 2** (/pricing page) — depends on nav having correct link
+4. **Task 4** (/company page) — depends on nav having correct link
+
+Each task will be implemented in a separate turn per the build workflow rules.
