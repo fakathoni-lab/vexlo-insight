@@ -1,23 +1,23 @@
 const InfrastructureMoat = () => {
   return (
     <section className="landing-section">
-      <p className="section-label">Infrastruktur</p>
+      <p className="section-label">Infrastructure</p>
       <h2 className="font-headline text-3xl sm:text-4xl mb-6 tracking-tight" style={{ color: "var(--text)" }}>
-        Infrastruktur, bukan tool.{" "}
+        Infrastructure, not a tool.{" "}
         <span className="italic" style={{ color: "var(--text-dim)" }}>
-          Yang ditinggalkan sulit.
+          Hard to walk away from.
         </span>
       </h2>
       <p className="font-body text-sm leading-relaxed max-w-[560px] mb-16" style={{ color: "var(--text-dim)" }}>
-        Domain klien yang tinggal di VEXLO. Archive pitch yang tumbuh nilainya setiap bulan.
-        Identitas brand agency yang terbentuk di sini. Ini bukan tool yang dipakai lalu ditinggalkan.
+        Client domains that live in VEXLO. A pitch archive that grows in value every month.
+        Agency brand identity shaped here. This isn't a tool you use and forget.
       </p>
 
       <div className="grid sm:grid-cols-3 gap-6">
         {[
-          { metric: "+60%", label: "LTV Uplift", desc: "Agency Pro users yang mengaktifkan domain integration." },
-          { metric: "4.2x", label: "Pitch Archive Value", desc: "Nilai archive tumbuh setiap bulan — semakin lama, semakin sulit ditinggalkan." },
-          { metric: "< 3%", label: "Churn Rate", desc: "Untuk users dengan 3+ domain aktif di platform." },
+          { metric: "+60%", label: "LTV Uplift", desc: "Agency Pro users who activate domain integration." },
+          { metric: "4.2x", label: "Pitch Archive Value", desc: "Archive value grows every month — the longer you stay, the harder it is to leave." },
+          { metric: "< 3%", label: "Churn Rate", desc: "For users with 3+ active domains on the platform." },
         ].map((item) => (
           <div key={item.label} className="product-flagship text-center">
             <span className="corner-dot tl" />

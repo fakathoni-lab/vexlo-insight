@@ -5,54 +5,54 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 const features = [
   {
     name: "Instant Proof Engine",
-    does: "Generate visual proof kerentanan SEO prospek dalam <30 detik dari data publik.",
-    why: "Anda tidak perlu akses GA4 atau GSC. Masuk ke call dengan bukti, bukan permintaan.",
+    does: "Generate visual proof of a prospect's SEO vulnerability in <30 seconds from public data.",
+    why: "You don't need GA4 or GSC access. Walk into the call with evidence, not requests.",
   },
   {
     name: "AI Overview Impact Visualizer",
-    does: "Visualisasikan seberapa besar AI Overview Google mengambil traffic organik prospek.",
-    why: "Prospek tidak tahu mereka kehilangan traffic. Anda yang pertama menunjukkannya.",
+    does: "Visualize how much of a prospect's organic traffic Google AI Overview is capturing.",
+    why: "Prospects don't know they're losing traffic. You're the first to show them.",
   },
   {
     name: "Closing Narrative Generator",
-    does: "AI menulis closing narrative berdasarkan data proof — siap dibacakan di call.",
-    why: "Ubah data mentah jadi storyline yang membuat prospek sulit menolak.",
+    does: "AI writes a closing narrative based on proof data — ready to read on the call.",
+    why: "Turn raw data into a storyline the prospect can't ignore.",
   },
   {
     name: "Proof Score Dashboard",
-    does: "Skor 0-100 yang merangkum kerentanan SEO dalam satu angka yang mudah dipahami.",
-    why: "Satu angka lebih powerful dari 20 slide. Prospek langsung paham.",
+    does: "A 0–100 score summarizing SEO vulnerability in one number anyone can understand.",
+    why: "One number is more powerful than 20 slides. The prospect gets it instantly.",
   },
   {
     name: "Pitch Intelligence Archive",
-    does: "Semua proof report tersimpan dan bisa diakses ulang kapan saja.",
-    why: "Bangun database pitch yang tumbuh nilainya setiap bulan.",
+    does: "Every proof report is stored and accessible anytime.",
+    why: "Build a pitch database that grows in value every month.",
   },
   {
     name: "White-Label Brand Vault",
-    does: "Kustomisasi logo, warna, dan domain untuk setiap report yang dibuat.",
-    why: "Klien melihat brand agency Anda, bukan brand VEXLO. Profesionalisme instan.",
+    does: "Customize logo, colors, and domain for every report you create.",
+    why: "Clients see your agency brand, not VEXLO. Instant professionalism.",
   },
   {
     name: "Client-Facing Portal",
-    does: "Portal khusus klien untuk melihat proof report dan update progress.",
-    why: "Klien merasa di-handle secara profesional. Retention meningkat.",
+    does: "A dedicated portal for clients to view proof reports and progress updates.",
+    why: "Clients feel professionally managed. Retention increases.",
   },
   {
     name: "Shareable Proof Link",
-    does: "Setiap report punya link unik yang bisa dikirim sebelum call.",
-    why: "Biarkan data 'memanaskan' percakapan sebelum Anda bicara.",
+    does: "Every report has a unique link you can send before the call.",
+    why: "Let the data 'warm up' the conversation before you speak.",
   },
   {
     name: "Domain Integration",
-    does: "Domain strategis yang terdeteksi bisa langsung diamankan dari VEXLO.",
-    why: "Revenue stream tambahan. Ketika domain 'tinggal' di VEXLO, relationship berubah dari transaksional ke custodial.",
+    does: "Strategic domains detected can be secured directly from VEXLO.",
+    why: "Additional revenue stream. When domains 'live' in VEXLO, the relationship shifts from transactional to custodial.",
     exclusive: true,
   },
   {
     name: "Daily Battlefield Intelligence Brief",
-    does: "Briefing harian perubahan ranking, AI Overview, dan peluang pitch baru.",
-    why: "Jangan pernah ketinggalan peluang. Setiap pagi, Anda tahu siapa yang harus ditelepon.",
+    does: "Daily briefing on ranking changes, AI Overview shifts, and new pitch opportunities.",
+    why: "Never miss an opportunity. Every morning, you know who to call.",
   },
 ];
 
@@ -61,8 +61,8 @@ const FeatureMatrix = () => {
     <section className="landing-section">
       <p className="section-label">Proof Arsenal</p>
       <h2 className="font-headline text-3xl sm:text-4xl mb-16 tracking-tight" style={{ color: "var(--text)" }}>
-        10 senjata untuk{" "}
-        <span className="italic" style={{ color: "var(--text-dim)" }}>menutup deal.</span>
+        10 weapons to{" "}
+        <span className="italic" style={{ color: "var(--text-dim)" }}>close the deal.</span>
       </h2>
 
       <div className="grid sm:grid-cols-2 gap-4">
@@ -104,7 +104,7 @@ function FeatureCard({ feature }: { feature: typeof features[number] }) {
               )}
             </div>
             <p className="font-mono text-[9px] uppercase tracking-widest mb-1" style={{ color: "var(--accent)" }}>
-              Apa yang dilakukan
+              What it does
             </p>
             <p className="font-body text-sm leading-relaxed" style={{ color: "var(--text-dim)" }}>
               {feature.does}
@@ -129,7 +129,7 @@ function FeatureCard({ feature }: { feature: typeof features[number] }) {
         <CollapsibleContent>
           <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
             <p className="font-mono text-[9px] uppercase tracking-widest mb-1" style={{ color: "var(--accent-success)" }}>
-              Mengapa penting
+              Why it matters
             </p>
             <p className="font-body text-sm leading-relaxed" style={{ color: "var(--text-dim)" }}>
               {feature.why}
