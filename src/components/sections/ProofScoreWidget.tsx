@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
 const ProofScoreWidget = () => {
+  const { t } = useTranslation();
   const [domain, setDomain] = useState("");
   const [state, setState] = useState<"idle" | "loading" | "done">("idle");
   const [score, setScore] = useState(0);
@@ -18,7 +20,6 @@ const ProofScoreWidget = () => {
     if (state !== "loading") return;
     const timer = setTimeout(() => {
       setState("done");
-      // Animate score from 0 to 23
       let current = 0;
       const interval = setInterval(() => {
         current += 1;
@@ -45,70 +46,36 @@ const ProofScoreWidget = () => {
       <form onSubmit={handleSubmit} className="relative">
         <Input
           type="text"
-          placeholder="masukkan domain prospek..."
+          placeholder={t('proof_score.widget_placeholder')}
           value={domain}
           onChange={(e) => setDomain(e.target.value)}
           className="h-12 pl-4 pr-40 rounded-[100px] font-body text-sm border bg-[var(--bg-raised)]"
           style={{ borderColor: "var(--border-strong)", color: "var(--text)" }}
         />
-        <button
-          type="submit"
-          className="btn-primary absolute right-1.5 top-1/2 -translate-y-1/2"
-          style={{ height: 36, fontSize: 9, padding: "0 18px" }}
-        >
+        <button type="submit" className="btn-primary absolute right-1.5 top-1/2 -translate-y-1/2" style={{ height: 36, fontSize: 9, padding: "0 18px" }}>
           <Search className="w-3.5 h-3.5 mr-1.5" />
-          Lihat Proof Score
+          {t('proof_score.widget_btn')}
         </button>
       </form>
 
-      {/* Loading state */}
       {state === "loading" && (
         <div className="mt-8 flex flex-col items-center gap-3">
-          <div
-            className="w-3 h-3 rounded-full"
-            style={{
-              backgroundColor: "var(--accent)",
-              animation: "orb-pulse 1.2s ease-in-out infinite",
-            }}
-          />
-          <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "var(--text-dim)" }}>
-            Generating proof...
-          </p>
+          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "var(--accent)", animation: "orb-pulse 1.2s ease-in-out infinite" }} />
+          <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "var(--text-dim)" }}>{t('proof_score.widget_generating')}</p>
         </div>
       )}
 
-      {/* Score result */}
       {state === "done" && (
         <div className="mt-8 flex flex-col items-center gap-4 fade-up">
           <div className="proof-score-gauge">
             <svg width="120" height="120" viewBox="0 0 120 120">
-              <circle
-                cx="60" cy="60" r={gaugeRadius}
-                fill="none"
-                stroke="rgba(255,255,255,0.07)"
-                strokeWidth="6"
-              />
-              <circle
-                cx="60" cy="60" r={gaugeRadius}
-                fill="none"
-                stroke={getScoreColor()}
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                strokeDashoffset={dashOffset}
-                transform="rotate(-90 60 60)"
-                style={{ transition: "stroke-dashoffset 0.8s var(--ease-circ-out)" }}
-              />
+              <circle cx="60" cy="60" r={gaugeRadius} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="6" />
+              <circle cx="60" cy="60" r={gaugeRadius} fill="none" stroke={getScoreColor()} strokeWidth="6" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={dashOffset} transform="rotate(-90 60 60)" style={{ transition: "stroke-dashoffset 0.8s var(--ease-circ-out)" }} />
             </svg>
-            <span
-              className="absolute font-mono text-3xl font-bold"
-              style={{ color: getScoreColor() }}
-            >
-              {score}
-            </span>
+            <span className="absolute font-mono text-3xl font-bold" style={{ color: getScoreColor() }}>{score}</span>
           </div>
           <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "var(--accent-danger)" }}>
-            Skor {score}/100 — {100 - score}% potensi ranking belum dioptimalkan.
+            {t('proof_score.widget_result', { score, remaining: 100 - score })}
           </p>
         </div>
       )}

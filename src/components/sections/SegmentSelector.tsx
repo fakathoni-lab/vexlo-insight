@@ -1,47 +1,51 @@
-const segments = [
-  {
-    tier: "Freelancer SEO",
-    persona: "Sam",
-    desc: "2–6 clients. Look more professional than an agency.",
-    pain: "Pitching without proof. Losing to bigger agencies.",
-    price: "From $39/mo",
-    cta: "Get Started",
-    href: "#waitlist",
-    highlight: false,
-  },
-  {
-    tier: "Boutique Agency",
-    persona: "Alex",
-    desc: "5–15 clients. Close rate <25%. Leaking pipeline.",
-    pain: "Need a weapon for discovery calls that close.",
-    price: "From $79/mo",
-    cta: "Get Started",
-    href: "#waitlist",
-    highlight: true,
-  },
-  {
-    tier: "Agency Elite",
-    persona: "Enterprise",
-    desc: "5+ seats. White-label. Domain ecosystem.",
-    pain: "Need infrastructure, not a tool that gets abandoned.",
-    price: "Custom",
-    cta: "Contact Sales",
-    href: "#waitlist",
-    highlight: false,
-  },
-];
+import { useTranslation } from "react-i18next";
 
 const SegmentSelector = () => {
+  const { t } = useTranslation();
+
   const scrollTo = (id: string) => {
     document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const segments = [
+    {
+      tier: t('segments.seg_1_tier'),
+      persona: t('segments.seg_1_persona'),
+      desc: t('segments.seg_1_desc'),
+      pain: t('segments.seg_1_pain'),
+      price: t('segments.seg_1_price'),
+      cta: t('segments.seg_1_cta'),
+      href: "#waitlist",
+      highlight: false,
+    },
+    {
+      tier: t('segments.seg_2_tier'),
+      persona: t('segments.seg_2_persona'),
+      desc: t('segments.seg_2_desc'),
+      pain: t('segments.seg_2_pain'),
+      price: t('segments.seg_2_price'),
+      cta: t('segments.seg_2_cta'),
+      href: "#waitlist",
+      highlight: true,
+    },
+    {
+      tier: t('segments.seg_3_tier'),
+      persona: t('segments.seg_3_persona'),
+      desc: t('segments.seg_3_desc'),
+      pain: t('segments.seg_3_pain'),
+      price: t('segments.seg_3_price'),
+      cta: t('segments.seg_3_cta'),
+      href: "#waitlist",
+      highlight: false,
+    },
+  ];
+
   return (
     <section className="landing-section">
-      <p className="section-label">Choose Your Path</p>
+      <p className="section-label">{t('segments.section_label')}</p>
       <h2 className="font-headline text-3xl sm:text-4xl mb-16 tracking-tight" style={{ color: "var(--text)" }}>
-        One platform.{" "}
-        <span className="italic" style={{ color: "var(--text-dim)" }}>Three paths to win.</span>
+        {t('segments.headline')}{" "}
+        <span className="italic" style={{ color: "var(--text-dim)" }}>{t('segments.headline_italic')}</span>
       </h2>
 
       <div className="grid sm:grid-cols-3 gap-6">
@@ -50,9 +54,7 @@ const SegmentSelector = () => {
             key={seg.tier}
             className="product-flagship flex flex-col"
             style={{
-              border: seg.highlight
-                ? "1px solid rgba(124,58,237,0.4)"
-                : "1px solid var(--border)",
+              border: seg.highlight ? "1px solid rgba(124,58,237,0.4)" : "1px solid var(--border)",
             }}
           >
             <span className="corner-dot tl" />
@@ -61,33 +63,21 @@ const SegmentSelector = () => {
             <span className="corner-dot br" />
 
             {seg.highlight && (
-              <span
-                className="inline-block mb-4 px-3 py-1 text-[8px] font-mono uppercase tracking-widest rounded-full self-start"
-                style={{ backgroundColor: "var(--accent)", color: "#fff" }}
-              >
-                Most Popular
+              <span className="inline-block mb-4 px-3 py-1 text-[8px] font-mono uppercase tracking-widest rounded-full self-start" style={{ backgroundColor: "var(--accent)", color: "#fff" }}>
+                {t('segments.most_popular')}
               </span>
             )}
 
-            <h3 className="font-headline text-xl mb-1" style={{ color: "var(--text)" }}>
-              {seg.tier}
-            </h3>
+            <h3 className="font-headline text-xl mb-1" style={{ color: "var(--text)" }}>{seg.tier}</h3>
             <p className="font-mono text-[9px] uppercase tracking-widest mb-4" style={{ color: "var(--accent)" }}>
-              Persona: {seg.persona}
+              {t('segments.persona_label')} {seg.persona}
             </p>
-            <p className="font-body text-sm mb-2 leading-relaxed" style={{ color: "var(--text-dim)" }}>
-              {seg.desc}
-            </p>
-            <p className="font-body text-sm mb-6 leading-relaxed flex-1" style={{ color: "var(--text-muted)" }}>
-              {seg.pain}
-            </p>
+            <p className="font-body text-sm mb-2 leading-relaxed" style={{ color: "var(--text-dim)" }}>{seg.desc}</p>
+            <p className="font-body text-sm mb-6 leading-relaxed flex-1" style={{ color: "var(--text-muted)" }}>{seg.pain}</p>
 
             <div>
               <p className="font-headline text-2xl mb-4" style={{ color: "var(--text)" }}>{seg.price}</p>
-              <button
-                onClick={() => scrollTo(seg.href)}
-                className={seg.highlight ? "btn-primary w-full" : "btn-ghost w-full"}
-              >
+              <button onClick={() => scrollTo(seg.href)} className={seg.highlight ? "btn-primary w-full" : "btn-ghost w-full"}>
                 {seg.cta}
               </button>
             </div>

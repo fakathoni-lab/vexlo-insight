@@ -1,28 +1,27 @@
+import { useTranslation } from "react-i18next";
 import { Shield, Zap, Lock, XCircle } from "lucide-react";
 import WaitlistForm from "@/components/sections/WaitlistForm";
 
-const badges = [
-  { icon: Shield, label: "Free to Join" },
-  { icon: Zap, label: "60-Second Setup" },
-  { icon: Lock, label: "No Card Required" },
-  { icon: XCircle, label: "Cancel Anytime" },
-];
-
 const CTA = () => {
+  const { t } = useTranslation();
+
+  const badges = [
+    { icon: Shield, label: t('cta_badges.free') },
+    { icon: Zap, label: t('cta_badges.setup') },
+    { icon: Lock, label: t('cta_badges.no_card') },
+    { icon: XCircle, label: t('cta_badges.cancel') },
+  ];
+
   return (
-    <section
-      id="waitlist"
-      className="py-[100px] px-10 max-sm:py-[60px] max-sm:px-5"
-      style={{ backgroundColor: "var(--bg-card)" }}
-    >
+    <section id="waitlist" className="py-[100px] px-10 max-sm:py-[60px] max-sm:px-5" style={{ backgroundColor: "var(--bg-card)" }}>
       <div className="max-w-[1280px] mx-auto text-center">
         <h2 className="font-headline text-4xl sm:text-5xl mb-6 tracking-tight" style={{ color: "var(--text)" }}>
-          Stop losing deals
+          {t('early_access.headline_main')}
           <br />
-          <span className="italic" style={{ color: "var(--accent)" }}>to the proof gap.</span>
+          <span className="italic" style={{ color: "var(--accent)" }}>{t('early_access.headline_italic')}</span>
         </h2>
         <p className="text-lg max-w-[460px] mx-auto mb-10 leading-relaxed" style={{ color: "var(--text-dim)" }}>
-          Join 17 SEO freelancers who will close their next client in the first 60 seconds of the call.
+          {t('early_access.subheadline')}
         </p>
 
         <div className="flex justify-center mb-8">
@@ -50,7 +49,7 @@ const CTA = () => {
         </div>
 
         <p className="font-body text-sm" style={{ color: "var(--text-muted)" }}>
-          Founding member pricing locked in for life. 50 slots only. 33 remaining.
+          {t('early_access.exclusive_frame')}
         </p>
       </div>
     </section>

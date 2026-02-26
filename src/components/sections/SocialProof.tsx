@@ -1,26 +1,5 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState, useRef } from "react";
-
-const stats = [
-  { value: 23847, label: "Proof Generated", prefix: "", suffix: "" },
-  { value: 4.2, label: "Deals Closed by Users", prefix: "$", suffix: "M" },
-  { value: 30, label: "Average Proof Time", prefix: "<", suffix: "s" },
-  { value: 0, label: "Permissions Required", prefix: "", suffix: "" },
-];
-
-const testimonials = [
-  {
-    name: "Alex R.",
-    role: "Agency Founder, 12 Clients",
-    quote:
-      "I walked into the discovery call with their Proof Score. They signed that day. My close rate went from 18% to 41%.",
-  },
-  {
-    name: "Sam T.",
-    role: "SEO Freelancer",
-    quote:
-      "I used to pitch like a freelancer begging for trust. Now I pitch like an agency delivering a verdict. VEXLO changed how I sell.",
-  },
-];
 
 function useAnimatedCounter(target: number, duration = 1500) {
   const [count, setCount] = useState(0);
@@ -51,11 +30,24 @@ function useAnimatedCounter(target: number, duration = 1500) {
 }
 
 const SocialProof = () => {
+  const { t } = useTranslation();
+
+  const stats = [
+    { value: 23847, label: t('social_proof.stat_1_label'), prefix: "", suffix: "" },
+    { value: 4.2, label: t('social_proof.stat_2_label'), prefix: "$", suffix: "M" },
+    { value: 30, label: t('social_proof.stat_3_label'), prefix: "<", suffix: "s" },
+    { value: 0, label: t('social_proof.stat_4_label'), prefix: "", suffix: "" },
+  ];
+
+  const testimonials = [
+    { name: t('social_proof.testimonial_1_name'), role: t('social_proof.testimonial_1_role'), quote: t('social_proof.testimonial_1_quote') },
+    { name: t('social_proof.testimonial_2_name'), role: t('social_proof.testimonial_2_role'), quote: t('social_proof.testimonial_2_quote') },
+  ];
+
   return (
     <section className="landing-section">
-      <p className="section-label">Proven</p>
+      <p className="section-label">{t('social_proof.section_label')}</p>
 
-      {/* Stats bar */}
       <div className="stats-bar mb-16">
         {stats.map((stat) => {
           const { ref, count } = useAnimatedCounter(stat.value);
@@ -76,22 +68,19 @@ const SocialProof = () => {
         })}
       </div>
 
-      {/* Testimonials */}
       <div className="grid sm:grid-cols-2 gap-6">
-        {testimonials.map((t) => (
-          <div key={t.name} className="testimonial-card">
+        {testimonials.map((item) => (
+          <div key={item.name} className="testimonial-card">
             <span className="corner-dot tl" />
             <span className="corner-dot tr" />
             <span className="corner-dot bl" />
             <span className="corner-dot br" />
             <p className="font-body text-sm leading-relaxed mb-6" style={{ color: "var(--text-dim)" }}>
-              "{t.quote}"
+              "{item.quote}"
             </p>
             <div>
-              <p className="font-headline text-base" style={{ color: "var(--text)" }}>{t.name}</p>
-              <p className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
-                {t.role}
-              </p>
+              <p className="font-headline text-base" style={{ color: "var(--text)" }}>{item.name}</p>
+              <p className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{item.role}</p>
             </div>
           </div>
         ))}
