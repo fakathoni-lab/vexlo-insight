@@ -30,7 +30,7 @@ const Understand = () => {
         style={{ transform: `translateY(${offset}px)` }}
       >
         {lines.map((line, i) => (
-          <div key={i} className={`st-line ${line.style}`}>
+          <div key={i} className={`st-line ${line.style}`} style={{ fontFamily: 'var(--serif)' }}>
             {line.text}
           </div>
         ))}
