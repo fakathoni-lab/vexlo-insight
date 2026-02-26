@@ -76,7 +76,7 @@ const Hero = () => {
               { value: "$4.2M", label: "Deals Closed" },
             ].map((stat, i) => (
               <div key={stat.label} className="flex items-center">
-                <div className="flex flex-col items-center gap-1 px-4 py-1">
+                <div className="flex flex-col items-center gap-1 px-4 py-1 rounded-lg transition-colors duration-300 hover:bg-[rgba(255,255,255,0.04)] cursor-default">
                   <span className="font-mono text-lg font-bold" style={{ color: "var(--text)" }}>
                     {stat.value}
                   </span>
