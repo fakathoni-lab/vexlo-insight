@@ -41,7 +41,7 @@ const SegmentSelector = () => {
       <p className="section-label">Pilih Jalurmu</p>
       <h2 className="font-headline text-3xl sm:text-4xl mb-16 tracking-tight" style={{ color: "var(--text)" }}>
         Satu platform.{" "}
-        <span className="italic" style={{ color: "rgba(240,240,238,0.42)" }}>Tiga jalur menang.</span>
+        <span className="italic" style={{ color: "var(--text-dim)" }}>Tiga jalur menang.</span>
       </h2>
 
       <div className="grid sm:grid-cols-3 gap-6">

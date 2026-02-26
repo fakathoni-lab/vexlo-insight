@@ -77,7 +77,7 @@ const WaitlistForm = ({
         placeholder={placeholder}
         disabled={isSubmitting}
         {...register("email")}
-        className="flex-1 h-10 bg-[#0d0d0d] border-[rgba(255,255,255,0.07)] text-[#f0f0ee] placeholder:text-[rgba(240,240,238,0.25)] font-body text-sm rounded-[4px] focus-visible:ring-[hsl(22,100%,52%)] focus-visible:ring-1 focus-visible:ring-offset-0"
+        className="flex-1 h-10 bg-[#0d0d0d] border-[rgba(255,255,255,0.07)] text-[#f0f0ee] placeholder:text-[var(--text-muted)] font-body text-sm rounded-[4px] focus-visible:ring-[hsl(22,100%,52%)] focus-visible:ring-1 focus-visible:ring-offset-0"
       />
       <Button
         type="submit"

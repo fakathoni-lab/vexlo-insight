@@ -18,7 +18,7 @@ const AIOverview = () => {
           Ribuan bisnis kehilangan traffic.{" "}
           <span style={{ color: "var(--accent-proof)" }}>Mereka tidak tahu.</span>
           <br />
-          <em className="italic" style={{ color: "rgba(240,240,238,0.42)" }}>Kamu tahu.</em>
+          <em className="italic" style={{ color: "var(--text-dim)" }}>Kamu tahu.</em>
         </h2>
 
         <p className="font-body text-sm leading-relaxed max-w-[520px] mx-auto mb-10" style={{ color: "var(--text-dim)" }}>

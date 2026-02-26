@@ -15,7 +15,7 @@ const Yn = ({ yes }: { yes: boolean }) =>
   yes ? (
     <Check className="w-4 h-4 text-accent mx-auto" />
   ) : (
-    <X className="w-4 h-4 mx-auto" style={{ color: 'rgba(240,240,238,0.25)' }} />
+    <X className="w-4 h-4 mx-auto" style={{ color: 'var(--text-muted)' }} />
   );
 
 const Comparison = () => {

@@ -4,7 +4,7 @@ const InfrastructureMoat = () => {
       <p className="section-label">Infrastruktur</p>
       <h2 className="font-headline text-3xl sm:text-4xl mb-6 tracking-tight" style={{ color: "var(--text)" }}>
         Infrastruktur, bukan tool.{" "}
-        <span className="italic" style={{ color: "rgba(240,240,238,0.42)" }}>
+        <span className="italic" style={{ color: "var(--text-dim)" }}>
           Yang ditinggalkan sulit.
         </span>
       </h2>

@@ -75,7 +75,7 @@ const Pricing = () => {
 
       <h2 className="font-headline text-3xl sm:text-4xl mb-16 tracking-tight text-center" style={{ color: "var(--text)" }}>
         Investasi yang{" "}
-        <span className="italic" style={{ color: "rgba(240,240,238,0.42)" }}>membayar dirinya sendiri.</span>
+        <span className="italic" style={{ color: "var(--text-dim)" }}>membayar dirinya sendiri.</span>
       </h2>
 
       <div className="grid sm:grid-cols-3 gap-6 mb-8">
