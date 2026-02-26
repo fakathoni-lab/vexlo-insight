@@ -65,7 +65,7 @@ const Login = () => {
               placeholder="you@agency.com"
               disabled={isSubmitting}
               {...register("email")}
-              className="h-10 bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#f0f0ee] placeholder:text-[rgba(240,240,238,0.25)] font-body text-sm rounded-[4px] focus-visible:ring-[hsl(22,100%,52%)] focus-visible:ring-1 focus-visible:ring-offset-0"
+              className="h-10 bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#f0f0ee] placeholder:text-[rgba(240,240,238,0.25)] font-body text-sm rounded-[4px] focus-visible:ring-[hsl(263,84%,58%)] focus-visible:ring-1 focus-visible:ring-offset-0"
             />
             {errors.email && (
               <p className="text-xs font-body" style={{ color: "hsl(0,80%,60%)" }}>{errors.email.message}</p>
@@ -81,7 +81,7 @@ const Login = () => {
               placeholder="••••••••"
               disabled={isSubmitting}
               {...register("password")}
-              className="h-10 bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#f0f0ee] placeholder:text-[rgba(240,240,238,0.25)] font-body text-sm rounded-[4px] focus-visible:ring-[hsl(22,100%,52%)] focus-visible:ring-1 focus-visible:ring-offset-0"
+              className="h-10 bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#f0f0ee] placeholder:text-[rgba(240,240,238,0.25)] font-body text-sm rounded-[4px] focus-visible:ring-[hsl(263,84%,58%)] focus-visible:ring-1 focus-visible:ring-offset-0"
             />
             {errors.password && (
               <p className="text-xs font-body" style={{ color: "hsl(0,80%,60%)" }}>{errors.password.message}</p>
@@ -106,7 +106,7 @@ const Login = () => {
 
         <p className="text-center font-body text-sm mt-6" style={{ color: "rgba(240,240,238,0.45)" }}>
           Don't have an account?{" "}
-          <Link to="/signup" className="transition-colors duration-200 hover:text-[#f0f0ee]" style={{ color: "hsl(22,100%,52%)" }}>
+          <Link to="/signup" className="transition-colors duration-200 hover:text-[#f0f0ee]" style={{ color: "hsl(263,84%,58%)" }}>
             Sign up
           </Link>
         </p>

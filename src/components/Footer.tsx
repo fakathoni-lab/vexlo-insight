@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 
 const footerLinks = [
   {
-    title: "Produk",
+    title: "Product",
     links: [
       { label: "Instant Proof Engine", href: "#product-demo" },
       { label: "AI Overview Impact", href: "#ai-overview" },
@@ -54,7 +54,7 @@ const Footer = () => {
             Monthly AI Overview Impact Index
           </p>
           <p className="font-body text-sm mb-6 max-w-[440px] mx-auto" style={{ color: "var(--text-dim)" }}>
-            Data dari ribuan proof yang tidak bisa kamu dapat dari tool lain manapun.
+            Data from thousands of proof reports you can't get from any other tool.
           </p>
           <form
             onSubmit={(e) => e.preventDefault()}
@@ -69,7 +69,7 @@ const Footer = () => {
               style={{ borderColor: "var(--border-strong)", color: "var(--text)" }}
             />
             <button type="submit" className="btn-primary" style={{ fontSize: 9 }}>
-              Terima Laporan Gratis
+              Get Free Report
             </button>
           </form>
         </div>

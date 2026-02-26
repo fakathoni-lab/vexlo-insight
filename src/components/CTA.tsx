@@ -2,10 +2,10 @@ import { Shield, Zap, Lock, XCircle } from "lucide-react";
 import WaitlistForm from "@/components/sections/WaitlistForm";
 
 const badges = [
-  { icon: Shield, label: "Gratis untuk mulai" },
-  { icon: Zap, label: "Setup 5 menit" },
-  { icon: Lock, label: "Data aman" },
-  { icon: XCircle, label: "Batal kapan saja" },
+  { icon: Shield, label: "Free to Join" },
+  { icon: Zap, label: "60-Second Setup" },
+  { icon: Lock, label: "No Card Required" },
+  { icon: XCircle, label: "Cancel Anytime" },
 ];
 
 const CTA = () => {
@@ -17,19 +17,19 @@ const CTA = () => {
     >
       <div className="max-w-[1280px] mx-auto text-center">
         <h2 className="font-headline text-4xl sm:text-5xl mb-6 tracking-tight" style={{ color: "var(--text)" }}>
-          Kirim Buktinya.
+          Stop losing deals
           <br />
-          <span className="italic" style={{ color: "var(--accent)" }}>Tutup Dealnya.</span>
+          <span className="italic" style={{ color: "var(--accent)" }}>to the proof gap.</span>
         </h2>
         <p className="text-lg max-w-[460px] mx-auto mb-10 leading-relaxed" style={{ color: "var(--text-dim)" }}>
-          Discovery call berikutnya layak mendapat data-backed proof. Daftar sekarang dan dapatkan akses awal.
+          Join 17 SEO freelancers who will close their next client in the first 60 seconds of the call.
         </p>
 
         <div className="flex justify-center mb-8">
           <WaitlistForm source="footer_cta" />
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-4">
+        <div className="flex flex-wrap items-center justify-center gap-4 mb-6">
           {badges.map((b) => (
             <div
               key={b.label}
@@ -48,6 +48,10 @@ const CTA = () => {
             </div>
           ))}
         </div>
+
+        <p className="font-body text-sm" style={{ color: "var(--text-muted)" }}>
+          Founding member pricing locked in for life. 50 slots only. 33 remaining.
+        </p>
       </div>
     </section>
   );

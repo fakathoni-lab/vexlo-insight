@@ -8,7 +8,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#080808" }}>
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: "hsl(22,100%,52%)" }} />
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--accent)" }} />
       </div>
     );
   }

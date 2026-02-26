@@ -21,7 +21,7 @@ interface WaitlistFormProps {
 
 const WaitlistForm = ({
   source = "hero_cta",
-  placeholder = "you@agency.com",
+  placeholder = "Your work email — we'll send access details",
 }: WaitlistFormProps) => {
   const [submitted, setSubmitted] = useState(false);
   
@@ -60,7 +60,7 @@ const WaitlistForm = ({
 
   if (submitted) {
     return (
-      <div className="flex items-center gap-2 font-mono uppercase tracking-widest" style={{ fontSize: 10, color: "hsl(22,100%,52%)" }}>
+      <div className="flex items-center gap-2 font-mono uppercase tracking-widest" style={{ fontSize: 10, color: "hsl(263,84%,58%)" }}>
         <CheckCircle className="w-4 h-4" />
         You're on the list
       </div>
@@ -77,7 +77,7 @@ const WaitlistForm = ({
         placeholder={placeholder}
         disabled={isSubmitting}
         {...register("email")}
-        className="flex-1 h-10 bg-[#0d0d0d] border-[rgba(255,255,255,0.07)] text-[#f0f0ee] placeholder:text-[var(--text-muted)] font-body text-sm rounded-[4px] focus-visible:ring-[hsl(22,100%,52%)] focus-visible:ring-1 focus-visible:ring-offset-0"
+        className="flex-1 h-10 bg-[#0d0d0d] border-[rgba(255,255,255,0.07)] text-[#f0f0ee] placeholder:text-[var(--text-muted)] font-body text-sm rounded-[4px] focus-visible:ring-[hsl(263,84%,58%)] focus-visible:ring-1 focus-visible:ring-offset-0"
       />
       <Button
         type="submit"
@@ -88,7 +88,7 @@ const WaitlistForm = ({
             "0px 1.5px 2px -1px hsla(0,0%,100%,.2) inset, 0px 1.5px 1px 0px hsla(0,0%,100%,.06)",
         }}
       >
-        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Join Waitlist"}
+        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Secure My Founding Slot"}
       </Button>
       {errors.email && (
         <p className="text-xs font-body sm:absolute sm:bottom-[-20px]" style={{ color: "hsl(0,80%,60%)" }}>

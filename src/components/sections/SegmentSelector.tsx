@@ -51,7 +51,7 @@ const SegmentSelector = () => {
             className="product-flagship flex flex-col"
             style={{
               border: seg.highlight
-                ? "1px solid rgba(255,99,8,0.4)"
+                ? "1px solid rgba(124,58,237,0.4)"
                 : "1px solid var(--border)",
             }}
           >
@@ -63,7 +63,7 @@ const SegmentSelector = () => {
             {seg.highlight && (
               <span
                 className="inline-block mb-4 px-3 py-1 text-[8px] font-mono uppercase tracking-widest rounded-full self-start"
-                style={{ backgroundColor: "hsl(22,100%,52%)", color: "#fff" }}
+                style={{ backgroundColor: "var(--accent)", color: "#fff" }}
               >
                 Most Popular
               </span>
