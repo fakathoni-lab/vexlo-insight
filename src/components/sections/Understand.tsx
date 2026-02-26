@@ -83,7 +83,7 @@ const Understand = () => {
         <div className="understand-atmo" />
         <div className="understand-line-sep" />
         <div className="understand-orb" />
-        <div className="understand-text" style={{ pointerEvents: "none", userSelect: "none" }}>
+        <div className="understand-text">
           <div
             className="understand-line understand-line-1"
             style={{ transform: `translateX(${offset}px)` }}
