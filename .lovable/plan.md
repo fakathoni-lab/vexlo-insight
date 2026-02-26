@@ -1,27 +1,19 @@
 
 
-# Refine Hero Stats Bar — `src/components/sections/Hero.tsx` only
+# Add Subtle Hover Effect to Hero Stats Strip Items
 
-## DO NOT CHANGE
-- Starfield canvas animation
-- ProofScoreWidget (CTA/search bar)
-- Trust badges content and styling
-- Headline, eyebrow, subtitle
+## File: `src/components/sections/Hero.tsx`
 
-## Fixes (3 items)
+## What stays unchanged
+- Starfield canvas, headline, subtitle, eyebrow
+- ProofScoreWidget, trust badges
+- Stats values, labels, dividers, layout/spacing
 
-### 1. Tighten stats spacing
-- Reduce `max-w-[600px]` to `max-w-[480px]` on the stats grid
-- Reduce `gap-6` to `gap-4`
-- This pulls the 4 stats closer together
+## Change
+Add a subtle hover effect to each stat item in the stats strip:
+- On hover: slight background highlight using `rgba(255,255,255,0.04)` with rounded corners (`rounded-lg`)
+- CSS transition: `transition-colors duration-300` (within the 400ms constraint)
+- Applied to the inner `div` wrapping each stat's value + label (the `px-4 py-1` container)
 
-### 2. Adjust stats text sizes
-- Stat values: reduce from `text-2xl` to `text-lg` (less overpowering)
-- Stat labels: bump from `text-[8px]` to `text-[9px]` for readability
+This is a single-line class addition — no structural changes needed.
 
-### 3. Reorder: stats strip above trust badges (swap positions)
-- Move the stats grid block (lines 49-69) **below** the trust badges block (lines 71-89)
-- Result: ProofScoreWidget -> Trust badges -> Stats strip
-
-## Technical detail
-Only lines 49-89 of `Hero.tsx` are affected. All changes are class/order swaps within the existing JSX.
