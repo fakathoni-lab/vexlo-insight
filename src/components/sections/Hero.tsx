@@ -39,17 +39,18 @@ function useCountUp(target: number, shouldStart: boolean, duration = 1800) {
   return value;
 }
 
-function CountUpStat({ stat }: { stat: typeof statsData[number] }) {
+function CountUpStat({ stat, delay = 0 }: { stat: typeof statsData[number]; delay?: number }) {
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold: 0.5 });
+    let timer: ReturnType<typeof setTimeout>;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { timer = setTimeout(() => setVisible(true), delay); obs.disconnect(); } }, { threshold: 0.5 });
     obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
+    return () => { obs.disconnect(); clearTimeout(timer); };
+  }, [delay]);
 
   const animated = useCountUp(stat.target, visible);
   const display = stat.target === 0
@@ -132,7 +133,7 @@ const Hero = () => {
           <div className="mt-8 flex flex-wrap sm:flex-nowrap items-center justify-center w-full max-w-[480px]">
             {statsData.map((stat, i) => (
               <div key={stat.label} className="flex items-center">
-                <CountUpStat stat={stat} />
+                <CountUpStat stat={stat} delay={i * 150} />
                 {i < 3 && (
                   <div
                     className="hidden sm:block h-8 w-px"
