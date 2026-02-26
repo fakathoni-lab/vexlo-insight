@@ -25,7 +25,6 @@ const Hero = () => {
             rows={3}
           />
           <div className="search-actions">
-            <span className="search-hint">e.g. example.com — best plumber london</span>
             <button className="search-submit" aria-label="Generate proof">
               <ArrowRight />
             </button>
