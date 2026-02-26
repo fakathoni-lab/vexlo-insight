@@ -1,90 +1,93 @@
 import type { Config } from "tailwindcss";
 
-export default {
-  darkMode: ["class"],
-  content: ["./index.html", "./src/**/*.{ts,tsx}"],
-  prefix: "",
+const config: Config = {
+  content: [
+    "./index.html", // ← DIUBAH: tambah entry HTML Vite
+    "./src/**/*.{js,ts,jsx,tsx}", // ← DIUBAH: src/ bukan app/+pages/+components/
+  ],
   theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1200px",
-      },
-    },
     extend: {
-      fontFamily: {
-        headline: ["Instrument Serif", "serif"],
-        body: ["DM Sans", "sans-serif"],
-        mono: ["Space Mono", "monospace"],
-      },
       colors: {
-        background: "hsl(var(--background))",
-        surface: "hsl(var(--surface))",
-        foreground: "hsl(var(--foreground))",
-        accent: {
-          DEFAULT: "hsl(var(--accent-hsl))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        border: "hsl(var(--border-hsl))",
-        muted: {
-          DEFAULT: "hsl(var(--muted-hsl))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
+        bg: "var(--bg)",
+        "bg-raised": "var(--bg-raised)",
+        "bg-card": "var(--bg-card)",
+        text: "var(--text)",
+        "text-dim": "var(--text-dim)",
+        "text-muted": "var(--text-muted)",
+        accent: "var(--accent)",
+        border: "var(--border)",
+        "border-strong": "var(--border-strong)",
+      },
+      fontFamily: {
+        mono: ["Space Mono", "monospace"],
+        serif: ["Instrument Serif", "Georgia", "serif"],
+        sans: ["DM Sans", "system-ui", "sans-serif"],
       },
       borderRadius: {
-        card: "var(--radius-card)",
-        button: "var(--radius-button)",
-        input: "var(--radius-input)",
-        outer: "var(--radii-outer)",
-        inner: "var(--radii-inner)",
+        outer: "var(--radii-outer)", // 12px
+        inner: "var(--radii-inner)", // 8px
+        button: "100px", // pill shape untuk semua buttons
       },
       height: {
-        taxbutton: "var(--taxbutton-height)",
+        taxbutton: "var(--taxbutton-height)", // 40px
       },
       boxShadow: {
+        inset: "var(--inset-shadow)",
         emboss: "var(--emboss-shadow)",
         "emboss-hover": "var(--emboss-shadow-hover)",
         "emboss-less": "var(--emboss-shadow-less)",
-        inset: "var(--inset-shadow)",
+        "emboss-less-hover": "var(--emboss-shadow-less-hover)",
       },
       transitionTimingFunction: {
-        "back-out": "var(--ease-back-out)",
-        "circ-out": "var(--ease-circ-out)",
-        "quart-in-out": "var(--ease-quart-in-out)",
+        "back-out": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "circ-out": "cubic-bezier(0, 0.55, 0.45, 1)",
+        "quart-in-out": "cubic-bezier(0.77, 0, 0.175, 1)",
+        // ease-material: gunakan [transition-timing-function:var(--ease-material)]
       },
       keyframes: {
+        // Spinning rings (sudah ada di config lama)
+        "spin-ring": { to: { transform: "rotate(360deg)" } },
+        "spin-reverse": { to: { transform: "rotate(-360deg)" } },
+
+        // ← DITAMBAHKAN: semua yang hilang dari config lama
         bounce: {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-6px)" },
+          "0%, 60%, 100%": { transform: "translateY(0)" },
+          "30%": { transform: "translateY(6px)" },
         },
         "orb-pulse": {
-          "0%, 100%": { opacity: "0.4", transform: "scale(1)" },
-          "50%": { opacity: "0.8", transform: "scale(1.15)" },
+          "0%, 100%": {
+            transform: "translate(-50%,-50%) scale(1)",
+            opacity: "0.6",
+          },
+          "50%": {
+            transform: "translate(-50%,-50%) scale(1.08)",
+            opacity: "1",
+          },
         },
         "fade-up": {
-          "0%": { opacity: "0", transform: "translateY(24px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
+          from: { opacity: "0", transform: "translateY(20px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
         },
         "ticker-scroll": {
-          "0%": { transform: "translateX(0)" },
-          "100%": { transform: "translateX(-50%)" },
-        },
-        "spin-ring": {
-          "0%": { transform: "rotate(0deg)" },
-          "100%": { transform: "rotate(360deg)" },
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" },
         },
       },
       animation: {
-        "bounce-scroll": "bounce 2s ease-in-out infinite",
-        "orb-pulse": "orb-pulse 4s ease-in-out infinite",
-        "fade-up": "fade-up 0.6s var(--ease-circ-out) both",
+        // Spinning rings
+        "spin-slow": "spin-ring 22s linear infinite",
+        "spin-medium": "spin-ring 16s linear infinite reverse", // ← fix: pakai spin-ring
+        "spin-fast": "spin-reverse 11s linear infinite",
+
+        // ← DITAMBAHKAN
+        "bounce-scroll": "bounce 2.2s ease-in-out infinite",
+        "orb-pulse": "orb-pulse 6s ease-in-out infinite",
+        "fade-up": "fade-up 0.6s var(--ease-circ-out) forwards",
         ticker: "ticker-scroll 30s linear infinite",
-        "spin-ring": "spin-ring 8s linear infinite",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+  plugins: [],
+};
+
+export default config;
