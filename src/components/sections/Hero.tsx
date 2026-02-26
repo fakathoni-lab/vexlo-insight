@@ -60,7 +60,15 @@ function CountUpStat({ stat, delay = 0 }: { stat: typeof statsData[number]; dela
       : `${stat.prefix}${stat.target % 1 !== 0 ? animated.toFixed(1) : Math.round(animated)}${stat.suffix}`;
 
   return (
-    <div ref={ref} className="flex flex-col items-center gap-1 px-4 py-1 rounded-lg transition-colors duration-300 hover:bg-[rgba(255,255,255,0.04)] cursor-default">
+    <div
+      ref={ref}
+      className="flex flex-col items-center gap-1 px-4 py-1 rounded-lg hover:bg-[rgba(255,255,255,0.04)] cursor-default"
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(12px)",
+        transition: "opacity 400ms ease-out, transform 400ms ease-out, background-color 300ms",
+      }}
+    >
       <span className="font-mono text-lg font-bold" style={{ color: "var(--text)" }}>
         {display}
       </span>
