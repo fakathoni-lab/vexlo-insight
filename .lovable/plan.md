@@ -1,127 +1,126 @@
 
+# Improve Early Access Conversion Copy + Align to Purple Brand
 
-# Restructure Hero Section to New Reference Design
-
-This is a complete visual overhaul of the Hero section — switching from a centered layout with starfield/stats to a left-aligned cinematic layout with volumetric light, giant wordmark background, and a textarea search box.
-
----
-
-## Summary of Changes
-
-The new Hero design has a fundamentally different visual language:
-- **Layout**: Left-aligned content (not centered)
-- **Background**: Volumetric blue/magenta/purple light atmosphere (replaces starfield canvas + orange gradient)
-- **Wordmark**: Giant italic "VEXLO" text as background element with gradient
-- **Search**: Textarea-based search box with glassmorphism (replaces ProofScoreWidget pill input)
-- **Bottom**: Announcement strip + scroll indicator (replaces trust badges + stats strip)
-- **Nav**: Flat centered links + ghost CTA (replaces popover dropdowns + primary CTA)
-- **Color tokens**: New accent colors (magenta/blue) alongside existing orange
+## Overview
+Text-only copy updates across 8 component files + color system migration from orange (#ff6308) to purple (#7C3AED) across CSS and all component files with hardcoded orange references. No layout, structure, or Supabase logic changes.
 
 ---
 
-## Implementation Steps
+## Files Changed (8 total)
 
-### 1. Add New CSS Variables + Hero Styles to index.css
+### 1. `src/index.css` — Color System Update
+**What changes:**
+- `:root` variable `--accent` from `#ff6308` to `#7C3AED`
+- Add new tokens: `--accent-light: #9333EA`, `--accent-glow: #A855F7`, `--accent-dim: rgba(124,58,237,0.12)`, `--accent-border: rgba(124,58,237,0.25)`
+- `--accent-hsl` from `22 100% 52%` to `263 84% 58%`
+- `--ring` from `22 100% 52%` to `263 84% 58%`
+- `.ann-tag`: `background` from `rgba(255,99,8,0.12)` to `rgba(124,58,237,0.12)`, `border` from `rgba(255,99,8,0.3)` to `rgba(124,58,237,0.30)`
+- `.product-flagship-visual`: radial-gradient `rgba(255,99,8,0.06)` to `rgba(124,58,237,0.06)`
+- `.grok-ring:nth-child(2)`: `border-color` from `rgba(255,99,8,0.18)` to `rgba(124,58,237,0.22)`
+- `.understand-atmo`: replace orange gradient stops with purple
+- `.understand-orb`: replace orange gradient stop with purple
+- `.supergrok-atmo`: replace orange gradient stops with purple
+- `.sg-badge`: 3 values — color, background, border — all from orange to purple
+- `::selection`: from `hsla(22, 100%, 52%, 0.3)` to `hsla(263, 84%, 58%, 0.3)`
 
-Add new accent color tokens to `:root`:
-```
---bg: #03040a  (update from #080808)
---accent-blue: #4169e1
---accent-magenta: #e040fb
---accent-red: #e11d48
---border: rgba(255,255,255,0.10)  (update from 0.07)
---border-strong: rgba(255,255,255,0.20)  (update from 0.13)
-```
+### 2. `src/components/sections/Hero.tsx` — Copy Update
+**Current → New:**
+- Eyebrow: `'Sales Proof Intelligence'` → `'Pre-Sale Revenue Infrastructure'`
+- Tagline: current text → `'Generate branded, prospect-specific SEO proof in under 60 seconds. No access. No waiting. No skill gap in the room.'`
+- ann-label: `'VEXLO Early Access — Founding Members Open:'` → `'VEXLO Early Access — Founding Members Open:'` (keep)
+- ann-sub: current → `'17 of 50 founding member slots claimed. Lifetime deal at $149 — locked in forever.'` (already correct — keep)
+- ann-btn: `'Claim Your Slot'` → `'Claim Founding Member Access'`
 
-Replace existing `.hero-*` CSS classes with the new reference styles:
-- `.hero-atmosphere` (dual radial gradients, blue/magenta/purple volumetric light)
-- `.light-streaks` (additional light effects with rotation and blur)
-- `.hero-vignette` (left-side gradient for text readability)
-- `.hero-wordmark` / `.hero-wordmark-text` (giant italic serif with gradient + breathe animation)
-- `.hero-content` (left-aligned, flex-end, max-width 820px)
-- `.hero-eyebrow` (magenta color, gradient line `::before`)
-- `.hero-tagline` (replaces subtitle)
-- `.hero-search-outer` / `.search-box` (glassmorphism textarea with blur)
-- `.hero-bottom` (announcement strip + scroll indicator)
-- `.announcement`, `.ann-label`, `.ann-sub`, `.ann-btn`
-- `@keyframes wordmark-breathe` and updated `@keyframes fade-up`
+### 3. `src/components/sections/Problem.tsx` — Copy Update
+**Current → New:**
+- Section label color: `hsl(22,100%,52%)` → `var(--accent)` (2 instances)
+- Section label text: `'The Problem'` → `'The Revenue Gap'`
+- H2: current 3 lines → `'Skill doesn't close deals. Proof does.'` + italic line `'And you don't have it fast enough.'`
+- Body paragraph: new text as specified
+- Card 1: tag `'Time Sink'` kept, title + body updated
+- Card 2: tag `'Trust Killer'` kept, title + body updated  
+- Card 3: tag `'Lost Deal'` kept, title + body updated
 
-Remove old classes no longer needed:
-- `.hero-bg` (replaced by `.hero-atmosphere`)
-- `.hero-canvas` (no more starfield)
-- `.hero-grid` (removed)
-- `.hero-top` (replaced by `.hero-content`)
+### 4. `src/components/sections/HowItWorks.tsx` — Copy Update
+**Current → New:**
+- Section label color: `hsl(22,100%,52%)` → `var(--accent)` (2 instances)
+- H2: `'Three steps to undeniable proof.'` → `'Proof in under 60 seconds.'` + italic `'Before the call ends.'`
+- Step 1: number `'01'`, title → `'Enter any prospect domain + keyword'`, body updated, label prefix `'01 — INPUT'`
+- Step 2: number `'02'`, title → `'VEXLO builds the proof report'`, body updated, label prefix `'02 — GENERATE'`
+- Step 3: number `'03'`, title → `'Share. Present. Win.'`, body updated, label prefix `'03 — CLOSE'`
+- Step label color: `hsl(22,100%,52%)` → `var(--accent)`
 
-### 2. Rewrite Hero.tsx Component
+### 5. `src/components/Pricing.tsx` — Copy Update
+**Current → New:**
+- Section label: `'Pricing'` → `'Founding Member Pricing'`
+- ROI framing box: replace Indonesian text with `'50 founding members only. Price increases once seats are gone.'`
+- H2: replace Indonesian → `'Early access pricing.'` + italic `'Locked in forever.'`
+- Tier 1: desc → `'Solo Freelancer'`, CTA → `'Start Closing'`
+- Tier 2: desc → `'Growing Operator'`, CTA → `'Claim Founding Slot'`
+- Tier 3: name `'Agency Elite'` → `'Elite'`, desc → `'Scale Operator'`, CTA → `'Lock Elite Access'`
+- Featured badge color: `hsl(22,100%,52%)` → `var(--accent)`
+- Featured border: `rgba(255,99,8,0.4)` → `rgba(124,58,237,0.4)`
+- Check icon color: `var(--accent)` (already uses variable — auto-updates)
+- Pay-per-proof box: update Indonesian text to English
 
-Complete rewrite of the component structure:
+### 6. `src/components/CTA.tsx` — Copy Update
+**Current → New:**
+- H2: `'Kirim Buktinya. Tutup Dealnya.'` → `'Stop losing deals to the proof gap.'`
+- Sub: Indonesian text → `'Join 17 SEO freelancers who will close their next client in the first 60 seconds of the call.'`
+- Badge labels: Indonesian → English (`'Free to Join'`, `'60-Second Setup'`, `'No Card Required'`, `'Cancel Anytime'`)
+- Add scarcity text below badges: `'Founding member pricing locked in for life. 50 slots only. 33 remaining.'`
 
-```text
-<section class="hero">
-  <div class="hero-atmosphere" />       -- volumetric light bg
-  <div class="light-streaks" />         -- additional light effects
-  <div class="hero-vignette" />         -- left readability gradient
-  <div class="hero-wordmark">           -- giant background text
-    <span class="hero-wordmark-text">VEXLO</span>
-  </div>
-  <div class="hero-content">           -- left-aligned content
-    <div class="hero-eyebrow">Sales Proof Intelligence</div>
-    <p class="hero-tagline">...</p>
-  </div>
-  <div class="hero-search-outer">      -- textarea search box
-    <div class="search-box">
-      <textarea placeholder="..." />
-      <div class="search-actions">
-        <span class="search-hint">...</span>
-        <button class="search-submit">arrow icon</button>
-      </div>
-    </div>
-  </div>
-  <div class="hero-bottom">            -- bottom strip
-    <div class="scroll-indicator">chevron down</div>
-    <div class="announcement">
-      <div>
-        <p class="ann-label">...</p>
-        <p class="ann-sub">...</p>
-      </div>
-      <a class="ann-btn">Claim Your Slot</a>
-    </div>
-  </div>
-</section>
-```
+### 7. `src/components/FAQ.tsx` — Complete Q&A Replacement
+Replace all 8 existing FAQs with the 8 new Q&A pairs specified in the task. No structural changes to the Accordion component.
 
-**Removed elements**: starfield canvas, ProofScoreWidget, TrustStrip, CountUpStat/stats strip, hero-grid, hero-bg.
+### 8. `src/components/Footer.tsx` — Copy Update
+**Current → New:**
+- Newsletter label: keep `'Monthly AI Overview Impact Index'` (already English)
+- Newsletter body: Indonesian → `'Data from thousands of proof reports you can't get from any other tool.'`
+- Newsletter button: Indonesian → `'Get Free Report'`
+- Footer link group 1 title: `'Produk'` → `'Product'`
+- Agency seats text: already English — keep
+- Legal line: already correct (`'© 2026 VEXLO — All rights reserved'`) — keep
 
-**Kept**: fade-up animations with stagger delays (0.2s, 0.5s, 0.65s, 1.0s), scroll bounce animation.
+### 9. `src/components/sections/WaitlistForm.tsx` — Color + Copy Update
+- Focus ring: `hsl(22,100%,52%)` → `hsl(263,84%,58%)`
+- Success state color: `hsl(22,100%,52%)` → `hsl(263,84%,58%)`
+- Placeholder: `'you@agency.com'` → `'Your work email — we'll send access details'`
+- Button text: `'Join Waitlist'` → `'Secure My Founding Slot'`
 
-### 3. Update Navbar to Match Reference
+### 10. `src/pages/Login.tsx` — Color Update Only
+- Focus ring (2 inputs): `hsl(22,100%,52%)` → `hsl(263,84%,58%)`
+- Sign up link color: `hsl(22,100%,52%)` → `hsl(263,84%,58%)`
 
-Restructure Navbar.tsx:
-- Replace popover dropdown groups with flat centered links: Features, Pricing, Use Cases, FAQ, About
-- Replace dual CTAs (btn-ghost + btn-primary) with single ghost-style "Get Early Access" CTA
-- Keep mobile hamburger Sheet for responsive
-- Update nav link styles to match reference (10px, 0.1em tracking, 7px 14px padding)
-- Replace text wordmark with SVG logo (the VEXLO logo from the reference, or keep text temporarily)
+### 11. `src/pages/Signup.tsx` — Color Update Only
+- Focus ring (3 inputs): `hsl(22,100%,52%)` → `hsl(263,84%,58%)`
+- Sign in link color: `hsl(22,100%,52%)` → `hsl(263,84%,58%)`
 
-### 4. Remove Unused Components
-
-- `ProofScoreWidget.tsx` import removed from Hero (component file kept for potential use elsewhere)
-- `useStarfield` hook import removed from Hero
-- `TrustStrip` and `CountUpStat` sub-components removed from Hero.tsx
-
-### 5. Responsive Updates
-
-Add responsive rules matching the reference:
-- `< 768px`: hero-content padding 100px 20px 0, nav links hidden, hero-bottom column layout, wordmark smaller, search-outer full width padding 20px, announcement stacks vertically
+### 12. `src/components/sections/SegmentSelector.tsx` — Color Update Only
+- Featured border: `rgba(255,99,8,0.4)` → `rgba(124,58,237,0.4)`
+- Badge background: `hsl(22,100%,52%)` → `var(--accent)`
 
 ---
 
-## Technical Notes
+## Execution Order
+1. `src/index.css` — color tokens + all orange references in CSS
+2. `src/components/sections/Hero.tsx` — copy
+3. `src/components/sections/Problem.tsx` — copy + color
+4. `src/components/sections/HowItWorks.tsx` — copy + color
+5. `src/components/Pricing.tsx` — copy + color
+6. `src/components/CTA.tsx` — copy
+7. `src/components/FAQ.tsx` — copy
+8. `src/components/Footer.tsx` — copy
+9. `src/components/sections/WaitlistForm.tsx` — color + copy
+10. `src/pages/Login.tsx` — color
+11. `src/pages/Signup.tsx` — color
+12. `src/components/sections/SegmentSelector.tsx` — color
 
-- The `--bg` change from `#080808` to `#03040a` affects the entire site. All sections using `var(--bg)` will shift slightly darker/bluer.
-- Border opacity changes (0.07 to 0.10, 0.13 to 0.20) affect all components using `var(--border)` and `var(--border-strong)`.
-- The `wordmark-breathe` keyframe is a subtle 8s opacity pulse (1 to 0.85).
-- Search box uses `backdrop-filter: blur(24px)` for glassmorphism — works in all modern browsers.
-- The `hero-vignette` uses a multi-stop linear gradient to keep left-side text readable against the right-side volumetric light.
-- No H1 element in the new reference — the headline is removed entirely in favor of eyebrow + tagline + search as the primary hero content. The giant wordmark serves as the visual anchor.
-
+## What Is NOT Touched
+- All layout/structure unchanged
+- All Supabase hooks/config untouched
+- All shadcn/ui components preserved
+- Section order preserved
+- No new sections added
+- No file/folder structure changes
+- `--bg`, `--text`, `--border`, `--font-*` variables unchanged
