@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Menu, ChevronDown } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -10,15 +11,23 @@ const navGroups = [
     items: [
       { label: "Instant Proof Engine", href: "#product-demo" },
       { label: "AI Overview Impact", href: "#ai-overview" },
-      { label: "Closing Narrative", href: "#features" },
-      { label: "Domain Intelligence", href: "#infrastructure" },
-      { label: "Pricing", href: "#pricing" },
+      { label: "Features", href: "#features" },
+      { label: "Pricing", href: "/pricing", isRoute: true },
+    ],
+  },
+  {
+    label: "Resources",
+    items: [
+      { label: "Blog", href: "#" },
+      { label: "Case Studies", href: "#" },
+      { label: "FAQ", href: "#faq" },
+      { label: "Help Center", href: "#" },
     ],
   },
   {
     label: "Developers",
     items: [
-      { label: "API Documentation", href: "#" },
+      { label: "API Docs", href: "#" },
       { label: "Integrations", href: "#" },
       { label: "White-label Setup", href: "#" },
     ],
@@ -26,22 +35,31 @@ const navGroups = [
   {
     label: "Company",
     items: [
-      { label: "Mission", href: "#" },
-      { label: "Team", href: "#" },
+      { label: "About / Mission", href: "/company", isRoute: true },
+      { label: "Team", href: "/company#team", isRoute: true },
       { label: "Certified Program", href: "#certified" },
-      { label: "Blog", href: "#" },
+      { label: "Contact", href: "mailto:sales@vexlo.com" },
     ],
   },
 ];
 
 const Navbar = () => {
   const scrolled = useNavScroll();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
-  const handleNavClick = (href: string) => {
+  const handleNavClick = (href: string, isRoute?: boolean) => {
     setOpen(false);
-    const el = document.querySelector(href);
-    el?.scrollIntoView({ behavior: "smooth" });
+    if (isRoute || href.startsWith("/") || href.startsWith("mailto:")) {
+      if (href.startsWith("mailto:")) {
+        window.location.href = href;
+      } else {
+        navigate(href);
+      }
+    } else {
+      const el = document.querySelector(href);
+      el?.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
