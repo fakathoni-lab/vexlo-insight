@@ -1,6 +1,7 @@
 import { useStarfield } from "@/hooks/useStarfield";
 import ProofScoreWidget from "@/components/sections/ProofScoreWidget";
 import { Database, Eye, Palette, Globe } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 const trustBadges = [
   { icon: Database, label: "DataForSEO-powered" },
@@ -8,6 +9,66 @@ const trustBadges = [
   { icon: Palette, label: "White-label ready" },
   { icon: Globe, label: "Domain integration" },
 ];
+
+const statsData = [
+  { target: 23847, prefix: "", suffix: "", format: true, label: "Proofs Generated" },
+  { target: 30, prefix: "< ", suffix: "s", format: false, label: "Avg Proof Time" },
+  { target: 0, prefix: "", suffix: "", format: false, label: "Permissions Required" },
+  { target: 4.2, prefix: "$", suffix: "M", format: false, label: "Deals Closed" },
+];
+
+function useCountUp(target: number, shouldStart: boolean, duration = 1800) {
+  const [value, setValue] = useState(0);
+  const rafRef = useRef<number>();
+
+  useEffect(() => {
+    if (!shouldStart) return;
+    if (target === 0) { setValue(0); return; }
+    const start = performance.now();
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(target * eased);
+      if (progress < 1) rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [shouldStart, target, duration]);
+
+  return value;
+}
+
+function CountUpStat({ stat }: { stat: typeof statsData[number] }) {
+  const [visible, setVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold: 0.5 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const animated = useCountUp(stat.target, visible);
+  const display = stat.target === 0
+    ? "0"
+    : stat.format
+      ? `${stat.prefix}${Math.round(animated).toLocaleString()}${stat.suffix}`
+      : `${stat.prefix}${stat.target % 1 !== 0 ? animated.toFixed(1) : Math.round(animated)}${stat.suffix}`;
+
+  return (
+    <div ref={ref} className="flex flex-col items-center gap-1 px-4 py-1 rounded-lg transition-colors duration-300 hover:bg-[rgba(255,255,255,0.04)] cursor-default">
+      <span className="font-mono text-lg font-bold" style={{ color: "var(--text)" }}>
+        {display}
+      </span>
+      <span className="font-mono text-[9px] uppercase tracking-[0.14em]" style={{ color: "var(--text-muted)" }}>
+        {stat.label}
+      </span>
+    </div>
+  );
+}
 
 const Hero = () => {
   const canvasRef = useStarfield();
@@ -69,24 +130,9 @@ const Hero = () => {
           {/* Colossus-style stats strip */}
           {/* Colossus-style stats strip */}
           <div className="mt-8 flex flex-wrap sm:flex-nowrap items-center justify-center w-full max-w-[480px]">
-            {[
-              { value: "23,847", label: "Proofs Generated" },
-              { value: "< 30s", label: "Avg Proof Time" },
-              { value: "0", label: "Permissions Required" },
-              { value: "$4.2M", label: "Deals Closed" },
-            ].map((stat, i) => (
+            {statsData.map((stat, i) => (
               <div key={stat.label} className="flex items-center">
-                <div className="flex flex-col items-center gap-1 px-4 py-1 rounded-lg transition-colors duration-300 hover:bg-[rgba(255,255,255,0.04)] cursor-default">
-                  <span className="font-mono text-lg font-bold" style={{ color: "var(--text)" }}>
-                    {stat.value}
-                  </span>
-                  <span
-                    className="font-mono text-[9px] uppercase tracking-[0.14em]"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    {stat.label}
-                  </span>
-                </div>
+                <CountUpStat stat={stat} />
                 {i < 3 && (
                   <div
                     className="hidden sm:block h-8 w-px"
