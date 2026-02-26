@@ -1,3 +1,4 @@
+// src/hooks/useNavScroll.ts
 import { useState, useEffect } from "react";
 
 export function useNavScroll(threshold = 16) {
@@ -11,3 +12,7 @@ export function useNavScroll(threshold = 16) {
 
   return scrolled;
 }
+
+// Usage in Navbar.tsx:
+// const scrolled = useNavScroll()
+// <nav className={`nav ${scrolled ? 'scrolled' : ''}`}>
