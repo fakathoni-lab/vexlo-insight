@@ -44,7 +44,7 @@ const features = [
     why: "Biarkan data 'memanaskan' percakapan sebelum Anda bicara.",
   },
   {
-    name: "Domain Reseller Integration",
+    name: "Domain Integration",
     does: "Domain strategis yang terdeteksi bisa langsung diamankan dari VEXLO.",
     why: "Revenue stream tambahan. Ketika domain 'tinggal' di VEXLO, relationship berubah dari transaksional ke custodial.",
     exclusive: true,
