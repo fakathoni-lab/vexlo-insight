@@ -10,7 +10,7 @@ const trustBadges = [
 ];
 
 const Hero = () => {
-  const canvasRef = useStarfield(100);
+  const canvasRef = useStarfield();
 
   return (
     <section className="hero">

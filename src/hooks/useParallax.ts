@@ -1,42 +1,37 @@
-import { useEffect, useRef, useState } from "react";
+// src/hooks/useParallax.ts
+import { useEffect, useRef, useState } from 'react'
 
-export function useParallax(speed = 0.15) {
-  const sectionRef = useRef<HTMLElement>(null);
-  const [offset, setOffset] = useState(0);
+export function useParallax() {
+  const sectionRef = useRef<HTMLElement>(null)
+  const [offset, setOffset] = useState(0)
 
   useEffect(() => {
-    let animationId: number;
-    let currentOffset = 0;
-    let targetOffset = 0;
+    let current = 0, target = 0, rafId: number
 
-    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    function updateTarget() {
+      const el = sectionRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const progress = 1 - (rect.top + rect.height * 0.5)
+                          / (window.innerHeight + rect.height)
+      target = (progress - 0.5) * 100
+    }
 
-    const onScroll = () => {
-      const el = sectionRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const viewportH = window.innerHeight;
-      // Only calculate when section is in view
-      if (rect.bottom > 0 && rect.top < viewportH) {
-        const progress = (viewportH - rect.top) / (viewportH + rect.height);
-        targetOffset = (progress - 0.5) * rect.height * speed;
-      }
-    };
+    function tick() {
+      current += (target - current) * 0.055
+      setOffset(current)
+      rafId = requestAnimationFrame(tick)
+    }
 
-    const tick = () => {
-      currentOffset = lerp(currentOffset, targetOffset, 0.08);
-      setOffset(currentOffset);
-      animationId = requestAnimationFrame(tick);
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    animationId = requestAnimationFrame(tick);
+    window.addEventListener('scroll', updateTarget, { passive: true })
+    updateTarget()
+    rafId = requestAnimationFrame(tick)
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      cancelAnimationFrame(animationId);
-    };
-  }, [speed]);
+      window.removeEventListener('scroll', updateTarget)
+      cancelAnimationFrame(rafId)
+    }
+  }, [])
 
-  return { sectionRef, offset };
+  return { sectionRef, offset }
 }

@@ -8,7 +8,7 @@ const lines = [
 ];
 
 const Understand = () => {
-  const { sectionRef, offset } = useParallax(0.12);
+  const { sectionRef, offset } = useParallax();
 
   return (
     <section
