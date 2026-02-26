@@ -1,9 +1,6 @@
-import { useTranslation } from "react-i18next";
 import { ChevronDown, ArrowRight } from "lucide-react";
 
 const Hero = () => {
-  const { t } = useTranslation();
-
   return (
     <section className="hero">
       <div className="hero-atmosphere" />
@@ -14,15 +11,21 @@ const Hero = () => {
       </div>
 
       <div className="hero-content">
-        <div className="hero-eyebrow">{t('hero.eyebrow')}</div>
-        <p className="hero-tagline">{t('hero.tagline')}</p>
+        <div className="hero-eyebrow">Pre-Sale Revenue Infrastructure</div>
+        <p className="hero-tagline">
+          Generate branded, prospect-specific SEO proof in under 60 seconds.
+          No access. No waiting. No skill gap in the room.
+        </p>
       </div>
 
       <div className="hero-search-outer">
         <div className="search-box">
-          <textarea placeholder={t('hero.placeholder')} rows={3} />
+          <textarea
+            placeholder="e.g. example.com — best plumber london"
+            rows={3}
+          />
           <div className="search-actions">
-            <button className="search-submit" aria-label={t('hero.cta_primary')}>
+            <button className="search-submit" aria-label="Generate proof">
               <ArrowRight />
             </button>
           </div>
@@ -37,9 +40,11 @@ const Hero = () => {
         <div className="announcement">
           <div>
             <p className="ann-label">
-              <strong>{t('hero.ann_label')}</strong> {t('hero.ann_label_suffix')}
+              <strong>VEXLO Early Access</strong> — Founding Members Open:
             </p>
-            <p className="ann-sub">{t('hero.ann_sub')}</p>
+            <p className="ann-sub">
+              17 of 50 founding member slots claimed. Lifetime deal at $149 — locked in forever.
+            </p>
           </div>
           <button
             className="ann-btn"
@@ -48,7 +53,7 @@ const Hero = () => {
               el?.scrollIntoView({ behavior: "smooth" });
             }}
           >
-            {t('hero.ann_btn')}
+            Claim Founding Member Access
           </button>
         </div>
       </div>

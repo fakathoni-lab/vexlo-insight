@@ -1,24 +1,21 @@
-import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavScroll } from "@/hooks/useNavScroll";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+
+const navLinks = [
+  { label: "Features", href: "#features" },
+  { label: "Pricing", href: "/pricing", isRoute: true },
+  { label: "Use Cases", href: "#segments" },
+  { label: "FAQ", href: "#faq" },
+  { label: "About", href: "#infrastructure" },
+];
 
 const Navbar = () => {
-  const { t } = useTranslation();
   const scrolled = useNavScroll();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-
-  const navLinks = [
-    { label: t('nav.features'), href: "#features" },
-    { label: t('nav.pricing'), href: "/pricing", isRoute: true },
-    { label: t('nav.use_cases'), href: "#segments" },
-    { label: t('nav.faq'), href: "#faq" },
-    { label: t('nav.about'), href: "#infrastructure" },
-  ];
 
   const handleNavClick = (href: string, isRoute?: boolean) => {
     setOpen(false);
@@ -57,11 +54,8 @@ const Navbar = () => {
         ))}
       </div>
 
-      {/* Right — language switcher + ghost CTA + mobile menu */}
+      {/* Right — ghost CTA + mobile menu */}
       <div className="flex items-center gap-2.5">
-        <div className="hidden md:block">
-          <LanguageSwitcher />
-        </div>
         <button
           onClick={() => handleNavClick("#waitlist")}
           className="nav-cta hidden md:inline-flex"
@@ -71,7 +65,7 @@ const Navbar = () => {
             border: "1.5px solid var(--border-strong)",
           }}
         >
-          {t('nav.cta_nav')}
+          Get Early Access
         </button>
 
         {/* Mobile hamburger */}
@@ -101,11 +95,8 @@ const Navbar = () => {
                 </button>
               ))}
               <div className="px-4 mt-4">
-                <LanguageSwitcher />
-              </div>
-              <div className="px-4 mt-2">
                 <button onClick={() => handleNavClick("#waitlist")} className="btn-ghost w-full">
-                  {t('nav.cta_nav')}
+                  Get Early Access
                 </button>
               </div>
             </div>

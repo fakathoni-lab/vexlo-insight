@@ -1,8 +1,4 @@
-import { useTranslation } from "react-i18next";
-
 const AIOverview = () => {
-  const { t } = useTranslation();
-
   const scrollTo = (id: string) => {
     document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
   };
@@ -16,22 +12,29 @@ const AIOverview = () => {
       }}
     >
       <div className="max-w-[800px] mx-auto text-center">
-        <p className="section-label mb-10">{t('ai_overview.section_label')}</p>
+        <p className="section-label mb-10">AI Overview Impact</p>
 
         <h2 className="font-headline text-3xl sm:text-5xl tracking-tight mb-6" style={{ color: "var(--text)" }}>
-          {t('ai_overview.headline')}{" "}
-          <span style={{ color: "var(--accent-proof)" }}>{t('ai_overview.headline_highlight')}</span>
+          Thousands of businesses are losing traffic.{" "}
+          <span style={{ color: "var(--accent-proof)" }}>They don't know.</span>
           <br />
-          <em className="italic" style={{ color: "var(--text-dim)" }}>{t('ai_overview.headline_italic')}</em>
+          <em className="italic" style={{ color: "var(--text-dim)" }}>You do.</em>
         </h2>
 
         <p className="font-body text-sm leading-relaxed max-w-[520px] mx-auto mb-10" style={{ color: "var(--text-dim)" }}>
-          {t('ai_overview.body')}
+          Google AI Overview is already capturing organic traffic from thousands of local businesses today.
+          VEXLO is the only platform that visualizes the damage in seconds.
         </p>
 
-        <div className="max-w-[480px] mx-auto rounded-[var(--radii-outer)] p-6 mb-10" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}>
+        {/* Damage visualization bar */}
+        <div
+          className="max-w-[480px] mx-auto rounded-[var(--radii-outer)] p-6 mb-10"
+          style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
+        >
           <div className="flex items-center justify-between mb-3">
-            <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{t('ai_overview.before_label')}</span>
+            <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
+              Traffic before AI Overview
+            </span>
             <span className="font-mono text-sm" style={{ color: "var(--accent-success)" }}>100%</span>
           </div>
           <div className="w-full h-3 rounded-full mb-4" style={{ backgroundColor: "rgba(255,255,255,0.07)" }}>
@@ -39,7 +42,9 @@ const AIOverview = () => {
           </div>
 
           <div className="flex items-center justify-between mb-3">
-            <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{t('ai_overview.after_label')}</span>
+            <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
+              Traffic after AI Overview
+            </span>
             <span className="font-mono text-sm" style={{ color: "var(--accent-danger)" }}>66%</span>
           </div>
           <div className="w-full h-3 rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.07)" }}>
@@ -47,12 +52,12 @@ const AIOverview = () => {
           </div>
 
           <p className="font-mono text-[9px] uppercase tracking-widest mt-4 text-center" style={{ color: "var(--accent-proof)" }}>
-            {t('ai_overview.loss_label')}
+            -34% organic traffic lost
           </p>
         </div>
 
         <button onClick={() => scrollTo("#waitlist")} className="btn-primary">
-          {t('ai_overview.cta')}
+          See AI Overview Impact Report Example
         </button>
       </div>
     </section>
