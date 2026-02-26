@@ -1,113 +1,58 @@
 
 
-# Sprint 1 — Critical Fixes (4 Tasks)
+# Fix Contrast Ratios + Add Stats to Hero
 
-Following the one-feature-at-a-time build approach, here is the sequenced plan. Each task is independent and will be implemented in separate turns.
+## Task 1: Fix WCAG Contrast Ratios
 
----
+**Problem:** 12 component files use hardcoded `rgba(240,240,238,0.45)` and `rgba(240,240,238,0.25)` instead of the WCAG-fixed CSS variables (`--text-dim` at 0.55 opacity, `--text-muted` at 0.55 opacity). These hardcoded values fail WCAG AA contrast (4.5:1 minimum).
 
-## Task 1: Enhance Social Proof Section (Logo Bar)
-**Impact:** Trust transformation | **Effort:** ~1 day
+**Fix:** Replace all hardcoded rgba values with the CSS variable equivalents:
+- `rgba(240,240,238,0.45)` --> `var(--text-dim)` 
+- `rgba(240,240,238,0.25)` --> `var(--text-muted)`
+- `rgba(240,240,238,0.42)` --> `var(--text-dim)` (closest match, bumped to 0.55)
 
-The current `SocialProof.tsx` has animated stats and 2 testimonial cards but is **missing a logo bar** — the most common trust signal on SaaS landing pages.
+**Files affected (12 files):**
 
-### Changes
-| File | Action |
-|------|--------|
-| `src/components/sections/SocialProof.tsx` | Add logo/partner bar above stats, add 1-2 more testimonials |
-| `src/index.css` | Add `.logo-bar` styles (grayscale logos, auto-scroll on mobile) |
-
-### What gets added
-- A horizontal row of 6-8 placeholder agency/partner logos (grayscale, opacity 0.4, hover to 0.7)
-- "Dipercaya oleh 200+ agency" label above the logos using `.section-label` pattern
-- Optional: ticker-scroll animation on mobile using existing `ticker-scroll` keyframe
-- 1-2 additional testimonial cards for more social weight
-
----
-
-## Task 2: Create Dedicated /pricing Page
-**Impact:** SEO capture + conversion clarity | **Effort:** ~1 day
-
-Currently Pricing is an inline component on the homepage. A dedicated `/pricing` route improves SEO (captures "vexlo pricing" queries) and lets the nav link directly to it.
-
-### Changes
-| File | Action |
-|------|--------|
-| `src/pages/PricingPage.tsx` | New page wrapping existing `Pricing` component with Navbar, Footer, SEO, and FAQ |
-| `src/App.tsx` | Add `/pricing` route |
-| `src/components/layout/Navbar.tsx` | Update "Pricing" link from `#pricing` to `/pricing` |
-| `src/components/Pricing.tsx` | Minor: add optional `showFAQ` prop for reuse |
-
-### Page structure
-```text
-SEO (title: "Pricing — VEXLO")
-Navbar
-Pricing (existing component, reused)
-FAQ (filtered to pricing-related questions)
-CTA
-Footer
-```
+| File | Hardcoded values to replace |
+|------|---------------------------|
+| `src/components/sections/Problem.tsx` | 0.45 x2, 0.25 x1 |
+| `src/components/sections/HowItWorks.tsx` | 0.45 x1, 0.42 x1 |
+| `src/components/sections/FeatureMatrix.tsx` | 0.42 x1 |
+| `src/components/sections/AIOverview.tsx` | 0.42 x1 |
+| `src/components/sections/ProductDemo.tsx` | 0.42 x1 |
+| `src/components/sections/CategoryOwnership.tsx` | 0.42 x1 |
+| `src/components/sections/SegmentSelector.tsx` | 0.42/0.45 instances |
+| `src/components/sections/WaitlistForm.tsx` | 0.25 x1 |
+| `src/components/sections/InfrastructureMoat.tsx` | 0.42 x1 |
+| `src/components/Pricing.tsx` | 0.42 x1 |
+| `src/components/Comparison.tsx` | 0.25 x1 |
+| `src/components/layout/DashboardLayout.tsx` | 0.45 x4 |
 
 ---
 
-## Task 3: Restructure Nav into 4 Groups
-**Impact:** IA clarity | **Effort:** ~0.5 day
+## Task 2: Add Colossus-Style Stats Strip to Hero
 
-Current nav has 3 groups (Produk, Developers, Company). Adding a 4th "Resources" group improves information architecture.
+**What:** Add a horizontal stats bar below the trust badges in the Hero section, inspired by xai's "200K GPUs" infrastructure stats but adapted for VEXLO's context.
 
-### Changes
-| File | Action |
-|------|--------|
-| `src/components/layout/Navbar.tsx` | Restructure `navGroups` into 4 groups, update items |
-| `src/components/Footer.tsx` | Mirror the 4-group structure in footer links |
+**Stats to display (4 items):**
+- `23,847` -- Proofs Generated
+- `< 30s` -- Average Proof Time  
+- `0` -- Permissions Required
+- `$4.2M` -- Deals Closed by Users
 
-### New nav structure
-```text
-Produk          Resources        Developers       Company
-- Proof Engine  - Blog           - API Docs       - About / Mission
-- AI Overview   - Case Studies   - Integrations   - Team
-- Features      - FAQ            - White-label     - Certified Program
-- Pricing (/pricing)  - Help Center                - Contact
-```
+**Design:** Reuses the existing `.stats-bar` CSS class pattern (mono font, uppercase labels, grid layout). This also **removes the duplicate** "23.847 proof generated" text line currently in the hero since the stats bar replaces it.
 
----
+**File:** `src/components/sections/Hero.tsx`
 
-## Task 4: Create /company Page with Team Section
-**Impact:** Trust signal | **Effort:** ~1 day
-
-No `/company` page exists. This adds a public-facing page with mission statement and team/leadership cards.
-
-### Changes
-| File | Action |
-|------|--------|
-| `src/pages/Company.tsx` | New page with mission + team sections |
-| `src/App.tsx` | Add `/company` route |
-| `src/components/layout/Navbar.tsx` | Update "Mission" and "Team" links to `/company` and `/company#team` |
-
-### Page structure
-```text
-SEO (title: "Company — VEXLO")
-Navbar
-Mission section (hero-style statement with .st-line typography)
-Team grid (4-6 cards with name, role, photo placeholder, LinkedIn)
-Company values (3 cards: Transparency, Speed, Proof-First)
-CTA
-Footer
-```
-
-### Team card design
-- Uses `.bg-card` + `.border` tokens
-- Avatar placeholder (initials in a circle, accent border)
-- Name in `font-headline`, role in `font-mono` uppercase
-- Follows existing card pattern from Pricing component
+### Changes to Hero.tsx:
+1. Replace the static "23.847 proof generated..." text with a 4-column stats bar
+2. Each stat uses `font-mono` text with `--text` color for the number and `--text-muted` for the label
+3. Responsive: 2x2 grid on mobile, 4-column on desktop
 
 ---
 
-## Recommended Build Order
+## Technical Details
 
-1. **Task 3** first (nav restructure) — smallest change, unblocks link targets for Tasks 2 and 4
-2. **Task 1** (social proof logos) — standalone, no dependencies
-3. **Task 2** (/pricing page) — depends on nav having correct link
-4. **Task 4** (/company page) — depends on nav having correct link
-
-Each task will be implemented in a separate turn per the build workflow rules.
+- All contrast fixes use `var(--text-dim)` and `var(--text-muted)` CSS variables (both set to `rgba(240,240,238,0.55)` in `:root`)
+- No new dependencies or files needed
+- Total: ~13 files edited (12 contrast fixes + 1 hero enhancement)
