@@ -1,19 +1,21 @@
 
 
-# Add Subtle Hover Effect to Hero Stats Strip Items
+# Add Stagger Delay to Count-Up Stats
 
 ## File: `src/components/sections/Hero.tsx`
 
 ## What stays unchanged
-- Starfield canvas, headline, subtitle, eyebrow
-- ProofScoreWidget, trust badges
-- Stats values, labels, dividers, layout/spacing
+Everything except the `CountUpStat` component and its usage.
 
 ## Change
-Add a subtle hover effect to each stat item in the stats strip:
-- On hover: slight background highlight using `rgba(255,255,255,0.04)` with rounded corners (`rounded-lg`)
-- CSS transition: `transition-colors duration-300` (within the 400ms constraint)
-- Applied to the inner `div` wrapping each stat's value + label (the `px-4 py-1` container)
+Pass an `index` prop to each `CountUpStat` and add a stagger delay of 150ms per item before starting the count-up animation.
 
-This is a single-line class addition — no structural changes needed.
+- `CountUpStat` receives `delay` prop (index * 150ms)
+- After `IntersectionObserver` triggers visibility, a `setTimeout` with the delay is used before setting `shouldStart = true`
+- Result: stat 0 starts immediately, stat 1 at 150ms, stat 2 at 300ms, stat 3 at 450ms
+
+### Technical detail
+- Add `delay` prop to `CountUpStat`
+- In the `useEffect` with IntersectionObserver, wrap `setVisible(true)` in `setTimeout(() => setVisible(true), delay)`
+- In the map call, pass `delay={i * 150}` to each `CountUpStat`
 
