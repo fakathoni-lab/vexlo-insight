@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 
 const narrativeText =
-  "Domain ini menunjukkan penurunan ranking 12 posisi dalam 30 hari terakhir. " +
-  "Backlink profile lemah dengan hanya 23 referring domains. " +
-  "AI Overview Google telah mengambil 34% traffic organik untuk keyword utama.";
+  "This domain shows a 12-position ranking decline over the last 30 days. " +
+  "Backlink profile is weak with only 23 referring domains. " +
+  "Google AI Overview has captured 34% of organic traffic for the primary keyword.";
 
 const ProductDemo = () => {
   const [typed, setTyped] = useState("");
@@ -34,13 +34,13 @@ const ProductDemo = () => {
     <section id="product-demo-section" className="landing-section">
       <p className="section-label">Instant Proof Engine</p>
       <h2 className="font-headline text-3xl sm:text-4xl mb-4 tracking-tight" style={{ color: "var(--text)" }}>
-        30 detik. Satu domain.{" "}
+        30 seconds. One domain.{" "}
         <span className="italic" style={{ color: "var(--text-dim)" }}>
-          Satu bukti yang tidak bisa diabaikan.
+          One proof they can't ignore.
         </span>
       </h2>
       <p className="font-body text-sm mb-12 max-w-[520px]" style={{ color: "var(--text-dim)" }}>
-        Power dynamic bergeser: Anda masuk sebagai pembawa verdict, bukan pemohon izin.
+        The power dynamic shifts: you walk in as the one delivering the verdict, not asking for permission.
       </p>
 
       {/* Mock dashboard */}

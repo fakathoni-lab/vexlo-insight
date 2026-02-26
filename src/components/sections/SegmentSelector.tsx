@@ -2,20 +2,20 @@ const segments = [
   {
     tier: "Freelancer SEO",
     persona: "Sam",
-    desc: "2–6 klien. Terlihat lebih profesional dari agency.",
-    pain: "Pitch tanpa bukti. Kalah dari agency yang lebih besar.",
-    price: "Mulai $39/bln",
-    cta: "Mulai Sekarang",
+    desc: "2–6 clients. Look more professional than an agency.",
+    pain: "Pitching without proof. Losing to bigger agencies.",
+    price: "From $39/mo",
+    cta: "Get Started",
     href: "#waitlist",
     highlight: false,
   },
   {
     tier: "Boutique Agency",
     persona: "Alex",
-    desc: "5–15 klien. Close rate <25%. Pipeline bocor.",
-    pain: "Butuh senjata untuk discovery call yang mematikan.",
-    price: "Mulai $79/bln",
-    cta: "Mulai Sekarang",
+    desc: "5–15 clients. Close rate <25%. Leaking pipeline.",
+    pain: "Need a weapon for discovery calls that close.",
+    price: "From $79/mo",
+    cta: "Get Started",
     href: "#waitlist",
     highlight: true,
   },
@@ -23,9 +23,9 @@ const segments = [
     tier: "Agency Elite",
     persona: "Enterprise",
     desc: "5+ seats. White-label. Domain ecosystem.",
-    pain: "Butuh infrastruktur, bukan tool yang dipakai lalu ditinggalkan.",
+    pain: "Need infrastructure, not a tool that gets abandoned.",
     price: "Custom",
-    cta: "Hubungi Sales",
+    cta: "Contact Sales",
     href: "#waitlist",
     highlight: false,
   },
@@ -38,10 +38,10 @@ const SegmentSelector = () => {
 
   return (
     <section className="landing-section">
-      <p className="section-label">Pilih Jalurmu</p>
+      <p className="section-label">Choose Your Path</p>
       <h2 className="font-headline text-3xl sm:text-4xl mb-16 tracking-tight" style={{ color: "var(--text)" }}>
-        Satu platform.{" "}
-        <span className="italic" style={{ color: "var(--text-dim)" }}>Tiga jalur menang.</span>
+        One platform.{" "}
+        <span className="italic" style={{ color: "var(--text-dim)" }}>Three paths to win.</span>
       </h2>
 
       <div className="grid sm:grid-cols-3 gap-6">

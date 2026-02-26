@@ -3,18 +3,18 @@ import { RefreshCw, Hourglass, MessageSquareOff } from "lucide-react";
 const pains = [
   {
     icon: RefreshCw,
-    title: "Butuh akses untuk diagnosa",
-    body: "Tapi prospek belum percaya cukup untuk beri akses. Dead loop dimulai.",
+    title: "Need access to diagnose",
+    body: "But the prospect doesn't trust you enough to grant it yet. The dead loop begins.",
   },
   {
     icon: Hourglass,
-    title: "Audit manual 30–60 menit",
-    body: "Per domain. Sebelum satu discovery call. Yang mungkin tidak akan closing.",
+    title: "30–60 minute manual audit",
+    body: "Per domain. Before a single discovery call. That might not even close.",
   },
   {
     icon: MessageSquareOff,
-    title: "'Nanti saya pikir-pikir dulu.'",
-    body: "Kalimat yang mematikan pipeline lebih banyak dari objeksi harga manapun.",
+    title: "'Let me think about it.'",
+    body: "The sentence that kills more pipeline than any price objection ever could.",
   },
 ];
 
@@ -26,9 +26,9 @@ const PainAmplification = () => {
         className="font-headline text-3xl sm:text-4xl mb-16 tracking-tight"
         style={{ color: "var(--text)" }}
       >
-        Dead loop yang membunuh deal{" "}
+        The dead loop that kills deals{" "}
         <span className="italic" style={{ color: "var(--accent-danger)" }}>
-          agency manapun.
+          at every agency.
         </span>
       </h2>
 

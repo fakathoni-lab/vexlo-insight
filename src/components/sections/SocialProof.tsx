@@ -10,15 +10,15 @@ const stats = [
 const testimonials = [
   {
     name: "Alex R.",
-    role: "Agency Founder, 12 klien",
+    role: "Agency Founder, 12 Clients",
     quote:
-      "Saya masuk ke discovery call dengan Proof Score mereka. Mereka tanda tangan hari itu juga. Close rate saya naik dari 18% ke 41%.",
+      "I walked into the discovery call with their Proof Score. They signed that day. My close rate went from 18% to 41%.",
   },
   {
     name: "Sam T.",
-    role: "Freelancer SEO",
+    role: "SEO Freelancer",
     quote:
-      "Dulu saya pitch seperti freelancer yang memohon kepercayaan. Sekarang saya pitch seperti agency yang membawa verdict. VEXLO mengubah cara saya menjual.",
+      "I used to pitch like a freelancer begging for trust. Now I pitch like an agency delivering a verdict. VEXLO changed how I sell.",
   },
 ];
 
@@ -53,7 +53,7 @@ function useAnimatedCounter(target: number, duration = 1500) {
 const SocialProof = () => {
   return (
     <section className="landing-section">
-      <p className="section-label">Terbukti</p>
+      <p className="section-label">Proven</p>
 
       {/* Stats bar */}
       <div className="stats-bar mb-16">

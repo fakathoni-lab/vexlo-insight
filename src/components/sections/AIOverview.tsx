@@ -8,22 +8,22 @@ const AIOverview = () => {
       className="py-[120px] px-10 max-sm:py-[80px] max-sm:px-5"
       style={{
         borderBottom: "1px solid var(--border)",
-        background: "linear-gradient(180deg, var(--bg) 0%, rgba(232,255,71,0.03) 50%, var(--bg) 100%)",
+        background: "linear-gradient(180deg, var(--bg) 0%, rgba(124,58,237,0.03) 50%, var(--bg) 100%)",
       }}
     >
       <div className="max-w-[800px] mx-auto text-center">
         <p className="section-label mb-10">AI Overview Impact</p>
 
         <h2 className="font-headline text-3xl sm:text-5xl tracking-tight mb-6" style={{ color: "var(--text)" }}>
-          Ribuan bisnis kehilangan traffic.{" "}
-          <span style={{ color: "var(--accent-proof)" }}>Mereka tidak tahu.</span>
+          Thousands of businesses are losing traffic.{" "}
+          <span style={{ color: "var(--accent-proof)" }}>They don't know.</span>
           <br />
-          <em className="italic" style={{ color: "var(--text-dim)" }}>Kamu tahu.</em>
+          <em className="italic" style={{ color: "var(--text-dim)" }}>You do.</em>
         </h2>
 
         <p className="font-body text-sm leading-relaxed max-w-[520px] mx-auto mb-10" style={{ color: "var(--text-dim)" }}>
-          Google AI Overview sudah mengambil traffic organik ribuan bisnis lokal hari ini.
-          VEXLO adalah satu-satunya platform yang memvisualisasikan kerusakan itu dalam hitungan detik.
+          Google AI Overview is already capturing organic traffic from thousands of local businesses today.
+          VEXLO is the only platform that visualizes the damage in seconds.
         </p>
 
         {/* Damage visualization bar */}
@@ -33,7 +33,7 @@ const AIOverview = () => {
         >
           <div className="flex items-center justify-between mb-3">
             <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
-              Traffic sebelum AI Overview
+              Traffic before AI Overview
             </span>
             <span className="font-mono text-sm" style={{ color: "var(--accent-success)" }}>100%</span>
           </div>
@@ -43,7 +43,7 @@ const AIOverview = () => {
 
           <div className="flex items-center justify-between mb-3">
             <span className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
-              Traffic setelah AI Overview
+              Traffic after AI Overview
             </span>
             <span className="font-mono text-sm" style={{ color: "var(--accent-danger)" }}>66%</span>
           </div>
@@ -57,7 +57,7 @@ const AIOverview = () => {
         </div>
 
         <button onClick={() => scrollTo("#waitlist")} className="btn-primary">
-          Lihat Contoh AI Overview Impact Report
+          See AI Overview Impact Report Example
         </button>
       </div>
     </section>

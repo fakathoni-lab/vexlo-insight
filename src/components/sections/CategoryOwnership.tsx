@@ -15,16 +15,16 @@ const CategoryOwnership = () => {
       </div>
 
       <h2 className="font-headline text-3xl sm:text-4xl mb-6 tracking-tight" style={{ color: "var(--text)" }}>
-        Bukan sekadar pelanggan.
+        Not just a customer.
         <br />
         <span className="italic" style={{ color: "var(--text-dim)" }}>
-          Founding members standar industri baru.
+          Founding members of a new industry standard.
         </span>
       </h2>
 
       <p className="font-body text-sm leading-relaxed max-w-[520px] mx-auto mb-10" style={{ color: "var(--text-dim)" }}>
-        Proof-First Certified Program — bergabung dengan cohort pertama agency yang mendefinisikan
-        standar baru dalam SEO sales. Badge LinkedIn. Akses eksklusif. Network yang tidak bisa dibeli.
+        Proof-First Certified Program — join the first cohort of agencies defining
+        a new standard in SEO sales. LinkedIn badge. Exclusive access. A network money can't buy.
       </p>
 
       {/* Timeline */}
@@ -44,7 +44,7 @@ const CategoryOwnership = () => {
       </div>
 
       <button onClick={() => scrollTo("#waitlist")} className="btn-primary">
-        Apply untuk Cohort 1
+        Apply for Cohort 1
       </button>
     </section>
   );

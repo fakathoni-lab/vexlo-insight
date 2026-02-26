@@ -14,7 +14,125 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          plan: string | null
+          plan_status: string | null
+          proofs_limit: number | null
+          proofs_used: number | null
+          stripe_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          plan?: string | null
+          plan_status?: string | null
+          proofs_limit?: number | null
+          proofs_used?: number | null
+          stripe_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          plan?: string | null
+          plan_status?: string | null
+          proofs_limit?: number | null
+          proofs_used?: number | null
+          stripe_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      proofs: {
+        Row: {
+          ai_overview: boolean | null
+          created_at: string
+          current_rank: number | null
+          delta_30: number | null
+          domain: string
+          id: string
+          keyword: string
+          narrative: string | null
+          rankings: Json | null
+          score: number
+          user_id: string
+        }
+        Insert: {
+          ai_overview?: boolean | null
+          created_at?: string
+          current_rank?: number | null
+          delta_30?: number | null
+          domain: string
+          id?: string
+          keyword: string
+          narrative?: string | null
+          rankings?: Json | null
+          score: number
+          user_id: string
+        }
+        Update: {
+          ai_overview?: boolean | null
+          created_at?: string
+          current_rank?: number | null
+          delta_30?: number | null
+          domain?: string
+          id?: string
+          keyword?: string
+          narrative?: string | null
+          rankings?: Json | null
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proofs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waitlist: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          ip_hash: string | null
+          referrer: string | null
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          ip_hash?: string | null
+          referrer?: string | null
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          ip_hash?: string | null
+          referrer?: string | null
+          source?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
