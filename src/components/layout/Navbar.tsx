@@ -1,46 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, ChevronDown } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useNavScroll } from "@/hooks/useNavScroll";
 
-const navGroups = [
-  {
-    label: "Produk",
-    items: [
-      { label: "Instant Proof Engine", href: "#product-demo" },
-      { label: "AI Overview Impact", href: "#ai-overview" },
-      { label: "Features", href: "#features" },
-      { label: "Pricing", href: "/pricing", isRoute: true },
-    ],
-  },
-  {
-    label: "Resources",
-    items: [
-      { label: "Blog", href: "#" },
-      { label: "Case Studies", href: "#" },
-      { label: "FAQ", href: "#faq" },
-      { label: "Help Center", href: "#" },
-    ],
-  },
-  {
-    label: "Developers",
-    items: [
-      { label: "API Docs", href: "#" },
-      { label: "Integrations", href: "#" },
-      { label: "White-label Setup", href: "#" },
-    ],
-  },
-  {
-    label: "Company",
-    items: [
-      { label: "About / Mission", href: "/company", isRoute: true },
-      { label: "Team", href: "/company#team", isRoute: true },
-      { label: "Certified Program", href: "#certified" },
-      { label: "Contact", href: "mailto:sales@vexlo.com" },
-    ],
-  },
+const navLinks = [
+  { label: "Features", href: "#features" },
+  { label: "Pricing", href: "/pricing", isRoute: true },
+  { label: "Use Cases", href: "#segments" },
+  { label: "FAQ", href: "#faq" },
+  { label: "About", href: "#infrastructure" },
 ];
 
 const Navbar = () => {
@@ -50,12 +19,10 @@ const Navbar = () => {
 
   const handleNavClick = (href: string, isRoute?: boolean) => {
     setOpen(false);
-    if (isRoute || href.startsWith("/") || href.startsWith("mailto:")) {
-      if (href.startsWith("mailto:")) {
-        window.location.href = href;
-      } else {
-        navigate(href);
-      }
+    if (isRoute || href.startsWith("/")) {
+      navigate(href);
+    } else if (href.startsWith("mailto:")) {
+      window.location.href = href;
     } else {
       const el = document.querySelector(href);
       el?.scrollIntoView({ behavior: "smooth" });
@@ -64,62 +31,41 @@ const Navbar = () => {
 
   return (
     <nav className={`nav ${scrolled ? "scrolled" : ""}`}>
-      {/* LEFT — Wordmark */}
-      <a href="/" className="nav-logo">VEXLO</a>
+      {/* Logo */}
+      <a href="/" className="nav-logo">
+        <svg height="28" viewBox="0 0 120 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="0" y="22" fontFamily="'Space Mono', monospace" fontSize="18" fontWeight="700" letterSpacing="0.12em" fill="currentColor">VEXLO</text>
+        </svg>
+      </a>
 
-      {/* CENTER — Dropdown groups (desktop) */}
-      <div className="hidden md:flex items-center gap-1">
-        {navGroups.map((group) => (
-          <Popover key={group.label}>
-            <PopoverTrigger asChild>
-              <button
-                className="flex items-center gap-1 font-mono text-[10.5px] uppercase tracking-wide px-3.5 py-1.5 rounded-[4px] transition-colors duration-200 hover:bg-[rgba(255,255,255,0.05)]"
-                style={{ color: "var(--text-dim)" }}
-              >
-                {group.label}
-                <ChevronDown className="w-3 h-3" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-[220px] p-2 border rounded-[8px]"
-              style={{
-                backgroundColor: "var(--bg-raised)",
-                borderColor: "var(--border-strong)",
-              }}
-              sideOffset={8}
-            >
-              <div className="flex flex-col gap-0.5">
-                {group.items.map((item) => (
-                  <button
-                    key={item.label}
-                    onClick={() => handleNavClick(item.href)}
-                    className="text-left font-body text-sm px-3 py-2 rounded-[4px] transition-colors duration-200 hover:bg-[rgba(255,255,255,0.05)]"
-                    style={{ color: "var(--text-dim)" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-dim)")}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
+      {/* Center — flat links (desktop) */}
+      <div className="nav-links hidden md:flex" style={{ position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
+        {navLinks.map((link) => (
+          <a
+            key={link.label}
+            href={link.href}
+            onClick={(e) => {
+              e.preventDefault();
+              handleNavClick(link.href, link.isRoute);
+            }}
+          >
+            {link.label}
+          </a>
         ))}
       </div>
 
-      {/* RIGHT — Dual CTAs + Mobile menu */}
+      {/* Right — ghost CTA + mobile menu */}
       <div className="flex items-center gap-2.5">
         <button
           onClick={() => handleNavClick("#waitlist")}
-          className="btn-ghost hidden md:inline-flex"
+          className="nav-cta hidden md:inline-flex"
+          style={{
+            background: "transparent",
+            color: "var(--text)",
+            border: "1.5px solid var(--border-strong)",
+          }}
         >
-          Agency Sales
-        </button>
-        <button
-          onClick={() => handleNavClick("#waitlist")}
-          className="btn-primary hidden md:inline-flex"
-        >
-          Coba Gratis
+          Get Early Access
         </button>
 
         {/* Mobile hamburger */}
@@ -137,33 +83,20 @@ const Navbar = () => {
             className="w-[280px] border-l"
             style={{ backgroundColor: "var(--bg-raised)", borderColor: "var(--border)" }}
           >
-            <div className="flex flex-col gap-6 mt-10">
-              {navGroups.map((group) => (
-                <div key={group.label}>
-                  <p
-                    className="font-mono text-[9px] uppercase tracking-[0.2em] px-4 mb-2"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    {group.label}
-                  </p>
-                  {group.items.map((item) => (
-                    <button
-                      key={item.label}
-                      onClick={() => handleNavClick(item.href)}
-                      className="w-full font-body text-sm text-left px-4 py-2.5 rounded transition-colors duration-200 hover:bg-[rgba(255,255,255,0.05)]"
-                      style={{ color: "var(--text-dim)" }}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              ))}
-              <div className="flex flex-col gap-2 px-4 mt-4">
-                <button onClick={() => handleNavClick("#waitlist")} className="btn-primary w-full">
-                  Coba Gratis
+            <div className="flex flex-col gap-2 mt-10">
+              {navLinks.map((link) => (
+                <button
+                  key={link.label}
+                  onClick={() => handleNavClick(link.href, link.isRoute)}
+                  className="w-full font-body text-sm text-left px-4 py-2.5 rounded transition-colors duration-200 hover:bg-[rgba(255,255,255,0.05)]"
+                  style={{ color: "var(--text-dim)" }}
+                >
+                  {link.label}
                 </button>
+              ))}
+              <div className="px-4 mt-4">
                 <button onClick={() => handleNavClick("#waitlist")} className="btn-ghost w-full">
-                  Agency Sales
+                  Get Early Access
                 </button>
               </div>
             </div>
