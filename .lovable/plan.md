@@ -1,96 +1,59 @@
 
 
-# Backfill Missing CSS Component Styles from xai-redesign.html
+# Replace index.css with Complete xai-redesign Stylesheet
 
-## Problem
-The current `src/index.css` has ~290 lines covering tokens, buttons, nav basics, hero basics, and VEXLO-specific additions. But the xai-redesign.html reference contains ~430 lines of CSS with dozens of component-level styles that were never transplanted. These missing classes mean any component referencing them gets no styling.
+## The Problem
 
-## What's Missing (grouped by component)
+The user provided a complete CSS file to replace `src/index.css`. However, a direct copy-paste would **break the app** because the provided CSS is missing several critical pieces that the current file has.
 
-### 1. Missing Tokens (add to `:root`)
-- `--ease-material` (advanced linear easing curve)
-- `--emboss-shadow-less-hover`
-- `--radii-right-mini`, `--radii-left-mini`
-- `color-scheme: light dark` on `:root`
+## What the Provided CSS is Missing
 
-### 2. Missing Global Styles
-- `body { overflow-x: hidden; min-height: 100vh; }`
-- `.text-wrap-content` utility class
+1. **Tailwind directives** -- The current file starts with `@tailwind base; @tailwind components; @tailwind utilities;`. Without these, all Tailwind utility classes and shadcn/ui components stop working entirely.
 
-### 3. Missing Nav Styles
-- `.nav-links` (flex container for nav items)
-- `.nav-links a` (mono font, 10.5px, uppercase, hover states)
-- `.nav-cta` (the nav-level CTA button variant)
+2. **HSL variables for shadcn compatibility** -- The current file has `--background`, `--foreground`, `--accent-hsl`, `--border-hsl`, `--muted-hsl`, `--input`, `--ring`, `--radius-card`, `--radius-button`, `--radius-input`, `--font-headline`, `--font-body`, `--font-mono` (shadcn variant). These are required by shadcn components.
 
-### 4. Missing Hero Component Styles
-- `.hero-top` (flex layout for headline area)
-- `.hero-search-wrap`, `.hero-search-form`, `.hero-search-inner` (search box container with gradient border)
-- `.hero-search-form textarea` (transparent input styling)
-- `.hero-search-submit` (circular submit button)
-- `.hero-bottom` (bottom bar with scroll icon + announcement)
-- `.hero-scroll-icon` + bounce animation
-- `.hero-ann`, `.ann-tag`, `.ann-text`, `.ann-link` (announcement strip)
+3. **VEXLO-specific accent tokens** -- `--accent-proof: #E8FF47`, `--accent-danger: #FF4747`, `--accent-success: #47FF8F`, `--surface`, `--surface-elevated` are used by existing components (ProductDemo gauge, SocialProof stats, etc.).
 
-### 5. Missing Products Section Styles
-- `.products-section` (padding + border)
-- `.products-header`, `.products-h2`, `.products-desc` (header layout)
-- `.product-flagship` needs the 2-col grid variant from the reference (current version is a simple card)
-- `.product-flagship-content` (content half with border-right)
-- `.product-tag`, `.product-name`, `.product-desc` (product text hierarchy)
-- `.product-flagship-visual` (visual half with radial gradient)
-- `.grok-visual`, `.grok-ring` (x3), `.grok-center` (spinning ring animation)
-- `.product-utilities`, `.product-card` (utility cards grid)
+4. **WCAG-compliant opacity values** -- The provided CSS uses `--text-dim: rgba(240,240,238,0.45)` and `--text-muted: rgba(240,240,238,0.25)` which fail WCAG AA. The current file already fixed these to `0.55`.
 
-### 6. Missing Understand Section Styles
-- `.understand-section` (min-height, flex centering, cursor:none)
-- `.understand-atmo` (atmospheric gradient with mask)
-- `.understand-line-sep` (top gradient separator)
-- `.understand-text` (text container)
-- `.understand-line`, `.understand-line-1`, `.understand-line-2` (gradient text fills -- different from current `.st-line` approach)
+5. **Component-specific styles** -- `.landing-section`, `.stats-bar`, `.testimonial-card`, `.proof-score-gauge`, `.typing-animation`, `.fade-up`, `.bounce-scroll` are used by existing components.
 
-### 7. Missing SuperGrok Section Styles
-- `.supergrok-section`, `.supergrok-atmo`, `.supergrok-sep`
-- `.supergrok-inner`, `.sg-wordmark`, `.sg-title`, `.sg-subtitle`
-- `.sg-badge`, `.sg-actions`
+6. **Existing keyframes** -- `blink-caret`, `gauge-fill`, `counter-up`, `ticker-scroll` are used by components.
 
-### 8. Missing Statement Section
-- `.statement-section`, `.statement-lines`
-- The `.st-line` class in the reference uses `font-family: var(--sans)` and `font-weight: 300` -- different from current implementation which uses `var(--serif)`
+7. **`::selection` styles and `* { border-color }` reset** for shadcn.
 
-### 9. Missing News Section Styles
-- `.news-section`, `.news-header`, `.news-h2`
-- `.news-item` (grid layout: date | title | arrow)
-- `.news-date`, `.news-title`, `.news-excerpt`
-- `.news-meta`, `.news-category`, `.news-arrow`
+8. **The `@layer components` wrapper** -- Current styles are inside `@layer components {}` which gives them proper Tailwind layer ordering. The provided CSS has no layer wrapping.
 
-### 10. Missing Footer Styles
-- `.footer-grid` (5-column grid)
-- `.footer-brand`, `.footer-tagline`
-- `.footer-col-title`, `.footer-links`
-- `.footer-bottom`, `.footer-legal`
+## Implementation Plan
 
-### 11. Missing Interactive Styles
-- `.question-tooltip` (floating tooltip with backdrop-filter)
+Replace the entire `src/index.css` with a merged version that:
 
-## Implementation
+1. **Keeps** the 3 Tailwind directives at the top
+2. **Adds** the Google Fonts `@import` from the provided CSS
+3. **Adds** the universal reset (`*, *::before, *::after { box-sizing... }`)
+4. **Merges `:root` tokens:** Takes the provided structure but keeps:
+   - WCAG-fixed opacities (`0.55` not `0.45`/`0.25`)
+   - All HSL shadcn variables (`--background`, `--foreground`, etc.)
+   - VEXLO accent tokens (`--accent-proof`, `--accent-danger`, `--accent-success`, `--surface`, `--surface-elevated`)
+   - Font aliases (`--mono`, `--serif`, `--sans`) alongside the new `--font-mono/serif/sans`
+   - Mini radii tokens
+5. **Keeps** the `* { border-color }` rule and `::selection`
+6. **Replaces** base `html`/`body` with the provided version
+7. **Wraps all component styles** inside `@layer components {}` for proper Tailwind ordering
+8. **Takes all component styles from the provided CSS** (nav, buttons, hero, products, understand, supergrok, statement, news, footer, utility classes) -- these are the canonical xai-redesign versions
+9. **Adds back** the VEXLO-specific component styles that the provided CSS doesn't have: `.landing-section`, `.stats-bar`, `.testimonial-card`, `.proof-score-gauge`, `.typing-animation`, `.fade-up`, `.bounce-scroll`, `.nav-cta`
+10. **Merges keyframes:** Takes the provided set + adds back `blink-caret`, `gauge-fill`, `counter-up`, `ticker-scroll`
+11. **Keeps** `prefers-reduced-motion` media query and scrollbar styles
 
-**Single file edit:** `src/index.css`
+## Single File Change
 
-All missing styles will be added inside the existing `@layer components { }` blocks or as new blocks after the existing content. The approach:
+| File | Action |
+|------|--------|
+| `src/index.css` | Full replacement with merged content (~550 lines) |
 
-1. Add missing tokens to `:root` (4 new variables)
-2. Add `overflow-x: hidden` and `min-height: 100vh` to body
-3. Add `.text-wrap-content` utility
-4. Add all missing nav styles (`.nav-links`, `.nav-links a`, `.nav-cta`)
-5. Add all missing hero sub-component styles (search box, bottom bar, announcement)
-6. Add all missing products section styles (header, flagship grid, product cards, grok visual)
-7. Add full understand section styles (atmosphere, gradient text lines, separator)
-8. Add supergrok section styles
-9. Add statement section + update `.st-line` to match reference (sans-serif, weight 300)
-10. Add news section styles
-11. Add footer component styles
-12. Add question tooltip styles
+## Key Decisions
 
-**Note on `.st-line` conflict:** The current `index.css` defines `.st-line` with `font-family: var(--serif)` while the xai-redesign.html uses `var(--sans)` with `font-weight: 300`. The reference version will be added as the canonical definition. The existing `.st-line` in `Understand.tsx` may need its usage reviewed after this change, but since it's the same class name the reference styling will take precedence.
+- **Font variable naming:** Keep both `--mono`/`--serif`/`--sans` (used by existing components) AND `--font-mono`/`--font-serif`/`--font-sans` (from provided CSS) as aliases pointing to the same values
+- **`.st-line` font:** Use `var(--font-sans)` with `font-weight: 300` as specified in the provided CSS (matching xai-redesign reference). The `Understand.tsx` component already has an inline `fontFamily` override.
+- **WCAG compliance:** Override the provided `0.45`/`0.25` opacity with `0.55` to maintain AA contrast
 
-**No new files created. No dependencies added. Single file update only.**
