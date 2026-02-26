@@ -56,10 +56,10 @@ const DashboardLayout = () => {
             to={item.url}
             end
             className="flex items-center gap-3 px-3 py-2.5 rounded-[8px] font-mono uppercase tracking-wide transition-colors duration-200 hover:bg-[rgba(255,255,255,0.03)]"
-            activeClassName="bg-[rgba(255,99,8,0.08)] border-l-2 border-[#ff6308]"
+            activeClassName="bg-[rgba(124,58,237,0.08)] border-l-2 border-[var(--accent)]"
             style={{
               fontSize: 9,
-              color: item.accent ? "#ff6308" : "var(--text-dim)",
+              color: item.accent ? "var(--accent)" : "var(--text-dim)",
             }}
             onClick={() => setMobileOpen(false)}
           >
@@ -155,7 +155,7 @@ const DashboardLayout = () => {
             <Avatar className="w-7 h-7">
               <AvatarFallback
                 className="font-mono text-[9px] uppercase"
-                style={{ backgroundColor: "rgba(255,99,8,0.12)", color: "#ff6308" }}
+                style={{ backgroundColor: "rgba(124,58,237,0.12)", color: "var(--accent)" }}
               >
                 {initials}
               </AvatarFallback>

@@ -1,18 +1,18 @@
 const painCards = [
   {
     tag: "Time Sink",
-    title: "45 minutes of manual research",
-    body: "Every audit you run manually is time you're not spending closing. Repetitive. Error-prone. Unscalable.",
+    title: "45 minutes of manual work — per prospect",
+    body: "Screenshots, exports, audit PDFs. All handcrafted. Not scalable. Not consistent. Not fast enough.",
   },
   {
     tag: "Trust Killer",
-    title: "Asking for access kills momentum",
-    body: "Requesting GSC or GA4 access signals doubt. It puts the prospect in control before trust is built.",
+    title: "Requesting access signals doubt",
+    body: "Asking for GSC or GA4 access before trust is built hands control to the prospect before the deal is closed.",
   },
   {
     tag: "Lost Deal",
-    title: "Generic pitches lose to specific proof",
-    body: "Your competitor walked in with their domain data. You walked in with a slide deck.",
+    title: "You look solo. The deal goes to the agency.",
+    body: "Perception gap kills deals. Skill without branded proof reads as amateur — regardless of your actual capability.",
   },
 ];
 
@@ -24,10 +24,10 @@ const Problem = () => {
     >
       <div className="max-w-[1280px] mx-auto">
         {/* Section label */}
-        <div className="flex items-center gap-3 mb-12" style={{ color: "hsl(22,100%,52%)" }}>
-          <span className="block w-7 h-px" style={{ backgroundColor: "hsl(22,100%,52%)" }} />
+        <div className="flex items-center gap-3 mb-12" style={{ color: "var(--accent)" }}>
+          <span className="block w-7 h-px" style={{ backgroundColor: "var(--accent)" }} />
           <span className="font-mono uppercase tracking-[0.18em]" style={{ fontSize: 10 }}>
-            The Problem
+            The Revenue Gap
           </span>
         </div>
 
@@ -43,12 +43,10 @@ const Problem = () => {
                 color: "#f0f0ee",
               }}
             >
-              Your prospects don't believe
-              <br />
-              they have a problem.
+              Skill doesn't close deals. Proof does.
               <br />
               <span className="italic" style={{ color: "var(--text-dim)" }}>
-                Until you show them.
+                And you don't have it fast enough.
               </span>
             </h2>
             <p
@@ -59,8 +57,8 @@ const Problem = () => {
                 color: "var(--text-dim)",
               }}
             >
-              Every lost deal has the same story. Great pitch, solid service, wrong timing.
-              The timing problem is really a proof problem.
+              Every SEO freelancer who lost a deal this month lost it before the proposal. Not after.
+              The closing gap is a proof gap.
             </p>
           </div>
 

@@ -25,7 +25,11 @@
   --text:             #f0f0ee;
   --text-dim:         rgba(240,240,238,0.45);
   --text-muted:       rgba(240,240,238,0.25);
-  --accent:           #ff6308;
+  --accent:           #7C3AED;
+  --accent-light:     #9333EA;
+  --accent-glow:      #A855F7;
+  --accent-dim:       rgba(124,58,237,0.12);
+  --accent-border:    rgba(124,58,237,0.25);
   --accent-blue:      #4169e1;
   --accent-magenta:   #e040fb;
   --accent-red:       #e11d48;
@@ -75,14 +79,14 @@
   /* HSL variables for Tailwind / shadcn compatibility */
   --background: 0 0% 3.1%;
   --foreground: 60 7% 94.1%;
-  --accent-hsl: 22 100% 52%;
+  --accent-hsl: 263 84% 58%;
   --accent-foreground: 0 0% 100%;
   --border-hsl: 0 0% 18%;
   --border-strong-hsl: 0 0% 100% / 0.13;
   --muted-hsl: 0 0% 60%;
   --muted-foreground: 0 0% 60%;
   --input: 0 0% 18%;
-  --ring: 22 100% 52%;
+  --ring: 263 84% 58%;
   --radius-card: 12px;
   --radius-button: 100px;
   --radius-input: 2px;
@@ -458,8 +462,8 @@ body {
   .ann-tag {
     font-family: var(--font-mono); font-size: 8.5px;
     letter-spacing: 0.16em; text-transform: uppercase;
-    color: var(--accent); background: rgba(255,99,8,0.12);
-    border: 1px solid rgba(255, 99, 8, 0.3);
+    color: var(--accent); background: rgba(124,58,237,0.12);
+    border: 1px solid rgba(124,58,237,0.30);
     padding: 3px 9px; border-radius: 100px;
   }
   .ann-text { color: var(--text-dim); }
@@ -530,7 +534,7 @@ body {
   .product-flagship-visual {
     display: flex; align-items: center; justify-content: center;
     padding: 48px; position: relative;
-    background: radial-gradient(circle at 50% 50%, rgba(255,99,8,0.06), transparent 70%);
+    background: radial-gradient(circle at 50% 50%, rgba(124,58,237,0.06), transparent 70%);
   }
 
   /* Grok-style spinning rings */
@@ -546,7 +550,7 @@ body {
   .grok-ring:nth-child(2) {
     inset: 22px; animation-duration: 16s;
     animation-direction: reverse;
-    border-color: rgba(255,99,8,0.18);
+    border-color: rgba(124,58,237,0.22);
   }
   .grok-ring:nth-child(3) {
     inset: 44px; animation-duration: 11s;
@@ -604,7 +608,7 @@ body {
   .understand-atmo {
     position: absolute; inset: 0; pointer-events: none;
     background: linear-gradient(to right,
-      rgba(255,99,8,0.06), rgba(255,99,8,0.05),
+      rgba(124,58,237,0.06), rgba(124,58,237,0.05),
       rgba(189,201,230,0.05), rgba(151,196,255,0.06), rgba(151,196,255,0.06));
     mask-image: radial-gradient(ellipse at top, black, transparent 65%);
     -webkit-mask-image: radial-gradient(ellipse at top, black, transparent 65%);
@@ -623,7 +627,7 @@ body {
     transform: translate(-50%,-50%);
     width: 600px; height: 600px; border-radius: 50%;
     background: radial-gradient(circle,
-      rgba(255,99,8,0.02) 0%,
+      rgba(124,58,237,0.02) 0%,
       rgba(151,196,255,0.015) 50%,
       transparent 70%);
     pointer-events: none;
@@ -691,7 +695,7 @@ body {
     position: absolute; left: 50%; top: 0; transform: translateX(-50%);
     width: 1200px; height: 500px; pointer-events: none;
     background: linear-gradient(to right,
-      rgba(255,99,8,0.07), rgba(255,99,8,0.07),
+      rgba(124,58,237,0.07), rgba(124,58,237,0.07),
       rgba(189,201,230,0.06), rgba(151,196,255,0.07), rgba(151,196,255,0.07));
     mask-image: radial-gradient(ellipse at top, black, transparent 65%);
     -webkit-mask-image: radial-gradient(ellipse at top, black, transparent 65%);
@@ -719,8 +723,8 @@ body {
   .sg-subtitle { font-size: 14.5px; font-weight: 300; color: var(--text-dim); line-height: 1.7; }
   .sg-badge {
     font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.18em;
-    text-transform: uppercase; color: rgba(255,99,8,0.9);
-    background: rgba(255,99,8,0.08); border: 1px solid rgba(255,99,8,0.2);
+    text-transform: uppercase; color: rgba(124,58,237,0.9);
+    background: rgba(124,58,237,0.10); border: 1px solid rgba(124,58,237,0.25);
     padding: 4px 12px; border-radius: 100px;
   }
   .sg-actions {
@@ -955,7 +959,7 @@ body {
 }
 
 ::selection {
-  background-color: hsla(22, 100%, 52%, 0.3);
+  background-color: hsla(263, 84%, 58%, 0.3);
   color: var(--text);
 }
 

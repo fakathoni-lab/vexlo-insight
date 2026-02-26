@@ -11,10 +11,10 @@ const Hero = () => {
       </div>
 
       <div className="hero-content">
-        <div className="hero-eyebrow">Sales Proof Intelligence</div>
+        <div className="hero-eyebrow">Pre-Sale Revenue Infrastructure</div>
         <p className="hero-tagline">
-          Generate visual SEO proof for any prospect in 30 seconds.
-          No access required. No awkward asks. Just close.
+          Generate branded, prospect-specific SEO proof in under 60 seconds.
+          No access. No waiting. No skill gap in the room.
         </p>
       </div>
 
@@ -53,7 +53,7 @@ const Hero = () => {
               el?.scrollIntoView({ behavior: "smooth" });
             }}
           >
-            Claim Your Slot
+            Claim Founding Member Access
           </button>
         </div>
       </div>

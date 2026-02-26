@@ -13,36 +13,36 @@ const tiers: Tier[] = [
   {
     name: "Starter",
     price: "$39",
-    desc: "Untuk freelancer yang closing klien pertama.",
+    desc: "Solo Freelancer",
     features: [
-      { label: "10 proof reports / bln", included: true },
+      { label: "10 proof reports / mo", included: true },
       { label: "Branded share links", included: true },
       { label: "Proof Score", included: true },
       { label: "AI narrative", included: false },
       { label: "White-label branding", included: false },
       { label: "API access", included: false },
     ],
-    cta: "Mulai Sekarang",
+    cta: "Start Closing",
   },
   {
     name: "Agency Pro",
     price: "$79",
-    desc: "Untuk agency yang pitch setiap minggu.",
+    desc: "Growing Operator",
     featured: true,
     features: [
-      { label: "50 proof reports / bln", included: true },
+      { label: "50 proof reports / mo", included: true },
       { label: "Branded share links", included: true },
       { label: "Proof Score", included: true },
       { label: "AI narrative", included: true },
       { label: "White-label branding", included: true },
       { label: "API access", included: false },
     ],
-    cta: "Mulai Sekarang",
+    cta: "Claim Founding Slot",
   },
   {
-    name: "Agency Elite",
+    name: "Elite",
     price: "$149",
-    desc: "Untuk tim yang scaling outbound.",
+    desc: "Scale Operator",
     features: [
       { label: "Unlimited reports", included: true },
       { label: "Branded share links", included: true },
@@ -51,14 +51,14 @@ const tiers: Tier[] = [
       { label: "White-label branding", included: true },
       { label: "API access", included: true },
     ],
-    cta: "Hubungi Sales",
+    cta: "Lock Elite Access",
   },
 ];
 
 const Pricing = () => {
   return (
     <section className="landing-section">
-      <p className="section-label">Pricing</p>
+      <p className="section-label">Founding Member Pricing</p>
 
       {/* ROI framing */}
       <div
@@ -66,16 +66,13 @@ const Pricing = () => {
         style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
       >
         <p className="font-body text-sm leading-relaxed" style={{ color: "var(--text-dim)" }}>
-          Rata-rata retainer SEO:{" "}
-          <span className="font-bold" style={{ color: "var(--text)" }}>$1.500/bln</span>.
-          Satu deal yang closed ={" "}
-          <span style={{ color: "var(--accent-proof)" }}>19 bulan subscription gratis</span>.
+          50 founding members only. Price increases once seats are gone.
         </p>
       </div>
 
       <h2 className="font-headline text-3xl sm:text-4xl mb-16 tracking-tight text-center" style={{ color: "var(--text)" }}>
-        Investasi yang{" "}
-        <span className="italic" style={{ color: "var(--text-dim)" }}>membayar dirinya sendiri.</span>
+        Early access pricing.{" "}
+        <span className="italic" style={{ color: "var(--text-dim)" }}>Locked in forever.</span>
       </h2>
 
       <div className="grid sm:grid-cols-3 gap-6 mb-8">
@@ -86,7 +83,7 @@ const Pricing = () => {
             style={{
               backgroundColor: "var(--bg-card)",
               border: tier.featured
-                ? "1px solid rgba(255,99,8,0.4)"
+                ? "1px solid rgba(124,58,237,0.4)"
                 : "1px solid var(--border)",
               transform: tier.featured ? "scale(1.02)" : undefined,
             }}
@@ -94,7 +91,7 @@ const Pricing = () => {
             {tier.featured && (
               <span
                 className="inline-block mb-4 px-3 py-1 text-[8px] font-mono uppercase tracking-widest rounded-full self-start"
-                style={{ backgroundColor: "hsl(22,100%,52%)", color: "#fff" }}
+                style={{ backgroundColor: "var(--accent)", color: "#fff" }}
               >
                 Most Popular
               </span>
@@ -103,7 +100,7 @@ const Pricing = () => {
             <p className="text-sm mb-4" style={{ color: "var(--text-dim)" }}>{tier.desc}</p>
             <div className="mb-6">
               <span className="font-headline text-4xl" style={{ color: "var(--text)" }}>{tier.price}</span>
-              <span className="text-sm" style={{ color: "var(--text-muted)" }}>/bln</span>
+              <span className="text-sm" style={{ color: "var(--text-muted)" }}>/mo</span>
             </div>
 
             <ul className="space-y-3 mb-8 flex-1">
@@ -137,13 +134,13 @@ const Pricing = () => {
         style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
       >
         <p className="font-mono text-[9px] uppercase tracking-widest mb-1" style={{ color: "var(--text-muted)" }}>
-          Atau bayar per proof
+          Or pay per proof
         </p>
         <p className="font-headline text-2xl" style={{ color: "var(--text)" }}>
           $12<span className="text-sm" style={{ color: "var(--text-muted)" }}> / proof</span>
         </p>
         <p className="font-body text-xs mt-1" style={{ color: "var(--text-dim)" }}>
-          Tanpa subscription. Bayar hanya saat butuh.
+          No subscription. Pay only when you need it.
         </p>
       </div>
     </section>

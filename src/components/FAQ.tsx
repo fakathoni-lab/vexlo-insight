@@ -6,14 +6,14 @@ import {
 } from "@/components/ui/accordion";
 
 const faqs = [
-  { q: "Do I need access to my prospect's Google accounts?", a: "No. Vexlo uses publicly available data — rankings, backlinks, and on-page signals. No Search Console or Analytics access required." },
-  { q: "How fast is a proof report generated?", a: "Most reports are ready in under 30 seconds. We scan live data in real-time so your numbers are always fresh." },
-  { q: "Can I white-label the reports?", a: "Yes. Agency Pro and Elite plans let you add your agency's logo, colors, and custom domain to every report." },
-  { q: "What's a Proof Score?", a: "A single 0-100 metric that combines ranking position, backlink authority, and on-page health into one number your prospects instantly understand." },
-  { q: "Is there a free plan?", a: "We offer a free trial so you can generate your first report with zero commitment. No credit card required." },
-  { q: "What data sources does Vexlo use?", a: "We aggregate public SERP data, backlink databases, and on-page crawl results. All data is pulled fresh at report generation time." },
-  { q: "Can I share reports with prospects?", a: "Absolutely. Every report has a unique shareable link. Send it before your call and let the data warm up the conversation." },
-  { q: "Do you offer API access?", a: "Yes, on the Elite plan. Integrate proof reports into your CRM, outbound sequences, or custom dashboards via our REST API." },
+  { q: "What exactly is a Proof Report?", a: "A branded, shareable document showing a prospect's current Google rankings, 30-day trend, Proof Score (0–100), AI Overview presence, and a 2-paragraph sales narrative — all generated from public data in under 60 seconds." },
+  { q: "Do I need access to the prospect's Google Search Console?", a: "No. Never. VEXLO uses only publicly observable ranking data. Zero credentials required from your prospect at any point." },
+  { q: "How is this different from Ahrefs or SEMrush?", a: "Ahrefs and SEMrush are post-sale research tools. VEXLO is a pre-sale closing weapon. Different job. Different moment. Different outcome." },
+  { q: "Is the data accurate enough to show a client?", a: "VEXLO uses the same public ranking signals agencies present in pitches daily. The disclaimer is built in: estimated public data for sales context — not certified analytics." },
+  { q: "Can I white-label the reports?", a: "Agency Pro and Elite plans include custom brand kit: your logo, brand colors, and domain. The report reads as your agency's, not VEXLO's." },
+  { q: "What is a Proof Score?", a: "A 0–100 composite score: ranking position (40%), 30-day trend (30%), AI Overview presence (20%), keyword coverage (10%). Green = strong proof. Red = urgent pain." },
+  { q: "What happens after founding slots are gone?", a: "Pricing increases to public tiers. Founding members keep their rate permanently, regardless of future pricing changes." },
+  { q: "When will VEXLO be live?", a: "Founding members get access first — before public launch. Expected Q2 2026. You'll receive a direct access link via email." },
 ];
 
 const FAQ = () => {

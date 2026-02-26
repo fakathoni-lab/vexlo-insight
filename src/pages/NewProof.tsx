@@ -148,7 +148,7 @@ const Typewriter = ({ text }: { text: string }) => {
     <p className="font-body font-light leading-relaxed" style={{ fontSize: 14, color: "rgba(240,240,238,0.7)" }}>
       {displayed}
       {displayed.length < text.length && (
-        <span className="inline-block w-0.5 h-4 ml-0.5 animate-pulse" style={{ backgroundColor: "#ff6308" }} />
+        <span className="inline-block w-0.5 h-4 ml-0.5 animate-pulse" style={{ backgroundColor: "var(--accent)" }} />
       )}
     </p>
   );
@@ -213,7 +213,7 @@ const NewProof = () => {
               <Input
                 placeholder="example.com — no https://"
                 {...register("domain")}
-                className="h-10 bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#f0f0ee] placeholder:text-[rgba(240,240,238,0.25)] font-body text-sm rounded-[4px] focus-visible:ring-[hsl(22,100%,52%)] focus-visible:ring-1 focus-visible:ring-offset-0"
+                className="h-10 bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#f0f0ee] placeholder:text-[rgba(240,240,238,0.25)] font-body text-sm rounded-[4px] focus-visible:ring-[hsl(263,84%,58%)] focus-visible:ring-1 focus-visible:ring-offset-0"
               />
               {errors.domain && (
                 <p className="text-xs font-body" style={{ color: "hsl(0,80%,60%)" }}>{errors.domain.message}</p>
@@ -227,7 +227,7 @@ const NewProof = () => {
               <Input
                 placeholder="best plumber london"
                 {...register("keyword")}
-                className="h-10 bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#f0f0ee] placeholder:text-[rgba(240,240,238,0.25)] font-body text-sm rounded-[4px] focus-visible:ring-[hsl(22,100%,52%)] focus-visible:ring-1 focus-visible:ring-offset-0"
+                className="h-10 bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#f0f0ee] placeholder:text-[rgba(240,240,238,0.25)] font-body text-sm rounded-[4px] focus-visible:ring-[hsl(263,84%,58%)] focus-visible:ring-1 focus-visible:ring-offset-0"
               />
               {errors.keyword && (
                 <p className="text-xs font-body" style={{ color: "hsl(0,80%,60%)" }}>{errors.keyword.message}</p>
@@ -275,7 +275,7 @@ const NewProof = () => {
                     {isDone ? (
                       <Check className="w-4 h-4" style={{ color: "#22c55e" }} />
                     ) : isActive ? (
-                      <Loader2 className="w-4 h-4 animate-spin" style={{ color: "#ff6308" }} />
+                      <Loader2 className="w-4 h-4 animate-spin" style={{ color: "var(--accent)" }} />
                     ) : (
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "rgba(240,240,238,0.15)" }} />
                     )}
