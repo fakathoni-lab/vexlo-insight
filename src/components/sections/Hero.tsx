@@ -128,12 +128,12 @@ const Hero = () => {
       <div className="relative z-10 flex flex-col items-center text-center px-5 pb-20">
         <div className="max-w-[900px] mx-auto flex flex-col items-center">
           {/* Eyebrow */}
-          <div className="hero-eyebrow">
+          <div className="hero-eyebrow" style={{ opacity: 0, transform: "translateY(12px)", animation: "heroFadeIn 400ms ease-out 100ms forwards" }}>
             <span>Sales Proof Intelligence</span>
           </div>
 
           {/* H1 */}
-          <h1 className="hero-headline" style={{ fontSize: "clamp(36px, 6vw, 80px)", lineHeight: 1.05 }}>
+          <h1 className="hero-headline" style={{ fontSize: "clamp(36px, 6vw, 80px)", lineHeight: 1.05, opacity: 0, transform: "translateY(12px)", animation: "heroFadeIn 400ms ease-out 250ms forwards" }}>
             Prospek bilang pikir-pikir dulu.
             <br />
             <em>Karena kamu belum punya bukti.</em>
@@ -142,7 +142,7 @@ const Hero = () => {
           {/* H2 */}
           <p
             className="mt-7 font-body font-light max-w-[560px]"
-            style={{ fontSize: 15, color: "var(--text-dim)", lineHeight: 1.65 }}
+            style={{ fontSize: 15, color: "var(--text-dim)", lineHeight: 1.65, opacity: 0, transform: "translateY(12px)", animation: "heroFadeIn 400ms ease-out 400ms forwards" }}
           >
             VEXLO menghasilkan visual proof kerentanan SEO prospek dalam &lt;30 detik
             — tanpa GA4, tanpa GSC, tanpa meminta izin siapapun.
