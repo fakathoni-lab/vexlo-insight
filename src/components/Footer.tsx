@@ -108,6 +108,16 @@ const Footer = () => {
           </p>
         </div>
 
+        {/* Founder identity */}
+        <div className="text-center mb-8">
+          <p className="font-sans text-sm mb-1" style={{ color: "#9CA3AF" }}>
+            <strong style={{ color: "var(--text)" }}>[Founder Name]</strong> — Founder, VEXLO
+          </p>
+          <p className="font-sans text-xs" style={{ color: "#9CA3AF" }}>
+            Building the pre-sale intelligence layer for SEO professionals.
+          </p>
+        </div>
+
         {/* Copyright */}
         <div className="pt-8" style={{ borderTop: "1px solid var(--border)" }}>
           <p className="font-mono text-xs text-center" style={{ color: "var(--text-muted)" }}>

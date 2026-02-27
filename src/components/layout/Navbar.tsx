@@ -31,11 +31,14 @@ const Navbar = () => {
 
   return (
     <nav className={`nav ${scrolled ? "scrolled" : ""}`}>
-      {/* Logo */}
-      <a href="/" className="nav-logo">
-        <svg height="28" viewBox="0 0 120 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="0" y="22" fontFamily="'Space Mono', monospace" fontSize="18" fontWeight="700" letterSpacing="0.12em" fill="currentColor">VEXLO</text>
+      {/* Logo + tagline */}
+      <a href="/" className="nav-logo" style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+        <svg height="22" viewBox="0 0 120 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="0" y="18" fontFamily="'Space Mono', monospace" fontSize="18" fontWeight="700" letterSpacing="0.12em" fill="currentColor">VEXLO</text>
         </svg>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.08em", color: "#9CA3AF", textTransform: "uppercase" }}>
+          Sales Proof Intelligence
+        </span>
       </a>
 
       {/* Center — flat links (desktop) */}
@@ -44,6 +47,7 @@ const Navbar = () => {
           <a
             key={link.label}
             href={link.href}
+            style={{ color: "#9CA3AF" }}
             onClick={(e) => {
               e.preventDefault();
               handleNavClick(link.href, link.isRoute);
@@ -89,7 +93,7 @@ const Navbar = () => {
                   key={link.label}
                   onClick={() => handleNavClick(link.href, link.isRoute)}
                   className="w-full font-body text-sm text-left px-4 py-2.5 rounded transition-colors duration-200 hover:bg-[rgba(255,255,255,0.05)]"
-                  style={{ color: "var(--text-dim)" }}
+                  style={{ color: "#9CA3AF" }}
                 >
                   {link.label}
                 </button>
