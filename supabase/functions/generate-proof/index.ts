@@ -9,7 +9,48 @@ const corsHeaders = {
 const DOMAIN_RE = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/;
 
 function sanitize(str: string): string {
-  return str.replace(/[<>"'&]/g, "").trim();
+  return str.replace(/[<>'"&]/g, "").trim();
+}
+
+async function fetchSERPData(domain: string, keyword: string) {
+  const apiKey = Deno.env.get("DATAFORSEO_API_KEY");
+  const baseUrl = "https://api.dataforseo.com/v3/serp/google";
+
+  const endpoints = [
+    `${baseUrl}/organic/live`,
+    `${baseUrl}/features`,
+    `${baseUrl}/organic/history`,
+  ];
+
+  const requests = endpoints.map((url) =>
+    fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ domain, keyword }),
+    }).then((res) => res.json())
+  );
+
+  return Promise.all(requests);
+}
+
+function calculateProofScore(rank: number | null, delta: number | null, isAiOverview: boolean): number {
+  let score = 0;
+
+  if (rank !== null) {
+    if (rank <= 3) score += 40;
+    else if (rank <= 10) score += 25;
+    else if (rank <= 20) score += 10;
+  } else {
+    score = 5; // No ranking
+  }
+
+  if (delta !== null && delta > 0) score += 20;
+  if (isAiOverview) score -= 15;
+
+  return Math.max(0, Math.min(score, 100));
 }
 
 serve(async (req) => {
@@ -40,11 +81,10 @@ serve(async (req) => {
       });
     }
 
-    const { domain, keyword } = await req.json();
+    const { domain, keyword, proof_id } = await req.json();
 
-    // Server-side validation
-    const cleanDomain = sanitize(String(domain || "")).toLowerCase();
-    const cleanKeyword = sanitize(String(keyword || ""));
+    const cleanDomain = sanitize(domain);
+    const cleanKeyword = sanitize(keyword);
 
     if (!DOMAIN_RE.test(cleanDomain)) {
       return new Response(JSON.stringify({ error: "Invalid domain format" }), {
@@ -53,96 +93,32 @@ serve(async (req) => {
       });
     }
 
-    if (cleanKeyword.length < 2 || cleanKeyword.length > 100) {
-      return new Response(JSON.stringify({ error: "Keyword must be 2-100 characters" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const [liveData, featuresData, historyData] = await fetchSERPData(cleanDomain, cleanKeyword);
 
-    // Check usage limits
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("proofs_used, proofs_limit")
-      .eq("id", user.id)
-      .single();
+    const rank = liveData?.rank || null;
+    const delta = historyData?.delta || null;
+    const isAiOverview = featuresData?.is_ai_overview || false;
 
-    if (profile && profile.proofs_used >= profile.proofs_limit) {
-      return new Response(JSON.stringify({ error: "Proof limit reached. Upgrade your plan." }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const proofScore = calculateProofScore(rank, delta, isAiOverview);
 
-    // Create proof record
-    const { data: proof, error: insertError } = await supabase
+    const updateResult = await supabase
       .from("proofs")
-      .insert({
-        user_id: user.id,
-        domain: cleanDomain,
-        target_keyword: cleanKeyword,
-        status: "processing",
+      .update({
+        proof_score: proofScore,
+        rank_data: { liveData, featuresData, historyData },
+        status: "scoring_done",
       })
-      .select("id")
-      .single();
+      .eq("id", proof_id);
 
-    if (insertError) {
-      return new Response(JSON.stringify({ error: insertError.message }), {
+    if (updateResult.error) {
+      return new Response(JSON.stringify({ error: updateResult.error.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // TODO: Replace with real SERP API call
-    const mockScore = Math.floor(Math.random() * 40) + 50;
-    const mockRank = Math.floor(Math.random() * 20) + 1;
-    const mockDelta = Math.floor(Math.random() * 12) - 6;
-    const hasAiOverview = Math.random() > 0.5;
-
-    const mockRankings = [
-      { keyword: cleanKeyword, position: mockRank },
-      { keyword: `best ${cleanKeyword}`, position: mockRank + 3 },
-      { keyword: `${cleanKeyword} near me`, position: Math.max(1, mockRank - 2) },
-      { keyword: `${cleanKeyword} services`, position: mockRank + 7 },
-      { keyword: `affordable ${cleanKeyword}`, position: Math.max(1, mockRank - 4) },
-    ];
-
-    const narrative = `Based on our analysis, ${cleanDomain} has solid SEO foundations but is leaving significant organic traffic on the table. Currently ranking #${mockRank} for "${cleanKeyword}", they're missing an estimated ${mockRank * 60} monthly clicks. With targeted optimization, there's a clear path to page 1 within 60-90 days.`;
-
-    // Update proof with results
-    await supabase
-      .from("proofs")
-      .update({
-        proof_score: mockScore,
-        ranking_position: mockRank,
-        ranking_delta: mockDelta,
-        ai_overview: hasAiOverview,
-        ranking_data: mockRankings,
-        ai_narrative: narrative,
-        status: "complete",
-      })
-      .eq("id", proof.id);
-
-    // Increment proofs_used
-    if (profile) {
-      await supabase
-        .from("profiles")
-        .update({ proofs_used: profile.proofs_used + 1 })
-        .eq("id", user.id);
-    }
-
     return new Response(
-      JSON.stringify({
-        id: proof.id,
-        domain: cleanDomain,
-        keyword: cleanKeyword,
-        score: mockScore,
-        currentRank: mockRank,
-        delta30: mockDelta,
-        aiOverview: hasAiOverview,
-        rankings: mockRankings,
-        narrative,
-      }),
+      JSON.stringify({ proof_id, proof_score: proofScore, status: "scoring_done" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
