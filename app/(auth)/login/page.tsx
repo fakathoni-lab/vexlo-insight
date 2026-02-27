@@ -3,6 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/client';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  email: z.string().email('Email tidak valid'),
+  password: z.string().min(6, 'Password minimal 6 karakter'),
+});
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -15,12 +21,20 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      loginSchema.parse({ email, password });
 
-    if (error) {
-      setError(error.message);
-    } else {
-      router.push('/dashboard');
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        router.push('/dashboard');
+      }
+    } catch (validationError) {
+      if (validationError instanceof z.ZodError) {
+        setError(validationError.errors[0].message);
+      }
     }
   };
 

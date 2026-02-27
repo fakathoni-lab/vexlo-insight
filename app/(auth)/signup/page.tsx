@@ -2,6 +2,13 @@
 
 import { useState } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
+import { z } from 'zod';
+
+const signupSchema = z.object({
+  fullName: z.string().min(1, 'Nama lengkap wajib diisi'),
+  email: z.string().email('Email tidak valid'),
+  password: z.string().min(6, 'Password minimal 6 karakter'),
+});
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('');
@@ -16,20 +23,28 @@ export default function SignupPage() {
     setMessage('');
     setError('');
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
-      },
-    });
+    try {
+      signupSchema.parse({ fullName, email, password });
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setMessage('Cek email kamu untuk verifikasi');
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setMessage('Cek email kamu untuk verifikasi');
+      }
+    } catch (validationError) {
+      if (validationError instanceof z.ZodError) {
+        setError(validationError.errors[0].message);
+      }
     }
   };
 

@@ -1,22 +1,15 @@
-import { Navigate, useLocation } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { session, loading } = useAuth();
-  const location = useLocation();
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#080808" }}>
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: "var(--accent)" }} />
-      </div>
-    );
+    return <div>Loading...</div>; // You can replace this with a spinner or skeleton loader
   }
 
-  if (!session) {
-    const next = encodeURIComponent(location.pathname + location.search);
-    return <Navigate to={`/login?next=${next}`} replace />;
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;

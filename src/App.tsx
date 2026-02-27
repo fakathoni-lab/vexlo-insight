@@ -23,7 +23,8 @@ const App = () => (
         <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/new" element={<NewProof />} />
-          <Route path="/dashboard/history" element={<div className="font-body" style={{ color: "var(--text-dim)" }}>Proof History — coming soon</div>} />
+          <Route path="/dashboard/history" element={<div className="font-body" style={{ color: "var(--text-dim)" }}>Proof History 
+coming soon</div>} />
           <Route path="/settings" element={<Settings />} />
         </Route>
         <Route path="*" element={<NotFound />} />
