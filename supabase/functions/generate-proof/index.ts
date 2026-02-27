@@ -12,28 +12,58 @@ function sanitize(str: string): string {
   return str.replace(/[<>'"&]/g, "").trim();
 }
 
-async function fetchSERPData(domain: string, keyword: string) {
-  const apiKey = Deno.env.get("DATAFORSEO_API_KEY");
-  const baseUrl = "https://api.dataforseo.com/v3/serp/google";
+async function fetchDataForSEO(keyword: string, domain: string) {
+  const baseUrl = "https://api.dataforseo.com";
+  const login = Deno.env.get("DATAFORSEO_LOGIN");
+  const password = Deno.env.get("DATAFORSEO_PASSWORD");
 
-  const endpoints = [
-    `${baseUrl}/organic/live`,
-    `${baseUrl}/features`,
-    `${baseUrl}/organic/history`,
-  ];
+  if (!login || !password) {
+    throw new Error("Missing DataForSEO credentials");
+  }
 
-  const requests = endpoints.map((url) =>
-    fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ domain, keyword }),
-    }).then((res) => res.json())
-  );
+  const authHeader = `Basic ${btoa(`${login}:${password}`)}`;
+  const headers = {
+    Authorization: authHeader,
+    "Content-Type": "application/json",
+  };
 
-  return Promise.all(requests);
+  const body1 = [{ keyword, location_code: 2360, language_code: "en", depth: 20 }];
+  const body2 = [{ keyword, location_code: 2360, language_code: "en" }];
+  const body3 = [{ keyword, location_code: 2360, language_code: "en", domain }];
+
+  try {
+    const [liveResponse, featuresResponse, historyTaskResponse] = await Promise.all([
+      fetch(`${baseUrl}/v3/serp/google/organic/live/advanced`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body1),
+      }).then((res) => res.json()),
+      fetch(`${baseUrl}/v3/serp/google/serp_features/live/advanced`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body2),
+      }).then((res) => res.json()),
+      fetch(`${baseUrl}/v3/serp/google/organic/task_post`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body3),
+      })
+        .then((res) => res.json())
+        .then((taskRes) => {
+          const taskId = taskRes.tasks?.[0]?.id;
+          if (!taskId) throw new Error("Failed to create history task");
+          return fetch(`${baseUrl}/v3/serp/google/organic/task_get/advanced`, {
+            method: "GET",
+            headers,
+          }).then((res) => res.json());
+        }),
+    ]);
+
+    return { liveResponse, featuresResponse, historyTaskResponse };
+  } catch (error) {
+    console.error("DataForSEO API call failed:", error);
+    throw new Error("dataforseo_failed");
+  }
 }
 
 function calculateProofScore(rank: number | null, delta: number | null, isAiOverview: boolean): number {
@@ -50,7 +80,7 @@ function calculateProofScore(rank: number | null, delta: number | null, isAiOver
   if (delta !== null && delta > 0) score += 20;
   if (isAiOverview) score -= 15;
 
-  return Math.max(0, Math.min(score, 100));
+  return Math.min(Math.max(score, 0), 100);
 }
 
 serve(async (req) => {
@@ -93,35 +123,45 @@ serve(async (req) => {
       });
     }
 
-    const [liveData, featuresData, historyData] = await fetchSERPData(cleanDomain, cleanKeyword);
+    try {
+      const { liveResponse, featuresResponse, historyTaskResponse } = await fetchDataForSEO(cleanKeyword, cleanDomain);
 
-    const rank = liveData?.rank || null;
-    const delta = historyData?.delta || null;
-    const isAiOverview = featuresData?.is_ai_overview || false;
+      const rank = liveResponse?.tasks?.[0]?.result?.[0]?.items?.[0]?.rank || null;
+      const delta = historyTaskResponse?.tasks?.[0]?.result?.[0]?.delta || null;
+      const isAiOverview = featuresResponse?.tasks?.[0]?.result?.[0]?.is_ai_overview || false;
 
-    const proofScore = calculateProofScore(rank, delta, isAiOverview);
+      const proofScore = calculateProofScore(rank, delta, isAiOverview);
 
-    const updateResult = await supabase
-      .from("proofs")
-      .update({
-        proof_score: proofScore,
-        rank_data: { liveData, featuresData, historyData },
-        status: "scoring_done",
-      })
-      .eq("id", proof_id);
+      const updateResult = await supabase
+        .from("proofs")
+        .update({
+          proof_score: proofScore,
+          rank_data: { liveResponse, featuresResponse, historyTaskResponse },
+          status: "scoring_done",
+        })
+        .eq("id", proof_id);
 
-    if (updateResult.error) {
-      return new Response(JSON.stringify({ error: updateResult.error.message }), {
+      if (updateResult.error) {
+        throw new Error(updateResult.error.message);
+      }
+
+      return new Response(
+        JSON.stringify({ proof_id, proof_score: proofScore, status: "scoring_done" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (error) {
+      await supabase
+        .from("proofs")
+        .update({ status: "failed" })
+        .eq("id", proof_id);
+
+      return new Response(JSON.stringify({ error: "dataforseo_failed" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    return new Response(
-      JSON.stringify({ proof_id, proof_score: proofScore, status: "scoring_done" }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
   } catch (err) {
+    console.error("Unexpected error:", err);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
