@@ -1,4 +1,3 @@
-
 -- Create waitlist table
 CREATE TABLE public.waitlist (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -76,6 +75,35 @@ CREATE POLICY "Users can create their own proofs"
 CREATE POLICY "Users can delete their own proofs"
   ON public.proofs FOR DELETE
   USING (auth.uid() = user_id);
+
+-- Add subscriptions table
+CREATE TABLE public.subscriptions (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES public.profiles(id),
+  stripe_customer_id TEXT,
+  stripe_subscription_id TEXT,
+  status TEXT,
+  current_period_end TIMESTAMP WITH TIME ZONE
+);
+
+-- Add proof_views table
+CREATE TABLE public.proof_views (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  proof_id UUID NOT NULL REFERENCES public.proofs(id),
+  viewer_ip_hash TEXT,
+  viewed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Enable RLS for proof_views
+ALTER TABLE public.proof_views ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public_insert_views" ON public.proof_views
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "proof_owner_select_views" ON public.proof_views
+  FOR SELECT USING (auth.uid() = (SELECT user_id FROM public.proofs WHERE id = proof_id));
+
+-- Add missing RLS policy for public proofs
+CREATE POLICY "public_proofs" ON public.proofs
+  FOR SELECT USING (is_public = true AND status = 'complete');
 
 -- Auto-create profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
