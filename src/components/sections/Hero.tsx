@@ -1,9 +1,6 @@
-import { useTranslation } from "react-i18next";
-import { ChevronDown, ArrowRight } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 const Hero = () => {
-  const { t } = useTranslation();
-
   return (
     <section className="hero">
       <div className="hero-atmosphere" />
@@ -14,18 +11,60 @@ const Hero = () => {
       </div>
 
       <div className="hero-content">
-        <div className="hero-eyebrow">{t('hero.eyebrow')}</div>
-        <p className="hero-tagline">{t('hero.tagline')}</p>
+        <h1
+          className="font-sans font-bold tracking-tight"
+          style={{
+            fontSize: "clamp(36px, 5vw, 56px)",
+            color: "#FFFFFF",
+            lineHeight: 1.1,
+            marginBottom: "16px",
+          }}
+        >
+          The First 60 Seconds<br />Decide the Deal.
+        </h1>
+        <p
+          className="font-sans"
+          style={{
+            fontSize: "clamp(16px, 1.6vw, 20px)",
+            fontWeight: 400,
+            color: "#E5E7EB",
+            lineHeight: 1.6,
+            maxWidth: "520px",
+            marginBottom: "32px",
+          }}
+        >
+          Generate branded, prospect-specific SEO proof in under 60 seconds.
+          No access. No waiting. No skill gap in the room.
+        </p>
       </div>
 
       <div className="hero-search-outer">
         <div className="search-box">
-          <textarea placeholder={t('hero.placeholder')} rows={3} />
+          <label
+            className="font-sans block mb-2"
+            style={{ fontSize: "14px", fontWeight: 500, color: "#E5E7EB" }}
+          >
+            Enter your prospect's domain:
+          </label>
+          <textarea
+            placeholder="e.g. example.com — best plumber london"
+            rows={3}
+          />
           <div className="search-actions">
-            <button className="search-submit" aria-label={t('hero.cta_primary')}>
-              <ArrowRight />
+            <div />
+            <button
+              className="hero-cta-btn"
+              aria-label="Generate proof"
+            >
+              Generate Proof →
             </button>
           </div>
+          <p
+            className="font-sans mt-2 text-center"
+            style={{ fontSize: "13px", color: "#9CA3AF" }}
+          >
+            Free. No login. ~30 seconds.
+          </p>
         </div>
       </div>
 
@@ -37,9 +76,8 @@ const Hero = () => {
         <div className="announcement">
           <div>
             <p className="ann-label">
-              <strong>{t('hero.ann_label')}</strong> {t('hero.ann_label_suffix')}
+              <strong>Founding Membership</strong> — Seleksi Terbatas
             </p>
-            <p className="ann-sub">{t('hero.ann_sub')}</p>
           </div>
           <button
             className="ann-btn"
@@ -48,7 +86,7 @@ const Hero = () => {
               el?.scrollIntoView({ behavior: "smooth" });
             }}
           >
-            {t('hero.ann_btn')}
+            Claim Founding Member Access
           </button>
         </div>
       </div>

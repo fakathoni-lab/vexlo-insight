@@ -1,24 +1,21 @@
-import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNavScroll } from "@/hooks/useNavScroll";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+
+const navLinks = [
+  { label: "Features", href: "#features" },
+  { label: "Pricing", href: "/pricing", isRoute: true },
+  { label: "Use Cases", href: "#segments" },
+  { label: "FAQ", href: "#faq" },
+  { label: "About", href: "#infrastructure" },
+];
 
 const Navbar = () => {
-  const { t } = useTranslation();
   const scrolled = useNavScroll();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-
-  const navLinks = [
-    { label: t('nav.features'), href: "#features" },
-    { label: t('nav.pricing'), href: "/pricing", isRoute: true },
-    { label: t('nav.use_cases'), href: "#segments" },
-    { label: t('nav.faq'), href: "#faq" },
-    { label: t('nav.about'), href: "#infrastructure" },
-  ];
 
   const handleNavClick = (href: string, isRoute?: boolean) => {
     setOpen(false);
@@ -34,11 +31,14 @@ const Navbar = () => {
 
   return (
     <nav className={`nav ${scrolled ? "scrolled" : ""}`}>
-      {/* Logo */}
-      <a href="/" className="nav-logo">
-        <svg height="28" viewBox="0 0 120 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="0" y="22" fontFamily="'Space Mono', monospace" fontSize="18" fontWeight="700" letterSpacing="0.12em" fill="currentColor">VEXLO</text>
+      {/* Logo + tagline */}
+      <a href="/" className="nav-logo" style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+        <svg height="22" viewBox="0 0 120 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="0" y="18" fontFamily="'Space Mono', monospace" fontSize="18" fontWeight="700" letterSpacing="0.12em" fill="currentColor">VEXLO</text>
         </svg>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.08em", color: "#9CA3AF", textTransform: "uppercase" }}>
+          Sales Proof Intelligence
+        </span>
       </a>
 
       {/* Center — flat links (desktop) */}
@@ -47,6 +47,7 @@ const Navbar = () => {
           <a
             key={link.label}
             href={link.href}
+            style={{ color: "#9CA3AF" }}
             onClick={(e) => {
               e.preventDefault();
               handleNavClick(link.href, link.isRoute);
@@ -57,11 +58,8 @@ const Navbar = () => {
         ))}
       </div>
 
-      {/* Right — language switcher + ghost CTA + mobile menu */}
+      {/* Right — ghost CTA + mobile menu */}
       <div className="flex items-center gap-2.5">
-        <div className="hidden md:block">
-          <LanguageSwitcher />
-        </div>
         <button
           onClick={() => handleNavClick("#waitlist")}
           className="nav-cta hidden md:inline-flex"
@@ -71,7 +69,7 @@ const Navbar = () => {
             border: "1.5px solid var(--border-strong)",
           }}
         >
-          {t('nav.cta_nav')}
+          Get Early Access
         </button>
 
         {/* Mobile hamburger */}
@@ -95,17 +93,14 @@ const Navbar = () => {
                   key={link.label}
                   onClick={() => handleNavClick(link.href, link.isRoute)}
                   className="w-full font-body text-sm text-left px-4 py-2.5 rounded transition-colors duration-200 hover:bg-[rgba(255,255,255,0.05)]"
-                  style={{ color: "var(--text-dim)" }}
+                  style={{ color: "#9CA3AF" }}
                 >
                   {link.label}
                 </button>
               ))}
               <div className="px-4 mt-4">
-                <LanguageSwitcher />
-              </div>
-              <div className="px-4 mt-2">
                 <button onClick={() => handleNavClick("#waitlist")} className="btn-ghost w-full">
-                  {t('nav.cta_nav')}
+                  Get Early Access
                 </button>
               </div>
             </div>
