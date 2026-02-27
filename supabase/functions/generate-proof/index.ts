@@ -7,9 +7,20 @@ const corsHeaders = {
 };
 
 const DOMAIN_RE = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/;
+const KEYWORD_MIN = 2;
+const KEYWORD_MAX = 100;
+const DOMAIN_MAX = 253;
 
 function sanitize(str: string): string {
   return str.replace(/[<>'"&]/g, "").trim();
+}
+
+function validateInputs(domain: string, keyword: string): string | null {
+  if (typeof domain !== "string" || typeof keyword !== "string") return "Invalid input types";
+  if (domain.length < 3 || domain.length > DOMAIN_MAX) return "Domain length must be 3-253 chars";
+  if (keyword.length < KEYWORD_MIN || keyword.length > KEYWORD_MAX) return "Keyword length must be 2-100 chars";
+  if (!DOMAIN_RE.test(domain)) return "Invalid domain format";
+  return null;
 }
 
 async function fetchDataForSEO(keyword: string, domain: string) {
@@ -60,8 +71,8 @@ async function fetchDataForSEO(keyword: string, domain: string) {
     ]);
 
     return { liveResponse, featuresResponse, historyTaskResponse };
-  } catch (error) {
-    console.error("DataForSEO API call failed:", error);
+  } catch (_error) {
+    console.error("DataForSEO API call failed");
     throw new Error("dataforseo_failed");
   }
 }
@@ -116,8 +127,9 @@ serve(async (req) => {
     const cleanDomain = sanitize(domain);
     const cleanKeyword = sanitize(keyword);
 
-    if (!DOMAIN_RE.test(cleanDomain)) {
-      return new Response(JSON.stringify({ error: "Invalid domain format" }), {
+    const validationError = validateInputs(cleanDomain, cleanKeyword);
+    if (validationError) {
+      return new Response(JSON.stringify({ error: validationError }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -160,8 +172,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-  } catch (err) {
-    console.error("Unexpected error:", err);
+  } catch (_err) {
+    console.error("Unexpected error in generate-proof");
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
