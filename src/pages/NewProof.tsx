@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 // ── Schema ──
 const schema = z.object({
@@ -167,21 +168,40 @@ const NewProof = () => {
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
-  const onSubmit = (data: FormData) => {
-    setResult({ ...mockResult, domain: data.domain, keyword: data.keyword, narrative: narrativeText });
+  const onSubmit = async (data: FormData) => {
     setState("loading");
     setActiveStep(0);
 
-    // Simulate progressive loading
+    // Progressive loading UI
     let step = 0;
     const interval = setInterval(() => {
       step++;
-      if (step >= loadingSteps.length) {
-        clearInterval(interval);
-        setTimeout(() => setState("result"), 800);
-      }
       setActiveStep(step);
+      if (step >= loadingSteps.length) clearInterval(interval);
     }, 2000);
+
+    try {
+      // Call edge function for server-side validation + generation
+      const { data: proofData, error } = await supabase.functions.invoke("generate-proof", {
+        body: { domain: data.domain, keyword: data.keyword },
+      });
+
+      clearInterval(interval);
+
+      if (error) {
+        setState("input");
+        toast.error("Failed to generate proof", { description: error.message });
+        return;
+      }
+
+      setResult({ ...mockResult, ...proofData, narrative: proofData.narrative || narrativeText });
+      setActiveStep(loadingSteps.length);
+      setTimeout(() => setState("result"), 800);
+    } catch (err) {
+      clearInterval(interval);
+      setState("input");
+      toast.error("Something went wrong", { description: "Please try again." });
+    }
   };
 
   const handleCopy = () => {
