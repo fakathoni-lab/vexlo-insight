@@ -1,126 +1,76 @@
 
-# Improve Early Access Conversion Copy + Align to Purple Brand
 
-## Overview
-Text-only copy updates across 8 component files + color system migration from orange (#ff6308) to purple (#7C3AED) across CSS and all component files with hardcoded orange references. No layout, structure, or Supabase logic changes.
+## VEXLO — Align Dashboard & NewProof to Target Schema
 
----
+### Problem
 
-## Files Changed (8 total)
+There is a mismatch between three layers:
 
-### 1. `src/index.css` — Color System Update
-**What changes:**
-- `:root` variable `--accent` from `#ff6308` to `#7C3AED`
-- Add new tokens: `--accent-light: #9333EA`, `--accent-glow: #A855F7`, `--accent-dim: rgba(124,58,237,0.12)`, `--accent-border: rgba(124,58,237,0.25)`
-- `--accent-hsl` from `22 100% 52%` to `263 84% 58%`
-- `--ring` from `22 100% 52%` to `263 84% 58%`
-- `.ann-tag`: `background` from `rgba(255,99,8,0.12)` to `rgba(124,58,237,0.12)`, `border` from `rgba(255,99,8,0.3)` to `rgba(124,58,237,0.30)`
-- `.product-flagship-visual`: radial-gradient `rgba(255,99,8,0.06)` to `rgba(124,58,237,0.06)`
-- `.grok-ring:nth-child(2)`: `border-color` from `rgba(255,99,8,0.18)` to `rgba(124,58,237,0.22)`
-- `.understand-atmo`: replace orange gradient stops with purple
-- `.understand-orb`: replace orange gradient stop with purple
-- `.supergrok-atmo`: replace orange gradient stops with purple
-- `.sg-badge`: 3 values — color, background, border — all from orange to purple
-- `::selection`: from `hsla(22, 100%, 52%, 0.3)` to `hsla(263, 84%, 58%, 0.3)`
+1. **Current DB types** (auto-generated `types.ts`): columns are `keyword`, `score`, `current_rank`, `delta_30`, `rankings`, `narrative`
+2. **Edge Function** (`generate-proof`): already references target schema columns (`proof_score`, `ranking_data`, `status`) that don't exist in the current DB
+3. **Target schema** (from knowledge file): `target_keyword`, `proof_score`, `ranking_position`, `ranking_delta`, `ranking_data`, `serp_features`, `ai_narrative`, `status`, `public_slug`, `is_public`, `error_message`, `api_cost_units`
 
-### 2. `src/components/sections/Hero.tsx` — Copy Update
-**Current → New:**
-- Eyebrow: `'Sales Proof Intelligence'` → `'Pre-Sale Revenue Infrastructure'`
-- Tagline: current text → `'Generate branded, prospect-specific SEO proof in under 60 seconds. No access. No waiting. No skill gap in the room.'`
-- ann-label: `'VEXLO Early Access — Founding Members Open:'` → `'VEXLO Early Access — Founding Members Open:'` (keep)
-- ann-sub: current → `'17 of 50 founding member slots claimed. Lifetime deal at $149 — locked in forever.'` (already correct — keep)
-- ann-btn: `'Claim Your Slot'` → `'Claim Founding Member Access'`
+Dashboard.tsx and NewProof.tsx currently use the old column names. The edge function uses a mix. Everything needs to align to the target schema.
 
-### 3. `src/components/sections/Problem.tsx` — Copy Update
-**Current → New:**
-- Section label color: `hsl(22,100%,52%)` → `var(--accent)` (2 instances)
-- Section label text: `'The Problem'` → `'The Revenue Gap'`
-- H2: current 3 lines → `'Skill doesn't close deals. Proof does.'` + italic line `'And you don't have it fast enough.'`
-- Body paragraph: new text as specified
-- Card 1: tag `'Time Sink'` kept, title + body updated
-- Card 2: tag `'Trust Killer'` kept, title + body updated  
-- Card 3: tag `'Lost Deal'` kept, title + body updated
+### Prerequisite: Database Migration
 
-### 4. `src/components/sections/HowItWorks.tsx` — Copy Update
-**Current → New:**
-- Section label color: `hsl(22,100%,52%)` → `var(--accent)` (2 instances)
-- H2: `'Three steps to undeniable proof.'` → `'Proof in under 60 seconds.'` + italic `'Before the call ends.'`
-- Step 1: number `'01'`, title → `'Enter any prospect domain + keyword'`, body updated, label prefix `'01 — INPUT'`
-- Step 2: number `'02'`, title → `'VEXLO builds the proof report'`, body updated, label prefix `'02 — GENERATE'`
-- Step 3: number `'03'`, title → `'Share. Present. Win.'`, body updated, label prefix `'03 — CLOSE'`
-- Step label color: `hsl(22,100%,52%)` → `var(--accent)`
+Before the code changes work end-to-end, the migration SQL from the knowledge file must be applied in the Supabase Dashboard to create the correct `proofs` table with all target columns. After that, the Lovable-generated `types.ts` will auto-update to reflect the new columns.
 
-### 5. `src/components/Pricing.tsx` — Copy Update
-**Current → New:**
-- Section label: `'Pricing'` → `'Founding Member Pricing'`
-- ROI framing box: replace Indonesian text with `'50 founding members only. Price increases once seats are gone.'`
-- H2: replace Indonesian → `'Early access pricing.'` + italic `'Locked in forever.'`
-- Tier 1: desc → `'Solo Freelancer'`, CTA → `'Start Closing'`
-- Tier 2: desc → `'Growing Operator'`, CTA → `'Claim Founding Slot'`
-- Tier 3: name `'Agency Elite'` → `'Elite'`, desc → `'Scale Operator'`, CTA → `'Lock Elite Access'`
-- Featured badge color: `hsl(22,100%,52%)` → `var(--accent)`
-- Featured border: `rgba(255,99,8,0.4)` → `rgba(124,58,237,0.4)`
-- Check icon color: `var(--accent)` (already uses variable — auto-updates)
-- Pay-per-proof box: update Indonesian text to English
+### Changes
 
-### 6. `src/components/CTA.tsx` — Copy Update
-**Current → New:**
-- H2: `'Kirim Buktinya. Tutup Dealnya.'` → `'Stop losing deals to the proof gap.'`
-- Sub: Indonesian text → `'Join 17 SEO freelancers who will close their next client in the first 60 seconds of the call.'`
-- Badge labels: Indonesian → English (`'Free to Join'`, `'60-Second Setup'`, `'No Card Required'`, `'Cancel Anytime'`)
-- Add scarcity text below badges: `'Founding member pricing locked in for life. 50 slots only. 33 remaining.'`
+#### 1. Update `src/integrations/supabase/types.ts` (proofs table definition)
 
-### 7. `src/components/FAQ.tsx` — Complete Q&A Replacement
-Replace all 8 existing FAQs with the 8 new Q&A pairs specified in the task. No structural changes to the Accordion component.
+Update the `proofs` table types to match the target schema:
 
-### 8. `src/components/Footer.tsx` — Copy Update
-**Current → New:**
-- Newsletter label: keep `'Monthly AI Overview Impact Index'` (already English)
-- Newsletter body: Indonesian → `'Data from thousands of proof reports you can't get from any other tool.'`
-- Newsletter button: Indonesian → `'Get Free Report'`
-- Footer link group 1 title: `'Produk'` → `'Product'`
-- Agency seats text: already English — keep
-- Legal line: already correct (`'© 2026 VEXLO — All rights reserved'`) — keep
+- `keyword` becomes `target_keyword`
+- `score` becomes `proof_score` (nullable)
+- `current_rank` becomes `ranking_position` (nullable)
+- `delta_30` becomes `ranking_delta` (nullable)
+- `rankings` becomes `ranking_data` (jsonb, nullable)
+- `narrative` becomes `ai_narrative` (nullable)
+- Add: `serp_features` (jsonb, nullable), `status` (text, default 'pending'), `public_slug` (text, nullable, unique), `is_public` (boolean, default false), `error_message` (text, nullable), `api_cost_units` (integer, nullable)
 
-### 9. `src/components/sections/WaitlistForm.tsx` — Color + Copy Update
-- Focus ring: `hsl(22,100%,52%)` → `hsl(263,84%,58%)`
-- Success state color: `hsl(22,100%,52%)` → `hsl(263,84%,58%)`
-- Placeholder: `'you@agency.com'` → `'Your work email — we'll send access details'`
-- Button text: `'Join Waitlist'` → `'Secure My Founding Slot'`
+#### 2. Update `src/pages/NewProof.tsx`
 
-### 10. `src/pages/Login.tsx` — Color Update Only
-- Focus ring (2 inputs): `hsl(22,100%,52%)` → `hsl(263,84%,58%)`
-- Sign up link color: `hsl(22,100%,52%)` → `hsl(263,84%,58%)`
+- Change `.insert({ keyword: ... })` to `.insert({ target_keyword: ... })`
+- Change `.select("keyword, score, ...")` to `.select("target_keyword, proof_score, ...")`
+- Update `ProofResult` interface to use new column names
+- Update all UI references: `result.keyword` to `result.target_keyword`, `result.score` to `result.proof_score`, `result.current_rank` to `result.ranking_position`, `result.delta_30` to `result.ranking_delta`, `result.narrative` to `result.ai_narrative`, `result.rankings` to `result.ranking_data`
+- Remove `score: 0` from initial insert (now nullable in schema, set by edge function)
+- Add `status: 'pending'` to initial insert
 
-### 11. `src/pages/Signup.tsx` — Color Update Only
-- Focus ring (3 inputs): `hsl(22,100%,52%)` → `hsl(263,84%,58%)`
-- Sign in link color: `hsl(22,100%,52%)` → `hsl(263,84%,58%)`
+#### 3. Update `src/pages/Dashboard.tsx`
 
-### 12. `src/components/sections/SegmentSelector.tsx` — Color Update Only
-- Featured border: `rgba(255,99,8,0.4)` → `rgba(124,58,237,0.4)`
-- Badge background: `hsl(22,100%,52%)` → `var(--accent)`
+- Change `.select("keyword, score, current_rank, ...")` to `.select("target_keyword, proof_score, ranking_position, ...")`
+- Update `Proof` interface to match new column names
+- Update all UI references in the recent proofs list
 
----
+#### 4. Fix `supabase/functions/generate-proof/index.ts`
 
-## Execution Order
-1. `src/index.css` — color tokens + all orange references in CSS
-2. `src/components/sections/Hero.tsx` — copy
-3. `src/components/sections/Problem.tsx` — copy + color
-4. `src/components/sections/HowItWorks.tsx` — copy + color
-5. `src/components/Pricing.tsx` — copy + color
-6. `src/components/CTA.tsx` — copy
-7. `src/components/FAQ.tsx` — copy
-8. `src/components/Footer.tsx` — copy
-9. `src/components/sections/WaitlistForm.tsx` — color + copy
-10. `src/pages/Login.tsx` — color
-11. `src/pages/Signup.tsx` — color
-12. `src/components/sections/SegmentSelector.tsx` — color
+The edge function already uses `proof_score` and `ranking_data` which align with the target schema. Additional fixes:
 
-## What Is NOT Touched
-- All layout/structure unchanged
-- All Supabase hooks/config untouched
-- All shadcn/ui components preserved
-- Section order preserved
-- No new sections added
-- No file/folder structure changes
-- `--bg`, `--text`, `--border`, `--font-*` variables unchanged
+- Add `ranking_position`, `ranking_delta`, `ai_overview`, `serp_features` to the update call
+- Change `status: "scoring_done"` to `status: "complete"` (matching the CHECK constraint)
+- Add LLMAPI narrative generation call (or placeholder) to populate `ai_narrative`
+
+### Technical Details
+
+Column name mapping (old to new):
+
+```text
+keyword         -> target_keyword
+score           -> proof_score
+current_rank    -> ranking_position
+delta_30        -> ranking_delta
+rankings        -> ranking_data
+narrative       -> ai_narrative
+(new)           -> serp_features
+(new)           -> status
+(new)           -> public_slug
+(new)           -> is_public
+(new)           -> error_message
+(new)           -> api_cost_units
+```
+
+Files modified: 4 (`types.ts`, `Dashboard.tsx`, `NewProof.tsx`, `generate-proof/index.ts`)
+
