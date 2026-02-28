@@ -148,7 +148,7 @@ serve(async (req) => {
         .from("proofs")
         .update({
           proof_score: proofScore,
-          rank_data: { liveResponse, featuresResponse, historyTaskResponse },
+          ranking_data: { liveResponse, featuresResponse, historyTaskResponse },
           status: "scoring_done",
         })
         .eq("id", proof_id);
