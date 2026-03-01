@@ -78,19 +78,32 @@ async function fetchDataForSEO(keyword: string, domain: string) {
 }
 
 function calculateProofScore(rank: number | null, delta: number | null, isAiOverview: boolean): number {
-  let score = 0;
-
+  // rank_score: weight 0.40
+  let rankScore = 5;
   if (rank !== null) {
-    if (rank <= 3) score += 40;
-    else if (rank <= 10) score += 25;
-    else if (rank <= 20) score += 10;
-  } else {
-    score = 5; // No ranking
+    if (rank <= 1) rankScore = 100;
+    else if (rank <= 3) rankScore = 90;
+    else if (rank <= 20) rankScore = Math.round(80 - ((rank - 4) / 16) * 75);
+    else rankScore = 5;
   }
 
-  if (delta !== null && delta > 0) score += 20;
-  if (isAiOverview) score -= 15;
+  // trend_score: weight 0.30
+  let trendScore = 50;
+  if (delta !== null) {
+    if (delta > 5) trendScore = 100;
+    else if (delta > 0) trendScore = 70;
+    else if (delta === 0) trendScore = 50;
+    else if (delta > -5) trendScore = 30;
+    else trendScore = 0;
+  }
 
+  // ai_score: weight 0.20 (simplified — no AI = good)
+  const aiScore = isAiOverview ? 40 : 100;
+
+  // kd_score: weight 0.10 (placeholder — no KD data yet)
+  const kdScore = 70;
+
+  const score = Math.round(rankScore * 0.4 + trendScore * 0.3 + aiScore * 0.2 + kdScore * 0.1);
   return Math.min(Math.max(score, 0), 100);
 }
 
@@ -135,6 +148,9 @@ serve(async (req) => {
       });
     }
 
+    // Mark as processing
+    await supabase.from("proofs").update({ status: "processing" }).eq("id", proof_id);
+
     try {
       const { liveResponse, featuresResponse, historyTaskResponse } = await fetchDataForSEO(cleanKeyword, cleanDomain);
 
@@ -144,12 +160,68 @@ serve(async (req) => {
 
       const proofScore = calculateProofScore(rank, delta, isAiOverview);
 
+      // Build SERP features summary
+      const serpFeatures = {
+        ai_overview: isAiOverview,
+        featured_snippets: featuresResponse?.tasks?.[0]?.result?.[0]?.featured_snippet || false,
+        local_pack: featuresResponse?.tasks?.[0]?.result?.[0]?.local_pack || false,
+      };
+
+      // LLMAPI narrative (placeholder — will call LLMAPI when key is set)
+      let aiNarrative: string | null = null;
+      const llmapiKey = Deno.env.get("LLMAPI_KEY");
+      if (llmapiKey) {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 15000);
+
+          const llmRes = await fetch("https://app.llmapi.ai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${llmapiKey}`,
+              "Content-Type": "application/json",
+            },
+            signal: controller.signal,
+            body: JSON.stringify({
+              model: "claude-3-haiku-20240307",
+              max_tokens: 300,
+              temperature: 0.7,
+              messages: [
+                {
+                  role: "system",
+                  content: "You are an expert SEO sales consultant helping agency owners close discovery calls. Write ONE paragraph sales narrative (max 225 words) using specific numbers. Professional, authoritative tone. No unverifiable claims.",
+                },
+                {
+                  role: "user",
+                  content: `domain=${cleanDomain}, keyword=${cleanKeyword}, score=${proofScore}, rank=${rank ?? "unranked"}, delta30d=${delta ?? "unknown"}, ai_overview=${isAiOverview}`,
+                },
+              ],
+            }),
+          });
+
+          clearTimeout(timeout);
+
+          if (llmRes.ok) {
+            const llmData = await llmRes.json();
+            aiNarrative = llmData.choices?.[0]?.message?.content ?? null;
+          }
+        } catch {
+          // LLMAPI timeout or error — proceed without narrative
+          console.error("LLMAPI call failed, proceeding without narrative");
+        }
+      }
+
       const updateResult = await supabase
         .from("proofs")
         .update({
           proof_score: proofScore,
+          ranking_position: rank,
+          ranking_delta: delta,
+          ai_overview: isAiOverview,
           ranking_data: { liveResponse, featuresResponse, historyTaskResponse },
-          status: "scoring_done",
+          serp_features: serpFeatures,
+          ai_narrative: aiNarrative,
+          status: "complete",
         })
         .eq("id", proof_id);
 
@@ -158,13 +230,13 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ proof_id, proof_score: proofScore, status: "scoring_done" }),
+        JSON.stringify({ proof_id, proof_score: proofScore, status: "complete" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } catch (error) {
       await supabase
         .from("proofs")
-        .update({ status: "failed" })
+        .update({ status: "failed", error_message: "Data collection failed" })
         .eq("id", proof_id);
 
       return new Response(JSON.stringify({ error: "dataforseo_failed" }), {

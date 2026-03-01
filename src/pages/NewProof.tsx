@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -36,13 +36,14 @@ interface RankingItem {
 interface ProofResult {
   id: string;
   domain: string;
-  keyword: string;
-  score: number;
-  current_rank: number | null;
-  delta_30: number | null;
+  target_keyword: string;
+  proof_score: number | null;
+  ranking_position: number | null;
+  ranking_delta: number | null;
   ai_overview: boolean | null;
-  rankings: Json | null;
-  narrative: string | null;
+  ranking_data: Json | null;
+  ai_narrative: string | null;
+  status: string;
 }
 
 type State = "input" | "loading" | "result";
@@ -75,15 +76,15 @@ const NewProof = () => {
     setState("loading");
     setActiveStep(0);
 
-    // 1. Insert pending proof row
+    // 1. Insert pending proof row (target schema columns)
     const { data: proofRow, error: insertError } = await supabase
       .from("proofs")
       .insert({
         user_id: user.id,
         domain: data.domain,
-        keyword: data.keyword,
-        score: 0,
-      })
+        target_keyword: data.keyword,
+        status: "pending",
+      } as any)
       .select("id")
       .single();
 
@@ -115,15 +116,15 @@ const NewProof = () => {
         return;
       }
 
-      // 4. Fetch the completed proof from DB
+      // 4. Fetch the completed proof from DB (target schema columns)
       const { data: completedProof } = await supabase
         .from("proofs")
-        .select("id, domain, keyword, score, current_rank, delta_30, ai_overview, rankings, narrative")
+        .select("id, domain, target_keyword, proof_score, ranking_position, ranking_delta, ai_overview, ranking_data, ai_narrative, status" as any)
         .eq("id", proofRow.id)
         .single();
 
       if (completedProof) {
-        setResult(completedProof);
+        setResult(completedProof as unknown as ProofResult);
       }
 
       setActiveStep(loadingSteps.length);
@@ -137,7 +138,7 @@ const NewProof = () => {
 
   const handleCopy = () => {
     if (!result) return;
-    const text = `Proof Report: ${result.domain}\nKeyword: ${result.keyword}\nScore: ${result.score}/100\nCurrent Rank: ${result.current_rank ? `#${result.current_rank}` : "N/A"}\n30-Day Delta: ${result.delta_30 ?? "N/A"}\nAI Overview: ${result.ai_overview ? "Yes" : "No"}\n\n${result.narrative || ""}`;
+    const text = `Proof Report: ${result.domain}\nKeyword: ${result.target_keyword}\nScore: ${result.proof_score ?? "N/A"}/100\nCurrent Rank: ${result.ranking_position ? `#${result.ranking_position}` : "N/A"}\n30-Day Delta: ${result.ranking_delta ?? "N/A"}\nAI Overview: ${result.ai_overview ? "Yes" : "No"}\n\n${result.ai_narrative || ""}`;
     navigator.clipboard.writeText(text);
     toast("Copied!", { description: "Report copied to clipboard." });
   };
@@ -266,7 +267,7 @@ const NewProof = () => {
   // ── STATE 3: RESULT ──
   if (!result) return null;
 
-  const rankingsRaw = result.rankings as unknown;
+  const rankingsRaw = result.ranking_data as unknown;
   const rankings: RankingItem[] = Array.isArray(rankingsRaw)
     ? (rankingsRaw as unknown as RankingItem[])
     : ((rankingsRaw as Record<string, unknown> | null)?.rankings as RankingItem[] | undefined) || [];
@@ -286,17 +287,17 @@ const NewProof = () => {
             {result.domain}
           </h2>
           <p className="font-body font-light mt-1" style={{ fontSize: 13, color: "rgba(240,240,238,0.45)" }}>
-            Keyword: {result.keyword}
+            Keyword: {result.target_keyword}
           </p>
         </div>
-        <ScoreRing score={result.score} />
+        <ScoreRing score={result.proof_score ?? 0} />
       </div>
 
       {/* Stats grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { label: "Current Rank", value: result.current_rank ? `#${result.current_rank}` : "N/A" },
-          { label: "30-Day Delta", value: result.delta_30 !== null ? `${(result.delta_30 ?? 0) > 0 ? "+" : ""}${result.delta_30}` : "N/A" },
+          { label: "Current Rank", value: result.ranking_position ? `#${result.ranking_position}` : "N/A" },
+          { label: "30-Day Delta", value: result.ranking_delta !== null ? `${(result.ranking_delta ?? 0) > 0 ? "+" : ""}${result.ranking_delta}` : "N/A" },
           { label: "AI Overview", value: result.ai_overview ? "Yes" : "No" },
         ].map((s) => (
           <div
@@ -332,7 +333,7 @@ const NewProof = () => {
       )}
 
       {/* AI Narrative */}
-      {result.narrative && (
+      {result.ai_narrative && (
         <div
           className="rounded-[12px] border border-[rgba(255,255,255,0.07)] p-8"
           style={{ backgroundColor: "#0d0d0d" }}
@@ -340,7 +341,7 @@ const NewProof = () => {
           <p className="font-mono uppercase tracking-wide mb-4" style={{ fontSize: 8.5, color: "rgba(240,240,238,0.25)" }}>
             AI Sales Narrative
           </p>
-          <Typewriter text={result.narrative} />
+          <Typewriter text={result.ai_narrative} />
         </div>
       )}
 
