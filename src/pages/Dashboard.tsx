@@ -8,9 +8,10 @@ import SEO from "@/components/SEO";
 interface Proof {
   id: string;
   domain: string;
-  keyword: string;
-  score: number;
-  current_rank: number | null;
+  target_keyword: string;
+  proof_score: number | null;
+  ranking_position: number | null;
+  status: string;
   created_at: string;
 }
 
@@ -34,13 +35,13 @@ const Dashboard = () => {
         .single(),
       supabase
         .from("proofs")
-        .select("id, domain, keyword, score, current_rank, created_at")
+        .select("id, domain, target_keyword, proof_score, ranking_position, status, created_at" as any)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(5),
     ]).then(([profileRes, proofsRes]) => {
       if (profileRes.data) setProfile(profileRes.data);
-      if (proofsRes.data) setRecentProofs(proofsRes.data);
+      if (proofsRes.data) setRecentProofs(proofsRes.data as unknown as Proof[]);
     });
   }, [user]);
 
@@ -59,6 +60,16 @@ const Dashboard = () => {
     if (score <= 30) return "#ef4444";
     if (score <= 60) return "#f59e0b";
     return "#22c55e";
+  };
+
+  const statusBadge = (status: string) => {
+    const colors: Record<string, string> = {
+      pending: "rgba(240,240,238,0.25)",
+      processing: "#f59e0b",
+      complete: "#22c55e",
+      failed: "#ef4444",
+    };
+    return colors[status] ?? "rgba(240,240,238,0.25)";
   };
 
   return (
@@ -150,18 +161,27 @@ const Dashboard = () => {
                     {proof.domain}
                   </p>
                   <p className="font-body font-light truncate" style={{ fontSize: 12, color: "rgba(240,240,238,0.45)" }}>
-                    {proof.keyword}
+                    {proof.target_keyword}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-4 shrink-0">
-                  <span className="font-headline" style={{ fontSize: 18, color: scoreColor(proof.score) }}>
-                    {proof.score}
-                  </span>
+                  {proof.status === "complete" && proof.proof_score !== null ? (
+                    <span className="font-headline" style={{ fontSize: 18, color: scoreColor(proof.proof_score) }}>
+                      {proof.proof_score}
+                    </span>
+                  ) : (
+                    <span
+                      className="font-mono uppercase text-[9px] tracking-wider px-2 py-0.5 rounded-full"
+                      style={{ color: statusBadge(proof.status), border: `1px solid ${statusBadge(proof.status)}` }}
+                    >
+                      {proof.status}
+                    </span>
+                  )}
 
-                  {proof.current_rank !== null && (
+                  {proof.ranking_position !== null && (
                     <span className="font-mono" style={{ fontSize: 11, color: "rgba(240,240,238,0.45)" }}>
-                      #{proof.current_rank}
+                      #{proof.ranking_position}
                     </span>
                   )}
 
