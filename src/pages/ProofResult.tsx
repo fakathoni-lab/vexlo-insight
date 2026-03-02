@@ -7,6 +7,7 @@ import RankingChart from "@/components/proof/RankingChart";
 import AIOverviewBadge from "@/components/proof/AIOverviewBadge";
 import TrendDelta from "@/components/proof/TrendDelta";
 import SalesNarrative from "@/components/proof/SalesNarrative";
+import ProofActions from "@/components/proof/ProofActions";
 import { Loader2, AlertTriangle, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -15,6 +16,7 @@ interface Proof {
   domain: string;
   keyword: string;
   score: number;
+  status: string;
   current_rank: number | null;
   delta_30: number | null;
   ai_overview: boolean | null;
@@ -23,6 +25,9 @@ interface Proof {
     domain_position: number | null;
   } | null;
   narrative: string | null;
+  error_message: string | null;
+  public_slug: string | null;
+  is_public: boolean | null;
   created_at: string;
   user_id: string;
 }
@@ -44,8 +49,7 @@ const ProofResult = () => {
   const [activeStep, setActiveStep] = useState(0);
   const edgeFunctionInvoked = useRef(false);
 
-  // Derive status: 0 = pending/processing, -1 = failed, >0 = complete
-  const derivedStatus = proof ? (proof.score > 0 ? "complete" : proof.score < 0 ? "failed" : "processing") : "loading";
+  const status = proof?.status ?? "loading";
 
   useEffect(() => {
     if (!id || !user) return;
@@ -67,8 +71,8 @@ const ProofResult = () => {
       setProof(data as unknown as Proof);
       setLoading(false);
 
-      // If score is 0 (pending), invoke edge function
-      if (data.score === 0 && !edgeFunctionInvoked.current) {
+      // If pending, invoke edge function
+      if ((data as any).status === "pending" && !edgeFunctionInvoked.current) {
         edgeFunctionInvoked.current = true;
         supabase.functions.invoke("generate-proof", {
           body: { domain: data.domain, keyword: data.keyword, proof_id: data.id },
@@ -104,12 +108,12 @@ const ProofResult = () => {
 
   // Progressive loading step animation
   useEffect(() => {
-    if (derivedStatus !== "processing") return;
+    if (status !== "pending" && status !== "processing") return;
     const interval = setInterval(() => {
       setActiveStep((prev) => (prev < loadingSteps.length - 1 ? prev + 1 : prev));
     }, 2500);
     return () => clearInterval(interval);
-  }, [derivedStatus]);
+  }, [status]);
 
   // ── Loading ──
   if (loading) {
@@ -141,7 +145,7 @@ const ProofResult = () => {
   }
 
   // ── Processing / Pending ──
-  if (derivedStatus === "processing") {
+  if (status === "pending" || status === "processing") {
     return (
       <div className="flex items-center justify-center py-24">
         <div
@@ -191,9 +195,8 @@ const ProofResult = () => {
     );
   }
 
-
   // ── Failed ──
-  if (derivedStatus === "failed") {
+  if (status === "failed") {
     return (
       <div className="flex items-center justify-center py-24">
         <div
@@ -205,7 +208,7 @@ const ProofResult = () => {
             Proof Generation Failed
           </h2>
           <p className="font-body text-sm text-center" style={{ color: "var(--text-dim)" }}>
-            {proof.narrative ?? "Something went wrong during data collection. Please try again."}
+            {proof.error_message ?? "Something went wrong during data collection. Please try again."}
           </p>
           <Button
             className="rounded-full h-10 px-6 font-mono text-[10px] uppercase tracking-widest"
@@ -301,6 +304,15 @@ const ProofResult = () => {
       <p className="font-mono text-center" style={{ fontSize: 9, color: "var(--text-muted)" }}>
         * Estimated public data — for sales context only
       </p>
+
+      {/* ── Action Bar ── */}
+      <ProofActions
+        proofId={proof.id}
+        narrative={proof.narrative}
+        publicSlug={proof.public_slug}
+        isPublic={proof.is_public ?? false}
+        onSlugUpdate={(slug) => setProof((p) => p ? { ...p, public_slug: slug, is_public: true } : p)}
+      />
     </div>
   );
 };

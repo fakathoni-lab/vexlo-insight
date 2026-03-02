@@ -66,7 +66,6 @@ export async function getViewCount(proofId: string): Promise<number> {
  */
 export async function trackProofView(proofId: string): Promise<void> {
   try {
-    // We can't get the real IP from the browser, so we use a fingerprint
     const userAgent = navigator.userAgent;
     const encoder = new TextEncoder();
     const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(userAgent + Date.now().toString()));

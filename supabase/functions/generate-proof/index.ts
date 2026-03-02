@@ -63,7 +63,6 @@ async function fetchWithRetry(
   } catch (err) {
     clearTimeout(timeout);
     if (retries > 0 && (err as Error).name === "AbortError") {
-      // Timeout — one retry
       await new Promise((r) => setTimeout(r, 1000));
       return fetchWithRetry(url, options, retries - 1, timeoutMs);
     }
@@ -111,7 +110,6 @@ async function fetchOrganicRankings(
   const data = await res.json();
   const resultItems = data?.tasks?.[0]?.result?.[0]?.items ?? [];
 
-  // Find domain position in SERP
   let rankPosition: number | null = null;
   const organicItems: OrganicItem[] = [];
 
@@ -130,7 +128,6 @@ async function fetchOrganicRankings(
     }
   }
 
-  // Extract keyword difficulty if available
   const kwDifficulty = data?.tasks?.[0]?.result?.[0]?.keyword_info?.keyword_difficulty ?? 50;
 
   return { rankPosition, items: organicItems.slice(0, 20), kwDifficulty };
@@ -170,7 +167,6 @@ async function fetchOrganicHistory(
   const data = await res.json();
   const items = data?.tasks?.[0]?.result?.[0]?.items ?? [];
 
-  // Find earliest and latest rank for domain
   let earliestRank: number | null = null;
   let latestRank: number | null = null;
 
@@ -181,7 +177,6 @@ async function fetchOrganicHistory(
     }
   }
 
-  // Delta: positive = improved (moved up in rank = lower number)
   if (earliestRank !== null && latestRank !== null) {
     return { delta30d: earliestRank - latestRank };
   }
@@ -236,7 +231,6 @@ async function fetchSerpFeatures(
     if (t === "knowledge_graph" || t === "knowledge_panel") knowledgePanel = true;
   }
 
-  // Also check item_types array
   for (const t of extraInfo) {
     const tl = (t as string).toLowerCase();
     if (tl.includes("ai_overview")) aiOverview = true;
@@ -245,7 +239,6 @@ async function fetchSerpFeatures(
     if (tl.includes("knowledge")) knowledgePanel = true;
   }
 
-  // Estimate AI impact: count non-organic items above fold
   const nonOrganic = items.filter(
     (i: { type: string; rank_absolute: number }) =>
       i.type !== "organic" && i.rank_absolute <= 10
@@ -340,7 +333,6 @@ function calculateProofScore(params: {
 }): number {
   const { rankPosition, delta30d, aiOverviewPresent, aiImpactPercent, kwDifficulty } = params;
 
-  // Rank score (weight 0.40)
   let rankScore = 0;
   if (rankPosition !== null && rankPosition > 0) {
     if (rankPosition === 1) rankScore = 100;
@@ -351,7 +343,6 @@ function calculateProofScore(params: {
     else rankScore = 0;
   }
 
-  // Trend score (weight 0.30)
   let trendScore = 50;
   if (delta30d !== null) {
     if (delta30d > 5) trendScore = 100;
@@ -361,7 +352,6 @@ function calculateProofScore(params: {
     else trendScore = 0;
   }
 
-  // AI score (weight 0.20)
   let aiScore = 100;
   if (aiOverviewPresent) {
     if (aiImpactPercent < 20) aiScore = 70;
@@ -369,7 +359,6 @@ function calculateProofScore(params: {
     else aiScore = 10;
   }
 
-  // KD score (weight 0.10)
   let kdScore: number;
   if (kwDifficulty < 30) kdScore = 100;
   else if (kwDifficulty <= 50) kdScore = 70;
@@ -424,7 +413,7 @@ serve(async (req) => {
     }
 
     // Mark as processing
-    // Mark as processing (no status column yet — skip)
+    await supabase.from("proofs").update({ status: "processing" }).eq("id", proof_id);
 
     // ── Check Redis cache ──
     const redis = getRedis();
@@ -440,7 +429,6 @@ serve(async (req) => {
     }
 
     if (cachedData) {
-      // Cache hit — use cached result
       const cached = typeof cachedData === "string" ? JSON.parse(cachedData) : cachedData;
 
       await supabase.from("proofs").update({
@@ -450,6 +438,7 @@ serve(async (req) => {
         ai_overview: cached.ai_overview ?? false,
         rankings: cached.ranking_data ?? cached.rankings ?? null,
         narrative: null,
+        status: "complete",
       }).eq("id", proof_id);
 
       return new Response(
@@ -463,7 +452,6 @@ serve(async (req) => {
     const { authHeader: dfsAuth } = getDataForSEOAuth();
     const dfsHeaders = { Authorization: dfsAuth, "Content-Type": "application/json" };
 
-    // 24s timeout guard for entire flow
     const results = await Promise.race([
       Promise.allSettled([
         fetchOrganicRankings(cleanKeyword, cleanDomain, dfsHeaders),
@@ -475,7 +463,6 @@ serve(async (req) => {
       ),
     ]);
 
-    // Extract results with defaults for failed calls
     let organicResult: OrganicResult = { rankPosition: null, items: [], kwDifficulty: 50 };
     let historyResult: { delta30d: number | null } = { delta30d: null };
     let serpResult: { serpFeatures: SerpFeatures; aiImpactPercent: number } = {
@@ -542,6 +529,7 @@ serve(async (req) => {
       ai_overview: serpResult.serpFeatures.ai_overview,
       rankings: rankingData,
       narrative: aiNarrative,
+      status: "complete",
     };
 
     const { error: updateError } = await supabase
@@ -577,10 +565,10 @@ serve(async (req) => {
           Deno.env.get("SUPABASE_URL")!,
           Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
         );
-        // Mark failed by setting score to -1 as error indicator
+        const errorMsg = (err as Error).message === "TIMEOUT" ? "Request timed out" : "Data collection failed";
         await supabase.from("proofs").update({
-          score: -1,
-          narrative: (err as Error).message === "TIMEOUT" ? "Request timed out" : "Data collection failed",
+          status: "failed",
+          error_message: errorMsg,
         }).eq("id", body.proof_id);
       }
     } catch { /* ignore cleanup error */ }

@@ -3,7 +3,6 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ScoreRing from "@/components/proof/ScoreRing";
 import RankBar from "@/components/proof/RankBar";
-import SerpFeatureGrid from "@/components/proof/SerpFeatureGrid";
 import RankingsTable from "@/components/proof/RankingsTable";
 import NarrativeCard from "@/components/proof/NarrativeCard";
 import { Button } from "@/components/ui/button";
@@ -15,11 +14,13 @@ interface Proof {
   domain: string;
   keyword: string;
   score: number;
+  status: string;
   current_rank: number | null;
   delta_30: number | null;
   ai_overview: boolean | null;
   rankings: { rankings: { keyword: string; position: number; url: string; etv: number }[]; domain_position: number | null } | null;
   narrative: string | null;
+  error_message: string | null;
   created_at: string;
 }
 
@@ -54,12 +55,12 @@ const PublicProof = () => {
         return;
       }
 
-      const typedData = data as Proof;
+      const typedData = data as unknown as Proof;
       setProof(typedData);
       setLoading(false);
 
-      // Stop polling once complete (score > 0) or failed (score < 0)
-      if (typedData.score !== 0) {
+      // Stop polling once complete or failed
+      if (typedData.status === "complete" || typedData.status === "failed") {
         if (pollInterval) clearInterval(pollInterval);
       }
     };
@@ -112,9 +113,9 @@ const PublicProof = () => {
     );
   }
 
-  const isProcessing = proof.score === 0;
-  const isFailed = proof.score < 0;
-  const isComplete = proof.score > 0;
+  const isProcessing = proof.status === "pending" || proof.status === "processing";
+  const isFailed = proof.status === "failed";
+  const isComplete = proof.status === "complete";
   const formattedDate = new Date(proof.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 
   return (
@@ -194,7 +195,9 @@ const PublicProof = () => {
         {isFailed && (
           <div className="rounded-[var(--radii-outer)] p-8 flex flex-col items-center gap-4" style={{ backgroundColor: "var(--bg-card)", border: "1px solid rgba(255,71,71,0.2)" }}>
             <AlertTriangle size={32} style={{ color: "var(--accent-danger)" }} />
-            <p className="font-body text-sm" style={{ color: "var(--text-dim)" }}>Proof generation failed.</p>
+            <p className="font-body text-sm" style={{ color: "var(--text-dim)" }}>
+              {proof.error_message ?? "Proof generation failed."}
+            </p>
             <Link to="/">
               <Button variant="outline" className="rounded-full">Generate Your Own</Button>
             </Link>

@@ -10,6 +10,7 @@ interface Proof {
   domain: string;
   keyword: string;
   score: number;
+  status: string;
   current_rank: number | null;
   created_at: string;
 }
@@ -40,7 +41,7 @@ const Dashboard = () => {
         .limit(5),
     ]).then(([profileRes, proofsRes]) => {
       if (profileRes.data) setProfile(profileRes.data);
-      if (proofsRes.data) setRecentProofs(proofsRes.data as Proof[]);
+      if (proofsRes.data) setRecentProofs((proofsRes.data as any[]).map(p => ({ ...p, status: p.status ?? (p.score > 0 ? "complete" : "pending") })) as Proof[]);
     });
   }, [user]);
 
@@ -54,8 +55,8 @@ const Dashboard = () => {
     { label: "Credits Used", value: `${proofsUsed}/${proofsLimit}`, icon: BarChart3 },
   ];
 
-  const scoreColor = (score: number) => {
-    if (score <= 0) return "rgba(240,240,238,0.25)";
+  const scoreColor = (score: number, status: string) => {
+    if (status !== "complete") return "rgba(240,240,238,0.25)";
     if (score <= 30) return "#ef4444";
     if (score <= 60) return "#f59e0b";
     return "#22c55e";
@@ -139,7 +140,8 @@ const Dashboard = () => {
         ) : (
           <div className="flex flex-col gap-2">
             {recentProofs.map((proof) => {
-              const isComplete = proof.score > 0;
+              const isComplete = proof.status === "complete";
+              const statusLabel = proof.status === "failed" ? "failed" : "processing";
               return (
                 <div
                   key={proof.id}
@@ -158,15 +160,18 @@ const Dashboard = () => {
 
                   <div className="flex items-center gap-4 shrink-0">
                     {isComplete ? (
-                      <span className="font-headline" style={{ fontSize: 18, color: scoreColor(proof.score) }}>
+                      <span className="font-headline" style={{ fontSize: 18, color: scoreColor(proof.score, proof.status) }}>
                         {proof.score}
                       </span>
                     ) : (
                       <span
                         className="font-mono uppercase text-[9px] tracking-wider px-2 py-0.5 rounded-full"
-                        style={{ color: "rgba(240,240,238,0.25)", border: "1px solid rgba(240,240,238,0.25)" }}
+                        style={{
+                          color: proof.status === "failed" ? "#ef4444" : "rgba(240,240,238,0.25)",
+                          border: `1px solid ${proof.status === "failed" ? "rgba(239,68,68,0.25)" : "rgba(240,240,238,0.25)"}`,
+                        }}
                       >
-                        processing
+                        {statusLabel}
                       </span>
                     )}
 

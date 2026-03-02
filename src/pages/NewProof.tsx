@@ -44,16 +44,17 @@ const NewProof = () => {
     setSubmitting(true);
 
     // Insert pending proof row
-    const { data: proofRow, error: insertError } = await supabase
+    const { data: proofRow, error: insertError } = await (supabase
       .from("proofs")
       .insert({
         user_id: user.id,
         domain: data.domain,
         keyword: data.keyword,
         score: 0,
-      })
+        status: "pending",
+      } as any)
       .select("id")
-      .single();
+      .single() as any);
 
     if (insertError || !proofRow) {
       setSubmitting(false);
