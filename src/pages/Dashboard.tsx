@@ -10,6 +10,7 @@ interface Proof {
   domain: string;
   keyword: string;
   score: number;
+  status: string;
   current_rank: number | null;
   created_at: string;
 }
