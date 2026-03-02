@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import ScoreRing from "@/components/proof/ScoreRing";
 import RankBar from "@/components/proof/RankBar";
 import SerpFeatureGrid from "@/components/proof/SerpFeatureGrid";
 import RankingsTable from "@/components/proof/RankingsTable";
 import NarrativeCard from "@/components/proof/NarrativeCard";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { ArrowLeft, Share2, Clock, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
