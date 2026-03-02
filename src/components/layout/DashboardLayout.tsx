@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { LayoutDashboard, Plus, History, Settings, LogOut, Menu, X, Globe } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, accent: false },
@@ -35,7 +37,21 @@ const DashboardLayout = () => {
     .toUpperCase()
     .slice(0, 2) ?? user?.email?.slice(0, 2).toUpperCase() ?? "U";
 
-  const plan = "free"; // will be pulled from profiles later
+  const [plan, setPlan] = useState<string | null>(null);
+  const [planLoading, setPlanLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setPlan(data?.plan ?? "free");
+        setPlanLoading(false);
+      });
+  }, [user]);
 
   const sidebarContent = (
     <>
@@ -147,13 +163,17 @@ const DashboardLayout = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <Badge
-              variant="outline"
-              className="font-mono uppercase tracking-widest rounded-[100px] border-[rgba(255,255,255,0.13)]"
-              style={{ fontSize: 8, color: "var(--text-dim)", padding: "2px 8px" }}
-            >
-              {plan}
-            </Badge>
+            {planLoading ? (
+              <Skeleton className="h-5 w-12 rounded-full" />
+            ) : (
+              <Badge
+                variant="outline"
+                className="font-mono uppercase tracking-widest rounded-[100px] border-[rgba(255,255,255,0.13)]"
+                style={{ fontSize: 8, color: "var(--text-dim)", padding: "2px 8px" }}
+              >
+                {plan ?? "free"}
+              </Badge>
+            )}
             <Avatar className="w-7 h-7">
               <AvatarFallback
                 className="font-mono text-[9px] uppercase"
