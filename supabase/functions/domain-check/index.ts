@@ -210,7 +210,11 @@ Deno.serve(async (req) => {
 
     let dynaRes: Response;
     try {
-      dynaRes = await fetch(dynadotUrl, fetchOptions);
+      dynaRes = await fetch(dynadotUrl, {
+        method: "GET",
+        signal: controller.signal,
+        ...(httpClient ? { client: httpClient } : {}),
+      } as RequestInit);
     } catch (_fetchErr) {
       clearTimeout(timeout);
       log({ request_id: requestId, domain_tld: tld, event: "dynadot_error", error: String(_fetchErr), latency_ms: Date.now() - startMs });
