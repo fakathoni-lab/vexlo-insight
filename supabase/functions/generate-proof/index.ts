@@ -602,14 +602,10 @@ Deno.serve(async (req) => {
       throw new Error(updateError.message);
     }
 
-    // ── Increment proofs_used on profile ──
-    const { error: incrementError } = await serviceClient
-      .from("profiles")
-      .update({ proofs_used: proofsUsed + 1 })
-      .eq("id", user.id);
-
+    // Increment proofs_used atomically
+    const { error: incrementError } = await serviceClient.rpc("increment_proofs_used", { user_id_input: user.id });
     if (incrementError) {
-      console.error("proofs_used increment failed:", incrementError.message);
+      console.error("increment_proofs_used RPC failed:", incrementError.message);
     }
 
     // ── Cache result in Redis ──
