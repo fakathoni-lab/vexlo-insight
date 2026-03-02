@@ -51,7 +51,7 @@ const SegmentSelector = () => {
             className="product-flagship flex flex-col"
             style={{
               border: seg.highlight
-                ? "1px solid rgba(124,58,237,0.4)"
+                ? "1px solid var(--accent-purple-border)"
                 : "1px solid var(--border)",
             }}
           >

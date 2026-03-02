@@ -23,7 +23,7 @@ const NarrativeCard = ({ narrative, animate = true }: { narrative: string | null
       style={{
         backgroundColor: "var(--bg-card)",
         border: "1px solid var(--accent-border)",
-        boxShadow: "0 0 30px rgba(124,58,237,0.06)",
+        boxShadow: "0 0 30px rgba(255,99,8,0.06)",
       }}
     >
       <p className="font-mono text-[10px] uppercase tracking-widest mb-3" style={{ color: "var(--accent-light)" }}>

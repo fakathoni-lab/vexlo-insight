@@ -155,7 +155,7 @@ const DashboardLayout = () => {
             <Avatar className="w-7 h-7">
               <AvatarFallback
                 className="font-mono text-[9px] uppercase"
-                style={{ backgroundColor: "rgba(124,58,237,0.12)", color: "var(--accent)" }}
+                style={{ backgroundColor: "var(--accent-purple-dim)", color: "var(--accent-purple)" }}
               >
                 {initials}
               </AvatarFallback>

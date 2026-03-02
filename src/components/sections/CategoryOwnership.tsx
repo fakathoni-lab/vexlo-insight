@@ -34,8 +34,8 @@ const CategoryOwnership = () => {
             key={cohort}
             className="font-mono text-[9px] uppercase tracking-widest px-4 py-2 rounded-[100px]"
             style={{
-              color: i === 0 ? "var(--accent)" : "var(--text-muted)",
-              border: i === 0 ? "1px solid rgba(124,58,237,0.4)" : "1px solid var(--border)",
+              color: i === 0 ? "var(--accent-purple)" : "var(--text-muted)",
+              border: i === 0 ? "1px solid var(--accent-purple-border)" : "1px solid var(--border)",
             }}
           >
             {cohort}
