@@ -1,76 +1,66 @@
 
 
-## VEXLO — Align Dashboard & NewProof to Target Schema
+## Diagnosis: Proof Generation Fails Silently
 
-### Problem
+### Root Cause
 
-There is a mismatch between three layers:
+The **Supabase types are out of sync with the actual database schema**. The generated types in `src/integrations/supabase/types.ts` use **old column names**, but the code in `NewProof.tsx` and `ProofResult.tsx` uses the **actual database column names**.
 
-1. **Current DB types** (auto-generated `types.ts`): columns are `keyword`, `score`, `current_rank`, `delta_30`, `rankings`, `narrative`
-2. **Edge Function** (`generate-proof`): already references target schema columns (`proof_score`, `ranking_data`, `status`) that don't exist in the current DB
-3. **Target schema** (from knowledge file): `target_keyword`, `proof_score`, `ranking_position`, `ranking_delta`, `ranking_data`, `serp_features`, `ai_narrative`, `status`, `public_slug`, `is_public`, `error_message`, `api_cost_units`
+**Types file says the `proofs` table has:**
+- `keyword` (not `target_keyword`)
+- `score` (not `proof_score`, and it's **required/non-nullable**)
+- `current_rank` (not `ranking_position`)
+- `delta_30` (not `ranking_delta`)
+- `narrative` (not `ai_narrative`)
+- `rankings` (not `ranking_data`)
+- No `status`, `public_slug`, `is_public`, `error_message`, `serp_features`, `api_cost_units`, `target_keyword` columns
 
-Dashboard.tsx and NewProof.tsx currently use the old column names. The edge function uses a mix. Everything needs to align to the target schema.
-
-### Prerequisite: Database Migration
-
-Before the code changes work end-to-end, the migration SQL from the knowledge file must be applied in the Supabase Dashboard to create the correct `proofs` table with all target columns. After that, the Lovable-generated `types.ts` will auto-update to reflect the new columns.
-
-### Changes
-
-#### 1. Update `src/integrations/supabase/types.ts` (proofs table definition)
-
-Update the `proofs` table types to match the target schema:
-
-- `keyword` becomes `target_keyword`
-- `score` becomes `proof_score` (nullable)
-- `current_rank` becomes `ranking_position` (nullable)
-- `delta_30` becomes `ranking_delta` (nullable)
-- `rankings` becomes `ranking_data` (jsonb, nullable)
-- `narrative` becomes `ai_narrative` (nullable)
-- Add: `serp_features` (jsonb, nullable), `status` (text, default 'pending'), `public_slug` (text, nullable, unique), `is_public` (boolean, default false), `error_message` (text, nullable), `api_cost_units` (integer, nullable)
-
-#### 2. Update `src/pages/NewProof.tsx`
-
-- Change `.insert({ keyword: ... })` to `.insert({ target_keyword: ... })`
-- Change `.select("keyword, score, ...")` to `.select("target_keyword, proof_score, ...")`
-- Update `ProofResult` interface to use new column names
-- Update all UI references: `result.keyword` to `result.target_keyword`, `result.score` to `result.proof_score`, `result.current_rank` to `result.ranking_position`, `result.delta_30` to `result.ranking_delta`, `result.narrative` to `result.ai_narrative`, `result.rankings` to `result.ranking_data`
-- Remove `score: 0` from initial insert (now nullable in schema, set by edge function)
-- Add `status: 'pending'` to initial insert
-
-#### 3. Update `src/pages/Dashboard.tsx`
-
-- Change `.select("keyword, score, current_rank, ...")` to `.select("target_keyword, proof_score, ranking_position, ...")`
-- Update `Proof` interface to match new column names
-- Update all UI references in the recent proofs list
-
-#### 4. Fix `supabase/functions/generate-proof/index.ts`
-
-The edge function already uses `proof_score` and `ranking_data` which align with the target schema. Additional fixes:
-
-- Add `ranking_position`, `ranking_delta`, `ai_overview`, `serp_features` to the update call
-- Change `status: "scoring_done"` to `status: "complete"` (matching the CHECK constraint)
-- Add LLMAPI narrative generation call (or placeholder) to populate `ai_narrative`
-
-### Technical Details
-
-Column name mapping (old to new):
-
-```text
-keyword         -> target_keyword
-score           -> proof_score
-current_rank    -> ranking_position
-delta_30        -> ranking_delta
-rankings        -> ranking_data
-narrative       -> ai_narrative
-(new)           -> serp_features
-(new)           -> status
-(new)           -> public_slug
-(new)           -> is_public
-(new)           -> error_message
-(new)           -> api_cost_units
+**NewProof.tsx inserts:**
+```ts
+{ user_id, domain, target_keyword, status: "pending" }
 ```
 
-Files modified: 4 (`types.ts`, `Dashboard.tsx`, `NewProof.tsx`, `generate-proof/index.ts`)
+This doesn't match the typed Insert schema which requires `keyword` (not `target_keyword`) and `score` (required, non-nullable number). The `as any` cast suppresses the TypeScript error, but the **actual database columns** are what matter at runtime.
+
+### Two Possible Scenarios
+
+**Scenario A** — The database has the new columns (`target_keyword`, `status`, `proof_score`, etc.) but types weren't regenerated. In this case the insert works at the DB level but `.single()` may fail because the returned columns don't match what TypeScript expects, causing a silent swallow.
+
+**Scenario B** — The database still has the old columns (`keyword`, `score`). In this case the insert fails because `target_keyword` doesn't exist as a column, and `score` (required, NOT NULL) is missing. The `as any` cast hides the type error, and the error toast may not show if the error object structure is unexpected.
+
+### Most Likely: Scenario B or a hybrid
+
+The insert silently fails because:
+1. Column `target_keyword` doesn't exist (should be `keyword`)
+2. Column `status` may not exist
+3. Column `score` is NOT NULL with no default, and isn't provided
+
+The `as any` cast masks all of this at compile time. At runtime, Supabase returns an error, but since the code does handle `insertError`, the toast should show — unless the user missed it.
+
+### Minimal Fix (2 steps)
+
+**Step 1: Regenerate Supabase types** — If the database was migrated to use `target_keyword`, `status`, `proof_score`, etc., regenerate types so they match. This is done via the Lovable Supabase integration.
+
+**Step 2: If types reflect reality (old columns)**, update `NewProof.tsx` insert to use the correct column names:
+```ts
+.insert({
+  user_id: user.id,
+  domain: data.domain,
+  keyword: data.keyword,       // not target_keyword
+  score: 0,                    // required, set initial value
+  // status column may not exist
+})
+```
+
+And update `ProofResult.tsx` and `generate-proof/index.ts` to use the actual column names from the database.
+
+**Step 3: Remove all `as any` casts** on Supabase queries so TypeScript catches column mismatches at build time instead of failing silently at runtime.
+
+### Recommendation
+
+Before I make any code changes, please:
+1. **Check your Supabase dashboard** → Table Editor → `proofs` table → confirm the actual column names
+2. Or **regenerate types** via Lovable's Supabase integration (this will update `types.ts` to match reality)
+
+Then confirm which column names are correct and I'll apply the fix.
 
