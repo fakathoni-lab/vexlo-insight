@@ -536,15 +536,12 @@ serve(async (req) => {
 
     // ── Update proof row ──
     const updatePayload = {
-      proof_score: proofScore,
-      ranking_position: organicResult.rankPosition,
-      ranking_delta: historyResult.delta30d,
+      score: proofScore,
+      current_rank: organicResult.rankPosition,
+      delta_30: historyResult.delta30d,
       ai_overview: serpResult.serpFeatures.ai_overview,
-      ranking_data: rankingData,
-      serp_features: serpResult.serpFeatures,
-      ai_narrative: aiNarrative,
-      status: "complete",
-      api_cost_units: apiCostUnits,
+      rankings: rankingData,
+      narrative: aiNarrative,
     };
 
     const { error: updateError } = await supabase
