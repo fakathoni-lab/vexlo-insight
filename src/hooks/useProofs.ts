@@ -14,7 +14,7 @@ export async function shareProof(proofId: string, existingSlug: string | null): 
   if (existingSlug) {
     // Already has a slug — just ensure is_public=true
     await (supabase.from("proofs").update({ is_public: true } as any).eq("id", proofId) as any);
-    const url = `${window.location.origin}/proof/public/${existingSlug}`;
+    const url = `${window.location.origin}/p/${existingSlug}`;
     return { slug: existingSlug, url };
   }
 
