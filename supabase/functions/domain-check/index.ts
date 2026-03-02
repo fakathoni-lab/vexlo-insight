@@ -175,13 +175,11 @@ Deno.serve(async (req) => {
     }
 
     // ── Dynadot API call ──
-    const apiKey = Deno.env.get("DYNADOT_API_KEY");
-    if (!apiKey) {
-      console.error("DYNADOT_API_KEY not configured");
+    const apiSecret = Deno.env.get("DYNADOT_API_SECRET");
+    if (!apiSecret) {
+      console.error("DYNADOT_API_SECRET not configured");
       return errResponse("SERVICE_UNAVAILABLE", "Domain lookup service temporarily unavailable.", 503);
     }
-
-    log({ request_id: requestId, event: "api_key_debug", key_length: apiKey.length, key_prefix: apiKey.slice(0, 4) });
 
     const dynadotUrl = `https://api.dynadot.com/restful/v2/domains/${encodeURIComponent(domain)}/search?show_price=true&currency=usd`;
 
