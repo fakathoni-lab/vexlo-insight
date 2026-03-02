@@ -181,9 +181,8 @@ Deno.serve(async (req) => {
       return errResponse("SERVICE_UNAVAILABLE", "Domain lookup service temporarily unavailable.", 503);
     }
 
-    log({ request_id: requestId, event: "api_key_debug", key_length: apiKey.length, key_prefix: apiKey.slice(0, 4) });
-
-    const dynadotUrl = `https://api.dynadot.com/restful/v2/domains/${encodeURIComponent(domain)}/search?show_price=true&currency=usd`;
+    // Use legacy API v3 (query param auth, XML response)
+    const dynadotUrl = `https://api.dynadot.com/api3.json?key=${encodeURIComponent(apiKey)}&command=search&domain0=${encodeURIComponent(domain)}&show_price=1&currency=USD`;
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10_000);
@@ -192,10 +191,6 @@ Deno.serve(async (req) => {
     try {
       dynaRes = await fetch(dynadotUrl, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          Accept: "application/json",
-        },
         signal: controller.signal,
       });
     } catch (_fetchErr) {
@@ -211,17 +206,33 @@ Deno.serve(async (req) => {
     }
 
     const dynaData = await dynaRes.json();
+    log({ request_id: requestId, event: "dynadot_response", data: JSON.stringify(dynaData).slice(0, 500) });
 
-    // ── Normalize response ──
+    // ── Check for top-level API errors (unauthorized IP, bad key, etc.) ──
+    if (dynaData?.Response?.ResponseCode === "-1" || dynaData?.Response?.Error) {
+      const apiErr = dynaData.Response.Error ?? "Unknown API error";
+      log({ request_id: requestId, event: "dynadot_api_error", error: apiErr });
+      return errResponse("SERVICE_UNAVAILABLE", "Domain lookup failed. Please try again.", 503);
+    }
+
+    // ── Normalize legacy API v3 response ──
+    const searchHeader = dynaData?.SearchResponse?.SearchHeader;
     const searchResults = dynaData?.SearchResponse?.SearchResults ?? [];
-    const result = searchResults[0] ?? {};
+    
+    if (searchHeader?.Status === "error") {
+      log({ request_id: requestId, event: "dynadot_api_error", error: searchHeader?.Error });
+      return errResponse("SERVICE_UNAVAILABLE", "Domain lookup failed. Please try again.", 503);
+    }
 
-    const available = result?.Available === "yes" || result?.Available === true;
+    const result = Array.isArray(searchResults) ? searchResults[0] : searchResults;
+    const domainName = result?.DomainName ?? domain;
+
+    const available = result?.Available === "yes";
     const premium = result?.IsPremium === "yes" || result?.IsPremium === true;
 
     const pricing: Record<string, { registration: number; renewal: number }> = {};
-    const regPrice = parseFloat(result?.Price?.Registration ?? result?.Price ?? "0");
-    const renewPrice = parseFloat(result?.Price?.Renewal ?? result?.Price ?? "0");
+    const regPrice = parseFloat(result?.Price ?? "0");
+    const renewPrice = parseFloat(result?.RenewalPrice ?? result?.Price ?? "0");
 
     for (let y = 1; y <= 3; y++) {
       pricing[String(y)] = {
