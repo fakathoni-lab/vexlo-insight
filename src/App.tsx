@@ -7,6 +7,7 @@ import Signup from "./pages/Signup";
 import PricingPage from "./pages/PricingPage";
 import Dashboard from "./pages/Dashboard";
 import NewProof from "./pages/NewProof";
+import DomainSearch from "./pages/DomainSearch";
 import ProofReport from "./pages/ProofReport";
 import ProofResult from "./pages/ProofResult";
 import PublicProof from "./pages/PublicProof";
