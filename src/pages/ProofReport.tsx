@@ -104,9 +104,11 @@ const ProofReport = () => {
   }, [id]);
 
   const handleShare = async () => {
-    const url = window.location.href;
+    const shareUrl = proof?.public_slug
+      ? `${window.location.origin}/p/${proof.public_slug}`
+      : window.location.href;
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(shareUrl);
       toast.success("Link copied to clipboard");
     } catch {
       toast.error("Failed to copy link");
