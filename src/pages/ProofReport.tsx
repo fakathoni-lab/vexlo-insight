@@ -57,11 +57,13 @@ const ProofReport = () => {
     const maxPolls = 15; // 30s at 2s intervals
 
     const fetchProof = async () => {
-      const { data, error: fetchError } = await supabase
+      // Use type assertion because auto-generated types.ts still has old column names
+      // but the actual DB schema uses the target columns
+      const { data, error: fetchError } = await (supabase
         .from("proofs")
         .select("*")
         .eq("id", id)
-        .maybeSingle();
+        .maybeSingle() as unknown as Promise<{ data: Proof | null; error: { message: string } | null }>);
 
       if (fetchError) {
         setError("Failed to load proof.");
@@ -75,14 +77,7 @@ const ProofReport = () => {
         return;
       }
 
-      // Cast ranking_data and serp_features from Json to typed objects
-      const typedProof: Proof = {
-        ...data,
-        ranking_data: data.ranking_data as Proof["ranking_data"],
-        serp_features: data.serp_features as Proof["serp_features"],
-      };
-
-      setProof(typedProof);
+      setProof(data);
       setLoading(false);
 
       // Stop polling if complete or failed
