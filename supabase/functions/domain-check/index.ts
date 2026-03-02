@@ -191,7 +191,7 @@ Deno.serve(async (req) => {
       dynaRes = await fetch(dynadotUrl, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiSecret}`,
           Accept: "application/json",
         },
         signal: controller.signal,
