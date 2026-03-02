@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { trackProofView } from "@/hooks/useProofs";
 import ProofScoreRing from "@/components/proof/ProofScoreRing";
@@ -13,22 +13,19 @@ import { Button } from "@/components/ui/button";
 interface Proof {
   id: string;
   domain: string;
-  target_keyword: string;
-  proof_score: number | null;
-  ranking_position: number | null;
-  ranking_delta: number | null;
+  keyword: string;
+  score: number | null;
+  current_rank: number | null;
+  delta_30: number | null;
   ai_overview: boolean | null;
-  ranking_data: {
-    rankings: { keyword: string; position: number; url: string; etv: number }[];
-    domain_position: number | null;
-  } | null;
+  rankings: { keyword: string; position: number; url: string; etv: number }[] | null;
   serp_features: {
     ai_overview: boolean;
     featured_snippet: boolean;
     local_pack: boolean;
     knowledge_panel: boolean;
   } | null;
-  ai_narrative: string | null;
+  narrative: string | null;
   status: string;
   is_public: boolean;
   created_at: string;
@@ -44,8 +41,9 @@ const ProofPublic = () => {
     if (!slug) return;
 
     const fetchProof = async () => {
-      const query = supabase.from("proofs").select("*") as any;
-      const { data, error } = await query
+      const { data, error } = await supabase
+        .from("proofs")
+        .select("*")
         .eq("public_slug", slug)
         .eq("is_public", true)
         .maybeSingle();
@@ -56,18 +54,30 @@ const ProofPublic = () => {
         return;
       }
 
-      const typedData = data as Proof;
-      setProof(typedData);
-      setLoading(false);
+      const mapped: Proof = {
+        id: data.id,
+        domain: data.domain,
+        keyword: data.keyword,
+        score: data.score,
+        current_rank: data.current_rank,
+        delta_30: data.delta_30,
+        ai_overview: data.ai_overview,
+        rankings: data.rankings as Proof["rankings"],
+        serp_features: data.serp_features as Proof["serp_features"],
+        narrative: data.narrative,
+        status: data.status ?? "pending",
+        is_public: data.is_public,
+        created_at: data.created_at ?? "",
+      };
 
-      // Track view
-      trackProofView(typedData.id);
+      setProof(mapped);
+      setLoading(false);
+      trackProofView(mapped.id);
     };
 
     fetchProof();
   }, [slug]);
 
-  // ── Loading ──
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "var(--bg)" }}>
@@ -76,7 +86,6 @@ const ProofPublic = () => {
     );
   }
 
-  // ── Not found ──
   if (notFound || !proof) {
     return (
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--bg)" }}>
@@ -107,14 +116,14 @@ const ProofPublic = () => {
     year: "numeric", month: "short", day: "numeric",
   });
 
-  const rankingItems = proof.ranking_data?.rankings ?? [];
+  const rankingItems = Array.isArray(proof.rankings) ? proof.rankings : [];
   const aiImpactPercent = proof.serp_features?.ai_overview
     ? Math.min(100, Math.round(((rankingItems.filter((r) => r.position <= 10).length || 1) / 10) * 30))
     : 0;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--bg)" }}>
-      {/* ── Header Bar ── */}
+      {/* Header Bar */}
       <header
         className="flex items-center justify-between px-6 py-4 border-b"
         style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-raised)" }}
@@ -125,7 +134,7 @@ const ProofPublic = () => {
         </span>
       </header>
 
-      {/* ── Content ── */}
+      {/* Content */}
       <main className="flex-1 max-w-[960px] mx-auto w-full px-4 py-8 sm:py-12 space-y-6">
         {/* Page Header */}
         <div
@@ -139,7 +148,7 @@ const ProofPublic = () => {
             {proof.domain}
           </h1>
           <p className="font-body font-light mt-1" style={{ fontSize: 13, color: "var(--text-dim)" }}>
-            Keyword: {proof.target_keyword} · {formattedDate}
+            Keyword: {proof.keyword} · {formattedDate}
           </p>
         </div>
 
@@ -150,13 +159,13 @@ const ProofPublic = () => {
               className="rounded-xl p-6 flex justify-center"
               style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
             >
-              <ProofScoreRing score={proof.proof_score ?? 0} />
+              <ProofScoreRing score={proof.score ?? 0} />
             </div>
             <div
               className="rounded-xl p-6 flex flex-col gap-4"
               style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
             >
-              <TrendDelta delta={proof.ranking_delta} />
+              <TrendDelta delta={proof.delta_30} />
               <AIOverviewBadge
                 aiOverview={proof.ai_overview ?? false}
                 aiImpactPercent={aiImpactPercent}
@@ -172,7 +181,7 @@ const ProofPublic = () => {
         </div>
 
         {/* Sales Narrative */}
-        <SalesNarrative narrative={proof.ai_narrative} />
+        <SalesNarrative narrative={proof.narrative} />
 
         {/* Disclaimer */}
         <p className="font-mono text-center" style={{ fontSize: 9, color: "var(--text-muted)" }}>
@@ -180,7 +189,7 @@ const ProofPublic = () => {
         </p>
       </main>
 
-      {/* ── VEXLO Footer (viral CTA) ── */}
+      {/* VEXLO Footer */}
       <footer
         className="sticky bottom-0 border-t flex items-center justify-between px-8 py-4"
         style={{ backgroundColor: "var(--bg-raised)", borderColor: "var(--border)" }}
