@@ -199,6 +199,9 @@ const ProofResult = () => {
           </h1>
           <p className="font-body font-light mt-1" style={{ fontSize: 13, color: "var(--text-dim)" }}>
             Keyword: {proof.target_keyword} · {formattedDate}
+            {viewCount > 0 && (
+              <span style={{ color: "var(--text-muted)" }}> · Viewed {viewCount} time{viewCount !== 1 ? "s" : ""}</span>
+            )}
           </p>
         </div>
         <div
