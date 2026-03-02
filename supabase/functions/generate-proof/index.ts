@@ -258,6 +258,78 @@ async function fetchSerpFeatures(
   };
 }
 
+// ── AI Narrative generation ──
+async function generateNarrative(params: {
+  domain: string;
+  keyword: string;
+  proofScore: number;
+  rankPosition: number | null;
+  rankingDelta: number | null;
+  serpFeatures: SerpFeatures;
+}): Promise<string | null> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) {
+    console.error("LOVABLE_API_KEY not configured, skipping narrative");
+    return null;
+  }
+
+  const { domain, keyword, proofScore, rankPosition, rankingDelta, serpFeatures } = params;
+
+  const rankText = rankPosition ? `currently ranking #${rankPosition}` : "not yet ranking in the top 20";
+  const deltaText = rankingDelta !== null
+    ? (rankingDelta > 0 ? `improved ${rankingDelta} positions` : rankingDelta < 0 ? `dropped ${Math.abs(rankingDelta)} positions` : "held steady")
+    : "no trend data available";
+  const aiText = serpFeatures.ai_overview ? "AI Overviews are present for this keyword, reducing organic click-through rates." : "";
+
+  const systemPrompt = `You are a sales copywriter for an SEO agency. Write exactly 2-3 sentences as a proof paragraph for a client pitch deck. Be specific with the data provided. Use a confident, professional tone. Do not use markdown formatting.`;
+
+  const userPrompt = `Domain: ${domain}
+Keyword: "${keyword}"
+Proof Score: ${proofScore}/100
+Ranking: ${rankText}
+30-day Trend: ${deltaText}
+${aiText}
+SERP Features: ${Object.entries(serpFeatures).filter(([_, v]) => v).map(([k]) => k.replace(/_/g, ' ')).join(', ') || 'none detected'}
+
+Write the proof paragraph now.`;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        stream: false,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      console.error(`AI gateway error: ${res.status}`);
+      return null;
+    }
+
+    const data = await res.json();
+    const content = data?.choices?.[0]?.message?.content;
+    return typeof content === "string" && content.length > 10 ? content.trim() : null;
+  } catch (err) {
+    console.error("Narrative generation failed:", (err as Error).message);
+    return null;
+  }
+}
+
 // ── Scoring algorithm ──
 function calculateProofScore(params: {
   rankPosition: number | null;
@@ -455,6 +527,16 @@ serve(async (req) => {
       domain_position: organicResult.rankPosition,
     };
 
+    // ── Generate AI narrative ──
+    const aiNarrative = await generateNarrative({
+      domain: cleanDomain,
+      keyword: cleanKeyword,
+      proofScore,
+      rankPosition: organicResult.rankPosition,
+      rankingDelta: historyResult.delta30d,
+      serpFeatures: serpResult.serpFeatures,
+    });
+
     // ── Update proof row ──
     const updatePayload = {
       proof_score: proofScore,
@@ -463,7 +545,7 @@ serve(async (req) => {
       ai_overview: serpResult.serpFeatures.ai_overview,
       ranking_data: rankingData,
       serp_features: serpResult.serpFeatures,
-      ai_narrative: null,
+      ai_narrative: aiNarrative,
       status: "complete",
       api_cost_units: apiCostUnits,
     };
