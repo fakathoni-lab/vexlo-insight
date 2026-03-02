@@ -10,8 +10,8 @@ const CategoryOwnership = () => {
       <p className="section-label">Proof-First Certified</p>
 
       {/* Badge */}
-      <div className="mx-auto mb-10 w-24 h-24 rounded-full flex items-center justify-center" style={{ border: "2px solid var(--accent)", backgroundColor: "rgba(124,58,237,0.08)" }}>
-        <Award className="w-10 h-10" style={{ color: "var(--accent)" }} />
+      <div className="mx-auto mb-10 w-24 h-24 rounded-full flex items-center justify-center" style={{ border: "2px solid var(--accent-purple)", backgroundColor: "var(--accent-purple-dim)" }}>
+        <Award className="w-10 h-10" style={{ color: "var(--accent-purple)" }} />
       </div>
 
       <h2 className="font-headline text-3xl sm:text-4xl mb-6 tracking-tight" style={{ color: "var(--text)" }}>
