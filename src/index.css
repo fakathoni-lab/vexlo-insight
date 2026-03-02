@@ -86,7 +86,7 @@
   /* HSL variables for Tailwind / shadcn compatibility */
   --background: 0 0% 3.1%;
   --foreground: 60 7% 94.1%;
-  --accent-hsl: 263 84% 58%;
+  --accent-hsl: 24 100% 50%;
   --accent-foreground: 0 0% 100%;
   --border-hsl: 0 0% 18%;
   --border-strong-hsl: 0 0% 100% / 0.13;
