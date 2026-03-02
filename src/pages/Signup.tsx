@@ -36,7 +36,7 @@ const Signup = () => {
       setServerError(error.message);
       return;
     }
-    navigate("/dashboard");
+    navigate("/onboarding");
   };
 
   return (
