@@ -34,13 +34,13 @@ const Dashboard = () => {
         .single(),
       supabase
         .from("proofs")
-        .select("id, domain, target_keyword, proof_score, ranking_position, status, created_at" as any)
+        .select("id, domain, keyword, score, current_rank, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(5),
     ]).then(([profileRes, proofsRes]) => {
       if (profileRes.data) setProfile(profileRes.data);
-      if (proofsRes.data) setRecentProofs(proofsRes.data as unknown as Proof[]);
+      if (proofsRes.data) setRecentProofs(proofsRes.data as Proof[]);
     });
   }, [user]);
 
@@ -54,21 +54,11 @@ const Dashboard = () => {
     { label: "Credits Used", value: `${proofsUsed}/${proofsLimit}`, icon: BarChart3 },
   ];
 
-  const scoreColor = (score: number | null) => {
-    if (score === null) return "rgba(240,240,238,0.25)";
+  const scoreColor = (score: number) => {
+    if (score <= 0) return "rgba(240,240,238,0.25)";
     if (score <= 30) return "#ef4444";
     if (score <= 60) return "#f59e0b";
     return "#22c55e";
-  };
-
-  const statusBadge = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: "rgba(240,240,238,0.25)",
-      processing: "#f59e0b",
-      complete: "#22c55e",
-      failed: "#ef4444",
-    };
-    return colors[status] ?? "rgba(240,240,238,0.25)";
   };
 
   return (
@@ -148,46 +138,49 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {recentProofs.map((proof) => (
-              <div
-                key={proof.id}
-                className="rounded-[12px] border border-[rgba(255,255,255,0.07)] p-5 flex items-center justify-between gap-4 transition-[border-color] duration-[250ms] hover:border-[rgba(255,255,255,0.13)] cursor-pointer"
-                style={{ backgroundColor: "#0d0d0d" }}
-                onClick={() => navigate(`/dashboard/proof/${proof.id}`)}
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-body truncate" style={{ fontSize: 14, color: "#f0f0ee" }}>
-                    {proof.domain}
-                  </p>
-                  <p className="font-body font-light truncate" style={{ fontSize: 12, color: "rgba(240,240,238,0.45)" }}>
-                    {proof.target_keyword}
-                  </p>
+            {recentProofs.map((proof) => {
+              const isComplete = proof.score > 0;
+              return (
+                <div
+                  key={proof.id}
+                  className="rounded-[12px] border border-[rgba(255,255,255,0.07)] p-5 flex items-center justify-between gap-4 transition-[border-color] duration-[250ms] hover:border-[rgba(255,255,255,0.13)] cursor-pointer"
+                  style={{ backgroundColor: "#0d0d0d" }}
+                  onClick={() => navigate(`/dashboard/proof/${proof.id}`)}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-body truncate" style={{ fontSize: 14, color: "#f0f0ee" }}>
+                      {proof.domain}
+                    </p>
+                    <p className="font-body font-light truncate" style={{ fontSize: 12, color: "rgba(240,240,238,0.45)" }}>
+                      {proof.keyword}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-4 shrink-0">
+                    {isComplete ? (
+                      <span className="font-headline" style={{ fontSize: 18, color: scoreColor(proof.score) }}>
+                        {proof.score}
+                      </span>
+                    ) : (
+                      <span
+                        className="font-mono uppercase text-[9px] tracking-wider px-2 py-0.5 rounded-full"
+                        style={{ color: "rgba(240,240,238,0.25)", border: "1px solid rgba(240,240,238,0.25)" }}
+                      >
+                        processing
+                      </span>
+                    )}
+
+                    {proof.current_rank !== null && (
+                      <span className="font-mono" style={{ fontSize: 11, color: "rgba(240,240,238,0.45)" }}>
+                        #{proof.current_rank}
+                      </span>
+                    )}
+
+                    <ExternalLink className="w-3.5 h-3.5" style={{ color: "rgba(240,240,238,0.25)" }} />
+                  </div>
                 </div>
-
-                <div className="flex items-center gap-4 shrink-0">
-                  {proof.status === "complete" && proof.proof_score !== null ? (
-                    <span className="font-headline" style={{ fontSize: 18, color: scoreColor(proof.proof_score) }}>
-                      {proof.proof_score}
-                    </span>
-                  ) : (
-                    <span
-                      className="font-mono uppercase text-[9px] tracking-wider px-2 py-0.5 rounded-full"
-                      style={{ color: statusBadge(proof.status), border: `1px solid ${statusBadge(proof.status)}` }}
-                    >
-                      {proof.status}
-                    </span>
-                  )}
-
-                  {proof.ranking_position !== null && (
-                    <span className="font-mono" style={{ fontSize: 11, color: "rgba(240,240,238,0.45)" }}>
-                      #{proof.ranking_position}
-                    </span>
-                  )}
-
-                  <ExternalLink className="w-3.5 h-3.5" style={{ color: "rgba(240,240,238,0.25)" }} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
