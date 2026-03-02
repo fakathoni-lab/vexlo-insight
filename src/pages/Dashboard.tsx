@@ -140,7 +140,8 @@ const Dashboard = () => {
         ) : (
           <div className="flex flex-col gap-2">
             {recentProofs.map((proof) => {
-              const isComplete = proof.score > 0;
+              const isComplete = proof.status === "complete";
+              const statusLabel = proof.status === "failed" ? "failed" : "processing";
               return (
                 <div
                   key={proof.id}
@@ -159,15 +160,18 @@ const Dashboard = () => {
 
                   <div className="flex items-center gap-4 shrink-0">
                     {isComplete ? (
-                      <span className="font-headline" style={{ fontSize: 18, color: scoreColor(proof.score) }}>
+                      <span className="font-headline" style={{ fontSize: 18, color: scoreColor(proof.score, proof.status) }}>
                         {proof.score}
                       </span>
                     ) : (
                       <span
                         className="font-mono uppercase text-[9px] tracking-wider px-2 py-0.5 rounded-full"
-                        style={{ color: "rgba(240,240,238,0.25)", border: "1px solid rgba(240,240,238,0.25)" }}
+                        style={{
+                          color: proof.status === "failed" ? "#ef4444" : "rgba(240,240,238,0.25)",
+                          border: `1px solid ${proof.status === "failed" ? "rgba(239,68,68,0.25)" : "rgba(240,240,238,0.25)"}`,
+                        }}
                       >
-                        processing
+                        {statusLabel}
                       </span>
                     )}
 

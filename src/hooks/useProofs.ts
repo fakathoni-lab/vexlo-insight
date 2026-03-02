@@ -13,25 +13,25 @@ interface ShareResult {
 export async function shareProof(proofId: string, existingSlug: string | null): Promise<ShareResult> {
   if (existingSlug) {
     // Already has a slug — just ensure is_public=true
-    await (supabase.from("proofs").update({ is_public: true } as any).eq("id", proofId) as any);
+    await supabase.from("proofs").update({ is_public: true }).eq("id", proofId);
     const url = `${window.location.origin}/proof/public/${existingSlug}`;
     return { slug: existingSlug, url };
   }
 
   // Generate new slug with collision retry
   const slug = generateSlug();
-  const { error } = await (supabase
+  const { error } = await supabase
     .from("proofs")
-    .update({ public_slug: slug, is_public: true } as any)
-    .eq("id", proofId) as any);
+    .update({ public_slug: slug, is_public: true })
+    .eq("id", proofId);
 
   if (error?.code === "23505") {
     // Unique constraint violation — retry once
     const retrySlug = generateSlug();
-    const { error: retryError } = await (supabase
+    const { error: retryError } = await supabase
       .from("proofs")
-      .update({ public_slug: retrySlug, is_public: true } as any)
-      .eq("id", proofId) as any);
+      .update({ public_slug: retrySlug, is_public: true })
+      .eq("id", proofId);
 
     if (retryError) throw new Error("Failed to generate share link");
     const url = `${window.location.origin}/proof/public/${retrySlug}`;
@@ -66,7 +66,6 @@ export async function getViewCount(proofId: string): Promise<number> {
  */
 export async function trackProofView(proofId: string): Promise<void> {
   try {
-    // We can't get the real IP from the browser, so we use a fingerprint
     const userAgent = navigator.userAgent;
     const encoder = new TextEncoder();
     const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(userAgent + Date.now().toString()));
