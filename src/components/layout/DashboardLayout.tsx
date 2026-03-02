@@ -163,13 +163,17 @@ const DashboardLayout = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <Badge
-              variant="outline"
-              className="font-mono uppercase tracking-widest rounded-[100px] border-[rgba(255,255,255,0.13)]"
-              style={{ fontSize: 8, color: "var(--text-dim)", padding: "2px 8px" }}
-            >
-              {plan}
-            </Badge>
+            {planLoading ? (
+              <Skeleton className="h-5 w-12 rounded-full" />
+            ) : (
+              <Badge
+                variant="outline"
+                className="font-mono uppercase tracking-widest rounded-[100px] border-[rgba(255,255,255,0.13)]"
+                style={{ fontSize: 8, color: "var(--text-dim)", padding: "2px 8px" }}
+              >
+                {plan ?? "free"}
+              </Badge>
+            )}
             <Avatar className="w-7 h-7">
               <AvatarFallback
                 className="font-mono text-[9px] uppercase"
