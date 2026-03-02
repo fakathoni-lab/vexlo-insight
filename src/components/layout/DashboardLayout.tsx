@@ -56,7 +56,7 @@ const DashboardLayout = () => {
             to={item.url}
             end
             className="flex items-center gap-3 px-3 py-2.5 rounded-[8px] font-mono uppercase tracking-wide transition-colors duration-200 hover:bg-[rgba(255,255,255,0.03)]"
-            activeClassName="bg-[rgba(124,58,237,0.08)] border-l-2 border-[var(--accent)]"
+            activeClassName="bg-[rgba(124,58,237,0.08)] border-l-2 border-[var(--accent-purple)]"
             style={{
               fontSize: 9,
               color: item.accent ? "var(--accent)" : "var(--text-dim)",
