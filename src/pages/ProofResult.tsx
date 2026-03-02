@@ -46,6 +46,7 @@ const ProofResult = () => {
   const [proof, setProof] = useState<Proof | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewCount, setViewCount] = useState<number>(0);
 
   useEffect(() => {
     if (!id || !user) return;
