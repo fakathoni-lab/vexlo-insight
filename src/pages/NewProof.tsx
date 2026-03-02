@@ -51,6 +51,7 @@ const NewProof = () => {
         domain: data.domain,
         keyword: data.keyword,
         score: 0,
+        status: "pending",
       })
       .select("id")
       .single();
