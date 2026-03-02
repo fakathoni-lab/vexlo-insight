@@ -49,9 +49,14 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 const ProofReport = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [proof, setProof] = useState<Proof | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isPublic, setIsPublic] = useState(false);
+  const [toggling, setToggling] = useState(false);
+
+  const isOwner = !!(user && proof && user.id === proof.user_id);
 
   useEffect(() => {
     if (!id) return;
