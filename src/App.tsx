@@ -10,6 +10,7 @@ import NewProof from "./pages/NewProof";
 import ProofReport from "./pages/ProofReport";
 import ProofResult from "./pages/ProofResult";
 import PublicProof from "./pages/PublicProof";
+import ProofPublic from "./pages/ProofPublic";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
