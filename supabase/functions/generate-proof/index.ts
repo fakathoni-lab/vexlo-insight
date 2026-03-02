@@ -504,17 +504,11 @@ Deno.serve(async (req) => {
         status: "complete",
       }).eq("id", proof_id);
 
-      // Increment proofs_used even for cached results
-      await serviceClient.rpc("increment_proofs_used", { user_id_input: user.id }).then(
-        () => {},
-        () => {
-          // Fallback: direct update if RPC doesn't exist
-          serviceClient.from("profiles")
-            .update({ proofs_used: proofsUsed + 1 })
-            .eq("id", user.id)
-            .then(() => {}, (e) => console.error("proofs_used increment failed:", e));
-        }
-      );
+      // Increment proofs_used atomically
+      const { error: incErr } = await serviceClient.rpc("increment_proofs_used", { user_id_input: user.id });
+      if (incErr) {
+        console.error("increment_proofs_used RPC failed (cached path):", incErr.message);
+      }
 
       return new Response(
         JSON.stringify({ proof_id, proof_score: cached.score, status: "complete", cached: true }),
@@ -608,14 +602,10 @@ Deno.serve(async (req) => {
       throw new Error(updateError.message);
     }
 
-    // ── Increment proofs_used on profile ──
-    const { error: incrementError } = await serviceClient
-      .from("profiles")
-      .update({ proofs_used: proofsUsed + 1 })
-      .eq("id", user.id);
-
+    // Increment proofs_used atomically
+    const { error: incrementError } = await serviceClient.rpc("increment_proofs_used", { user_id_input: user.id });
     if (incrementError) {
-      console.error("proofs_used increment failed:", incrementError.message);
+      console.error("increment_proofs_used RPC failed:", incrementError.message);
     }
 
     // ── Cache result in Redis ──

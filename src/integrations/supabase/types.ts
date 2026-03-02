@@ -299,7 +299,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_proofs_used: {
+        Args: { user_id_input: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

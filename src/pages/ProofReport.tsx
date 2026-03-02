@@ -21,7 +21,7 @@ interface Proof {
   current_rank: number | null;
   delta_30: number | null;
   ai_overview: boolean | null;
-  rankings: { keyword: string; position: number; url: string; etv: number }[] | null;
+  rankings: { rankings: { keyword: string; position: number; url: string; etv: number }[]; domain_position: number | null } | null;
   serp_features: { ai_overview: boolean; featured_snippet: boolean; local_pack: boolean; knowledge_panel: boolean } | null;
   narrative: string | null;
   status: string;
@@ -313,14 +313,14 @@ const ProofReport = () => {
             </div>
 
             {/* Rankings Table */}
-            {proof.rankings && Array.isArray(proof.rankings) && proof.rankings.length > 0 && (
+            {proof.rankings?.rankings && proof.rankings.rankings.length > 0 && (
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-widest mb-3" style={{ color: "var(--text-dim)" }}>
                   Top 20 Rankings
                 </p>
                 <RankingsTable
-                  rankings={proof.rankings}
-                  domainPosition={proof.current_rank ?? null}
+                  rankings={proof.rankings.rankings}
+                  domainPosition={proof.rankings.domain_position}
                   domain={proof.domain}
                 />
               </div>

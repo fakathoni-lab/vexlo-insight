@@ -3,6 +3,8 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { Toaster } from "@/components/ui/sonner";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Signup from "./pages/Signup";
 import PricingPage from "./pages/PricingPage";
 import Dashboard from "./pages/Dashboard";
@@ -11,7 +13,6 @@ import DomainSearch from "./pages/DomainSearch";
 import ProofReport from "./pages/ProofReport";
 import ProofResult from "./pages/ProofResult";
 import PublicProof from "./pages/PublicProof";
-import ProofPublic from "./pages/ProofPublic";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -24,9 +25,10 @@ const App = () => (
         <Route path="/" element={<Index />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/proof/:id" element={<ProofReport />} />
-        <Route path="/proof/public/:slug" element={<ProofPublic />} />
         <Route path="/p/:slug" element={<PublicProof />} />
         <Route path="/check" element={<DomainSearch />} />
         <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>

@@ -1,294 +1,163 @@
 
+## Domain A — Database Audit Fixes
 
-# VEXLO Total System Audit
+### Status: READY TO APPLY
+
+Run the following SQL in **Supabase SQL Editor** (Dashboard → SQL Editor → New Query → paste → Run).
+
+This single script fixes all 4 CRITICAL FAILS and 8 MAJOR WARNS from the audit.
 
 ---
 
-## 1. SYSTEM MAP RECONSTRUCTION
+### SQL Migration (copy & run in Supabase SQL Editor)
 
-```text
-┌─────────────────────────────────────────────────────┐
-│                    FRONTEND (Vite/React)             │
-│                                                     │
-│  Landing (/) ─── Auth (Login/Signup) ─── Dashboard  │
-│       │                  │                   │      │
-│   Waitlist            Supabase Auth      NewProof   │
-│   (INSERT)          (signIn/signUp)     (INSERT→    │
-│                          │               redirect)  │
-│                     ProtectedRoute          │       │
-│                          │            ProofResult   │
-│                     DashboardLayout   (invoke edge  │
-│                          │            fn + realtime) │
-│                     ┌────┴────┐            │       │
-│                  Domains   Settings    ProofReport  │
-│                  (edge fn) (placeholder) ProofPublic│
-│                                        PublicProof  │
-└──────────────┬──────────────────────────────────────┘
-               │
-┌──────────────▼──────────────────────────────────────┐
-│              EDGE FUNCTIONS (Deno)                   │
-│                                                     │
-│  generate-proof ── DataForSEO + Lovable AI Gateway  │
-│  domain-check   ── Dynadot API (401 blocked)        │
-│  domain-register ── Scaffold (501)                  │
-└──────────────┬──────────────────────────────────────┘
-               │
-┌──────────────▼──────────────────────────────────────┐
-│              SUPABASE (Postgres + Auth)              │
-│                                                     │
-│  profiles │ proofs │ proof_views │ waitlist          │
-│  subscriptions │ domain_availability_cache           │
-│  domain_check_rate_limit                            │
-│                                                     │
-│  Trigger: on_auth_user_created → handle_new_user()  │
-│  Missing RPC: increment_proofs_used                 │
-│  Caching: Upstash Redis (24h TTL)                   │
-└─────────────────────────────────────────────────────┘
+```sql
+-- ============================================================
+-- VEXLO Database Audit Fixes — Domain A
+-- Addresses: 4 CRITICAL FAILS + 8 MAJOR WARNS
+-- Safe to run idempotently (uses IF NOT EXISTS / DROP IF EXISTS)
+-- ============================================================
+
+-- ────────────────────────────────────────────────────────────
+-- FIX 1: Add ON DELETE CASCADE to all foreign keys
+-- ────────────────────────────────────────────────────────────
+
+-- proofs.user_id → profiles.id
+ALTER TABLE public.proofs
+  DROP CONSTRAINT IF EXISTS proofs_user_id_fkey;
+ALTER TABLE public.proofs
+  ADD CONSTRAINT proofs_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+-- subscriptions.user_id → profiles.id
+ALTER TABLE public.subscriptions
+  DROP CONSTRAINT IF EXISTS subscriptions_user_id_fkey;
+ALTER TABLE public.subscriptions
+  ADD CONSTRAINT subscriptions_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+-- proof_views.proof_id → proofs.id
+ALTER TABLE public.proof_views
+  DROP CONSTRAINT IF EXISTS proof_views_proof_id_fkey;
+ALTER TABLE public.proof_views
+  ADD CONSTRAINT proof_views_proof_id_fkey
+  FOREIGN KEY (proof_id) REFERENCES public.proofs(id) ON DELETE CASCADE;
+
+-- ────────────────────────────────────────────────────────────
+-- FIX 2: Add missing columns to proofs
+-- ────────────────────────────────────────────────────────────
+
+ALTER TABLE public.proofs ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
+ALTER TABLE public.proofs ADD COLUMN IF NOT EXISTS public_slug TEXT;
+ALTER TABLE public.proofs ADD COLUMN IF NOT EXISTS is_public BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.proofs ADD COLUMN IF NOT EXISTS error_message TEXT;
+ALTER TABLE public.proofs ADD COLUMN IF NOT EXISTS serp_features JSONB;
+
+-- Unique index on public_slug (partial — only non-null)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_proofs_public_slug
+  ON public.proofs (public_slug) WHERE public_slug IS NOT NULL;
+
+-- ────────────────────────────────────────────────────────────
+-- FIX 3: Add CHECK constraints
+-- ────────────────────────────────────────────────────────────
+
+DO $$ BEGIN
+  ALTER TABLE public.proofs ADD CONSTRAINT chk_proofs_status
+    CHECK (status IN ('pending', 'processing', 'complete', 'failed'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.proofs ADD CONSTRAINT chk_proofs_score
+    CHECK (score >= 0 AND score <= 100);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.profiles ADD CONSTRAINT chk_profiles_plan
+    CHECK (plan IN ('free', 'starter', 'pro', 'elite'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.profiles ADD CONSTRAINT chk_profiles_plan_status
+    CHECK (plan_status IN ('active', 'past_due', 'canceled', 'trialing'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- ────────────────────────────────────────────────────────────
+-- FIX 4: RLS — UPDATE policy on proofs + fix public SELECT + subscriptions
+-- ────────────────────────────────────────────────────────────
+
+ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their own subscriptions" ON public.subscriptions;
+CREATE POLICY "Users can view their own subscriptions"
+  ON public.subscriptions FOR SELECT
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update their own proofs" ON public.proofs;
+CREATE POLICY "Users can update their own proofs"
+  ON public.proofs FOR UPDATE
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "public_proofs" ON public.proofs;
+CREATE POLICY "public_proofs"
+  ON public.proofs FOR SELECT
+  USING (is_public = true AND status = 'complete');
+
+-- ────────────────────────────────────────────────────────────
+-- FIX 5: Missing indexes
+-- ────────────────────────────────────────────────────────────
+
+CREATE INDEX IF NOT EXISTS idx_proofs_user_created
+  ON public.proofs (user_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_proof_views_proof_id
+  ON public.proof_views (proof_id);
+
+CREATE INDEX IF NOT EXISTS idx_profiles_stripe_id
+  ON public.profiles (stripe_id) WHERE stripe_id IS NOT NULL;
+
+-- ────────────────────────────────────────────────────────────
+-- FIX 6: Secure handle_new_user() with explicit search_path
+-- ────────────────────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name)
+  VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'full_name');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- ────────────────────────────────────────────────────────────
+-- Backfill: Mark existing proofs with score > 0 as 'complete'
+-- ────────────────────────────────────────────────────────────
+
+UPDATE public.proofs SET status = 'complete' WHERE score > 0 AND status = 'pending';
 ```
 
 ---
 
-## 2. WHAT IS BUILT VS NOT BUILT
+### What This Fixes
 
-### A) Clearly Implemented
-- Landing page with 14 section components, SEO meta, navbar auth-state switching
-- Supabase Auth (login, signup, session persistence, onAuthStateChange)
-- Protected routes via ProtectedRoute component
-- Dashboard layout with sidebar navigation, plan badge (now reads from DB)
-- Waitlist signup (INSERT with RLS, duplicate detection)
-- Proof creation flow: NewProof INSERT → ProofResult realtime listener → generate-proof edge function
-- generate-proof edge function: DataForSEO SERP data, scoring algorithm, AI narrative via Lovable gateway, plan enforcement, Redis caching
-- domain-check edge function: Dynadot API, DB-backed rate limiting (10/min), TTL caching
-- Proof sharing: slug generation, public/private toggle, clipboard copy
-- Proof view tracking: proof_views INSERT with hashed user agent
-- Three public proof viewer pages (ProofReport, ProofPublic, PublicProof) — all now use correct column names
-- RLS policies on all tables
+| # | Issue | Fix |
+|---|-------|-----|
+| C1 | No ON DELETE CASCADE on FKs | Added CASCADE to all 3 FKs |
+| C2 | proofs UPDATE RLS missing | Added UPDATE policy |
+| C3 | public SELECT references missing columns | Added columns first, then recreated policy |
+| C4 | subscriptions RLS not enabled | Enabled + added SELECT policy |
+| W1 | No CHECK constraints | Added on status, score, plan, plan_status |
+| W2 | Missing proof_views index | Added idx_proof_views_proof_id |
+| W3 | Missing profiles.stripe_id index | Added idx_profiles_stripe_id |
+| W4 | handle_new_user lacks search_path | Recreated with SET search_path |
+| W5 | score=0 ambiguity | Added status column + backfill |
+| W6 | Missing public_slug/is_public | Added columns + unique index |
 
-### B) Partially Implemented
-- **Domain search**: UI complete, edge function deployed, but Dynadot API returns 401 (IP whitelist issue). Feature is dead.
-- **Proof sharing URL mismatch**: `useProofs.ts` generates URLs to `/proof/public/:slug` (ProofPublic page), but ProofReport generates URLs to `/p/:slug` (PublicProof page). Two different share URL patterns coexist.
-- **proofs_used increment**: generate-proof edge function calls `serviceClient.rpc("increment_proofs_used")` — this RPC function does not exist in the database. Falls back to direct UPDATE which works, but the cached-result path (line 508) silently fails the RPC and the fallback does a fire-and-forget that may also fail.
-- **i18n framework**: Files exist (`en.ts`, `id.ts`, provider in `index.tsx`), but zero components consume translations. Dead code.
-- **Pricing page**: Static UI with hardcoded tiers ($39/$79/$149). CTA buttons link to `#waitlist` anchor. No Stripe checkout, no plan selection, no upgrade flow.
+### After Running
 
-### C) Missing but Critical
-- **Password reset flow**: No "Forgot password" link, no `/reset-password` page. Users locked out permanently.
-- **Stripe billing integration**: Secret exists, `subscriptions` table exists, `profiles.stripe_id` exists — zero implementation code. No checkout, no webhooks, no plan changes.
-- **Settings page**: Placeholder text only. No profile editing, no password change, no plan management.
-- **Proof history page**: Inline "coming soon" text.
-- **Email confirmation UX**: No handling for unconfirmed accounts.
-- **Monitoring/alerting**: No error tracking, no usage analytics, no health checks.
-- **`increment_proofs_used` database function**: Called by edge function but doesn't exist.
-
----
-
-## 3. PARALLEL / REDUNDANT ARCHITECTURE
-
-### Three public proof routes — two different UI patterns
-
-| Route | Component | Share URL generated by | UI pattern |
-|-------|-----------|----------------------|------------|
-| `/proof/:id` | ProofReport | — (accessed directly by ID) | ScoreRing + RankBar + SerpFeatureGrid + RankingsTable + NarrativeCard |
-| `/proof/public/:slug` | ProofPublic | `useProofs.ts` shareProof() | ProofScoreRing + RankingChart + TrendDelta + AIOverviewBadge + SalesNarrative |
-| `/p/:slug` | PublicProof | ProofReport handleShare() | ScoreRing + RankBar + RankingsTable + NarrativeCard |
-
-**Impact**: 
-- Two different share URLs generated by different parts of the code
-- Three different visual presentations of the same data
-- ProofReport is accessible by raw UUID (any authenticated user's proof visible if they guess the ID — but RLS "Users can read own proofs" policy is RESTRICTIVE, so non-owners get empty result unless the proof is public)
-- Maintenance burden triples for any UI change
-
-### Duplicate proofs_used increment logic
-The generate-proof edge function has two paths:
-1. **Cached path** (line 508): calls non-existent `increment_proofs_used` RPC, silently fails, fires fallback UPDATE in a `.then()` chain that swallows errors
-2. **Live path** (line 612): direct UPDATE which works
-
-Both paths should be unified into one reliable mechanism.
-
-### Rankings data shape inconsistency
-- ProofResult and ProofPublic expect `rankings: { rankings: [...], domain_position: number | null }`
-- ProofReport expects `rankings: { keyword, position, url, etv }[]` (flat array)
-- PublicProof expects `rankings: { rankings: [...], domain_position: number | null }`
-- The generate-proof edge function writes `rankings` as `{ rankings: [...], domain_position: ... }` (nested object)
-- ProofReport will fail to render rankings because it checks `Array.isArray(proof.rankings)` on a nested object — always false
-
----
-
-## 4. POSITIONING MISALIGNMENT CHECK
-
-### Reinforcing "Sales Proof Intelligence"
-- Proof Score concept is strong — quantified credibility signal
-- AI-generated sales narrative is well-positioned for agency closers
-- Share link mechanics support the "proof as asset" framing
-- Score ring + trend delta create visual urgency
-
-### Drifting toward wrong positioning
-- **Domain search is a distraction.** It has zero connection to proof intelligence. It's a registrar feature that serves no sales closing purpose. It dilutes product identity and consumes engineering resources (edge function, caching, rate limiting, UI) for a feature that doesn't align with "Sales Proof Intelligence."
-- **Pricing page links to waitlist, not checkout.** The product says "Sales Proof Intelligence System" but monetization is "join a waitlist." This creates cognitive dissonance.
-- **No white-label or branding customization exists** despite being listed as a paid feature on the pricing page. `profiles` has `brand_logo_url`, `brand_color`, `agency_name` columns — none are used anywhere.
-- **"Generate Your Own Proof" CTA on public pages** links to vexloai.com (hardcoded) or `/` — not to a signup flow with context about what they just saw.
-
-### Verdict
-The core proof engine is well-aligned. Domain search is scope creep. The gap between what the pricing page promises and what exists is large.
-
----
-
-## 5. SECURITY AUDIT
-
-### HIGH RISK
-1. **ProofReport (`/proof/:id`) access model is ambiguous.** It queries by `id` without filtering by `user_id`. RLS restricts SELECT to own proofs OR public proofs with slugs. A non-authenticated user hitting `/proof/:id` with a valid UUID gets nothing (good). But the page itself has no auth gate — it just shows "Proof not found" which leaks that the ID format is valid.
-2. **No rate limiting on proof generation.** A user can spam proof creation (costs DataForSEO credits). Plan enforcement exists but no per-minute throttle.
-3. **`as any` type casts throughout Supabase queries** bypass TypeScript safety. Multiple files cast entire query chains, meaning schema mismatches are invisible until runtime.
-
-### MEDIUM RISK
-4. **domain-check edge function has `verify_jwt: false`** in config.toml. This is intentional (public `/check` page), but means anyone can hit the endpoint without authentication. Rate limiting mitigates this, but the rate limit uses IP-based UUID hashing for anonymous users — Supabase Edge Functions behind Cloudflare may all share the same IP.
-5. **proof_views INSERT policy is `true`** (anyone can insert). No validation on proof_id existence. An attacker could spam fake view records for any proof_id.
-6. **Error messages in edge functions leak internal state.** "Profile not found" (404), "Proof not found" (404) — these confirm entity existence.
-
-### LOW RISK
-7. **Hardcoded Supabase URL/key in client.ts** — standard for Lovable-generated code, anon key is designed to be public.
-8. **User agent hashing in proof_views** uses `Date.now()` as salt — every view generates a unique hash, defeating deduplication.
-
----
-
-## 6. MONETIZATION AUDIT
-
-### Revenue leakage
-1. **Zero payment flow exists.** Users get 5 free proofs and then hit a wall with no upgrade path. 100% churn at limit.
-2. **Pricing page CTAs go to `#waitlist`** — no Stripe checkout, no plan selection. Every interested buyer is lost.
-3. **Pay-per-proof ($12/proof)** advertised on pricing page — no implementation exists.
-4. **Plan column exists but is never written to by any upgrade flow.** Always "free."
-
-### Under-leveraged moments
-5. **Plan limit reached → failure screen says "Upgrade your plan"** but provides no upgrade button or link.
-6. **Public proof pages** show VEXLO branding and "Prove your own domain" CTA — but the CTA links to homepage, not a signup page with conversion context.
-7. **No trial-to-paid conversion mechanism.** The free tier gives 5 proofs, then nothing. No email trigger, no in-app upsell, no usage notification.
-
-### Domain flow under-leveraged
-8. **Domain search is completely disconnected from proof flow.** A user who runs a proof for `example.com` is never shown "This domain is available — want to secure it?" Even if domain registration worked, there's no cross-sell moment.
-
----
-
-## 7. UX & FRICTION ANALYSIS
-
-### Critical friction points
-1. **ProtectedRoute loading state** is a raw `<div>Loading...</div>` — no spinner, no branded loading, breaks the visual experience.
-2. **No "Forgot Password" link** on login page. Users who forget passwords abandon.
-3. **Proof generation has no cancel option.** Once started, user waits 15-30 seconds with no way to abort.
-4. **Dashboard shows "Proofs This Month"** but there's no monthly reset mechanism. `proofs_used` only increments, never resets.
-5. **Three different proof view pages** with different layouts create inconsistent experience when sharing vs viewing own proofs.
-6. **NewProof form has no domain/keyword suggestions** — cold start for every proof.
-7. **Share flow generates URLs to `/proof/public/:slug`** from ProofActions, but ProofReport's share button generates `/p/:slug`. Recipients see different pages depending on where the link was generated.
-
-### Missing triggers
-8. **No empty state CTA in Dashboard** beyond "Generate your first one" — no onboarding guidance.
-9. **No notification when proof generation completes** if user navigates away from ProofResult page.
-
----
-
-## 8. SCALABILITY REVIEW
-
-### Current capacity
-- **DataForSEO**: 2 API calls per proof (organic + history). At $0.01-0.02 per call, 1000 proofs = $20-40. Scales linearly with cost.
-- **Upstash Redis**: 24h cache reduces repeat queries. Good for same domain+keyword. Low hit rate expected (each proof is unique combo).
-- **Supabase**: Free tier handles ~500 concurrent connections. Realtime subscriptions (one per active ProofResult page) will be the first bottleneck.
-
-### Bottlenecks at scale
-1. **No monthly reset for `proofs_used`.** At 10K users, manual reset is impossible. Needs a cron job or billing-period-based calculation.
-2. **Realtime subscriptions in ProofResult** — one channel per proof generation. At 100 concurrent users generating proofs, 100 Supabase realtime channels. Supabase free tier caps at 200 concurrent connections.
-3. **No queue for proof generation.** Edge functions are synchronous — one HTTP request per proof, 15-30 seconds each. Under load, edge function cold starts + DataForSEO rate limits will cause failures.
-4. **Domain check rate limiting uses DB queries** — two queries per rate limit check (SELECT + UPDATE/INSERT). At 100K checks/day, that's 200K+ rate limit DB operations.
-5. **No multi-region support.** DataForSEO queries hardcoded to "United States" location. International users get US-only SERP data.
-
----
-
-## 9. STRATEGIC RISK REVIEW
-
-### Commoditization risk: MEDIUM
-Any SEO tool (Ahrefs, SEMrush, Moz) could add a "proof report" feature. The moat is in the narrative framing and the "30-second proof" speed, not the data itself.
-
-### Indie clone vulnerability: HIGH
-The entire product is: (1) DataForSEO API call, (2) scoring formula, (3) AI narrative prompt. A developer could clone this in a weekend. The scoring algorithm is in a public edge function.
-
-### Lack of moat reinforcement
-- No accumulated data advantage (each proof is independent)
-- No network effects
-- No integrations ecosystem
-- No proprietary data source
-- The AI narrative is a commodity (any LLM can do it)
-
-### Over-engineering risk: MEDIUM
-Domain search (3 files, edge function, 2 DB tables, rate limiting, caching) serves no monetization purpose and doesn't support the core positioning.
-
-### Under-building risk: HIGH
-The core revenue flow (proof → upsell → payment) has a complete gap at the payment step. The product works as a free tool with a hard cap. There's no path from "user hits limit" to "user pays."
-
----
-
-## 10. FINAL VERDICT
-
-### Overall system maturity: 4/10
-
-The frontend architecture is clean. The edge function engineering is solid. The proof scoring algorithm is thoughtful. But the product has no revenue mechanism, no password reset, three redundant public proof pages, a dead domain feature, and multiple data shape inconsistencies that will cause runtime errors.
-
-### Top 5 Critical Fixes
-1. **Create `increment_proofs_used` RPC or unify increment logic** — current cached-path silently fails
-2. **Fix rankings data shape in ProofReport** — `Array.isArray()` check on nested object means rankings never render on that page
-3. **Consolidate public proof routes** — pick one (`/p/:slug` + `PublicProof.tsx`), delete the other two, update `useProofs.ts` share URLs
-4. **Add password reset flow** — forgot password link + Supabase `resetPasswordForEmail` + `/reset-password` page
-5. **Fix ProtectedRoute loading state** — replace raw text with branded spinner
-
-### Top 3 Immediate Revenue Multipliers
-1. **Implement Stripe checkout** — connect pricing tiers to Stripe, add checkout button, handle webhooks to update `profiles.plan`
-2. **Add upgrade CTA at plan limit** — when proof generation fails with "plan_limit_reached", show upgrade button with Stripe checkout link
-3. **Add conversion CTA on public proof pages** — when a prospect views a shared proof, show signup with context ("See what [agency] proved — generate your own")
-
-### Top 3 Existential Risks
-1. **Zero revenue mechanism** — product is a free tool with no upgrade path. Unsustainable.
-2. **Single API dependency** — DataForSEO goes down or changes pricing, the entire product is dead. No fallback.
-3. **No defensible moat** — scoring algorithm + AI prompt are the entire IP, both trivially replicable.
-
-### 30-Day Priority Roadmap
-
-**Week 1**: Fix broken mechanics
-- Consolidate public proof routes to `/p/:slug`
-- Fix rankings data shape in ProofReport (or delete ProofReport entirely)
-- Add `increment_proofs_used` DB function
-- Add password reset flow
-- Fix ProtectedRoute loading state
-
-**Week 2**: Revenue infrastructure
-- Implement Stripe checkout (3 tiers + pay-per-proof)
-- Create stripe-webhook edge function
-- Add upgrade CTAs at plan limit + settings page
-- Build settings page (profile editing + plan management)
-
-**Week 3**: Conversion optimization
-- Redesign public proof page with stronger signup CTA
-- Add proof history page (simple table of past proofs)
-- Add monthly proofs_used reset mechanism (cron or billing-period)
-- Remove or deprioritize domain search feature
-
-**Week 4**: Reliability
-- Test full proof generation pipeline end-to-end
-- Add error tracking (Sentry or equivalent)
-- Remove dead i18n code
-- Clean up `as any` casts across Supabase queries
-
----
-
-## Hard Truth Summary
-
-1. The product has zero revenue infrastructure — it is a free tool with a wall, not a SaaS.
-2. Three public proof pages exist doing the same thing with different UIs and different share URLs — pick one, delete the rest.
-3. `ProofReport.tsx` will never render rankings because it checks `Array.isArray()` on a nested `{rankings: [...]}` object.
-4. `increment_proofs_used` RPC is called but doesn't exist in the database — usage tracking on cached proofs silently fails.
-5. Domain search is a fully-engineered feature that serves no monetization or positioning purpose — it is scope creep.
-6. The pricing page promises features (white-label, API access, AI narrative toggle) that don't exist anywhere in the codebase.
-7. No password reset flow means any user who forgets their password is permanently locked out.
-8. The entire product's IP (scoring algorithm + AI prompt) is in a single edge function that any developer can replicate in hours.
-9. There is no monthly reset mechanism for `proofs_used` — users who exhaust their limit are stuck forever even on paid plans.
-10. The `ProtectedRoute` loading state is an unstyled `<div>Loading...</div>` — the first thing authenticated users see.
-11. `proof_views` tracking hashes `userAgent + Date.now()` — every view generates a unique hash, making deduplication impossible.
-12. The Dynadot API integration is dead (401) and has been dead since deployment — engineering effort with zero user value delivered.
-
+1. Confirm "Success" in SQL Editor
+2. Go to **Table Editor → proofs** and verify `status`, `public_slug`, `is_public` columns exist
+3. Come back here and tell me it's done — I'll update the app code to use the new columns
