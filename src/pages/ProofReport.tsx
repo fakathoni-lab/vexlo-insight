@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import ScoreRing from "@/components/proof/ScoreRing";
 import RankBar from "@/components/proof/RankBar";
 import SerpFeatureGrid from "@/components/proof/SerpFeatureGrid";
 import RankingsTable from "@/components/proof/RankingsTable";
 import NarrativeCard from "@/components/proof/NarrativeCard";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { ArrowLeft, Share2, Clock, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -46,9 +49,14 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 const ProofReport = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [proof, setProof] = useState<Proof | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isPublic, setIsPublic] = useState(false);
+  const [toggling, setToggling] = useState(false);
+
+  const isOwner = !!(user && proof && user.id === proof.user_id);
 
   useEffect(() => {
     if (!id) return;
@@ -79,6 +87,7 @@ const ProofReport = () => {
       }
 
       setProof(data);
+      setIsPublic(data.is_public ?? false);
       setLoading(false);
 
       // Stop polling if complete or failed
@@ -114,6 +123,24 @@ const ProofReport = () => {
     } catch {
       toast.error("Failed to copy link");
     }
+  };
+
+  const handleToggleVisibility = async (checked: boolean) => {
+    if (!proof) return;
+    setToggling(true);
+    const { error: updateError } = await (supabase
+      .from("proofs")
+      .update({ is_public: checked } as any)
+      .eq("id", proof.id) as any);
+
+    if (updateError) {
+      toast.error("Failed to update visibility");
+    } else {
+      setIsPublic(checked);
+      setProof({ ...proof, is_public: checked });
+      toast.success(checked ? "Proof is now public" : "Proof is now private");
+    }
+    setToggling(false);
   };
 
   // ── Loading skeleton ──
@@ -161,14 +188,31 @@ const ProofReport = () => {
           <Link to="/dashboard" className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest transition-colors hover:opacity-80" style={{ color: "var(--text-dim)" }}>
             <ArrowLeft size={14} /> Dashboard
           </Link>
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-full gap-2 font-mono text-[10px] uppercase tracking-widest"
-            onClick={handleShare}
-          >
-            <Share2 size={12} /> Share
-          </Button>
+          <div className="flex items-center gap-4">
+            {isOwner && (
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="visibility"
+                  checked={isPublic}
+                  onCheckedChange={handleToggleVisibility}
+                  disabled={toggling}
+                />
+                <Label htmlFor="visibility" className="font-mono text-[10px] uppercase tracking-widest cursor-pointer" style={{ color: "var(--text-dim)" }}>
+                  {isPublic ? "Public" : "Private"}
+                </Label>
+              </div>
+            )}
+            {isPublic && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full gap-2 font-mono text-[10px] uppercase tracking-widest"
+                onClick={handleShare}
+              >
+                <Share2 size={12} /> Share
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* ── Header ── */}
