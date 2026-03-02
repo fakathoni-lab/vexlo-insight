@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Redis } from "https://deno.land/x/upstash_redis@v1.22.0/mod.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 // ── CORS ──
 const corsHeaders = {
@@ -9,20 +10,21 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// ── Validation ──
+// ── Zod input schema ──
 const DOMAIN_RE = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/;
 
-function sanitize(str: string): string {
-  return str.replace(/[<>'"&]/g, "").trim();
-}
-
-function validateInputs(domain: string, keyword: string): string | null {
-  if (typeof domain !== "string" || typeof keyword !== "string") return "Invalid input types";
-  if (domain.length < 3 || domain.length > 253) return "Domain length must be 3-253 chars";
-  if (keyword.length < 2 || keyword.length > 100) return "Keyword length must be 2-100 chars";
-  if (!DOMAIN_RE.test(domain)) return "Invalid domain format";
-  return null;
-}
+const RequestSchema = z.object({
+  domain: z.string()
+    .min(3, "Domain must be at least 3 characters")
+    .max(253, "Domain must be at most 253 characters")
+    .transform((d) => d.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/+$/, "").toLowerCase().trim())
+    .refine((d) => DOMAIN_RE.test(d), "Invalid domain format"),
+  keyword: z.string()
+    .min(2, "Keyword must be at least 2 characters")
+    .max(100, "Keyword must be at most 100 characters")
+    .transform((k) => k.replace(/[<>'"&]/g, "").trim().toLowerCase()),
+  proof_id: z.string().uuid("Invalid proof_id"),
+});
 
 // ── Redis cache helper ──
 function getRedis(): Redis | null {
@@ -70,7 +72,7 @@ async function fetchWithRetry(
   }
 }
 
-// ── Call 1: Organic rankings ──
+// ── Call 1: Organic rankings + SERP features (merged — single API call) ──
 interface OrganicItem {
   rank_absolute: number;
   url: string;
@@ -78,17 +80,26 @@ interface OrganicItem {
   etv: number;
 }
 
-interface OrganicResult {
+interface SerpFeatures {
+  ai_overview: boolean;
+  featured_snippet: boolean;
+  local_pack: boolean;
+  knowledge_panel: boolean;
+}
+
+interface OrganicAndSerpResult {
   rankPosition: number | null;
   items: OrganicItem[];
   kwDifficulty: number;
+  serpFeatures: SerpFeatures;
+  aiImpactPercent: number;
 }
 
-async function fetchOrganicRankings(
+async function fetchOrganicAndSerpFeatures(
   keyword: string,
   domain: string,
   headers: Record<string, string>
-): Promise<OrganicResult> {
+): Promise<OrganicAndSerpResult> {
   const res = await fetchWithRetry(
     `${DATAFORSEO_BASE}/serp/google/organic/live/advanced`,
     {
@@ -109,28 +120,62 @@ async function fetchOrganicRankings(
 
   const data = await res.json();
   const resultItems = data?.tasks?.[0]?.result?.[0]?.items ?? [];
+  const extraInfo: string[] = data?.tasks?.[0]?.result?.[0]?.item_types ?? [];
 
+  // ── Organic rankings ──
   let rankPosition: number | null = null;
   const organicItems: OrganicItem[] = [];
 
+  // ── SERP features ──
+  let aiOverview = false;
+  let featuredSnippet = false;
+  let localPack = false;
+  let knowledgePanel = false;
+
   for (const item of resultItems) {
-    if (item.type === "organic") {
+    const t = (item.type ?? "").toLowerCase();
+
+    if (t === "organic") {
       organicItems.push({
         rank_absolute: item.rank_absolute,
         url: item.url ?? "",
         title: item.title ?? "",
         etv: item.etv ?? 0,
       });
-
       if (rankPosition === null && item.url?.includes(domain)) {
         rankPosition = item.rank_absolute;
       }
     }
+
+    if (t.includes("ai_overview")) aiOverview = true;
+    if (t === "featured_snippet") featuredSnippet = true;
+    if (t === "local_pack") localPack = true;
+    if (t === "knowledge_graph" || t === "knowledge_panel") knowledgePanel = true;
   }
+
+  for (const t of extraInfo) {
+    const tl = t.toLowerCase();
+    if (tl.includes("ai_overview")) aiOverview = true;
+    if (tl === "featured_snippet") featuredSnippet = true;
+    if (tl === "local_pack") localPack = true;
+    if (tl.includes("knowledge")) knowledgePanel = true;
+  }
+
+  const nonOrganic = resultItems.filter(
+    (i: { type: string; rank_absolute: number }) =>
+      i.type !== "organic" && i.rank_absolute <= 10
+  ).length;
+  const aiImpactPercent = Math.min(100, Math.round((nonOrganic / 10) * 100));
 
   const kwDifficulty = data?.tasks?.[0]?.result?.[0]?.keyword_info?.keyword_difficulty ?? 50;
 
-  return { rankPosition, items: organicItems.slice(0, 20), kwDifficulty };
+  return {
+    rankPosition,
+    items: organicItems.slice(0, 20),
+    kwDifficulty,
+    serpFeatures: { ai_overview: aiOverview, featured_snippet: featuredSnippet, local_pack: localPack, knowledge_panel: knowledgePanel },
+    aiImpactPercent,
+  };
 }
 
 // ── Call 2: Organic history (30-day delta) ──
@@ -182,73 +227,6 @@ async function fetchOrganicHistory(
   }
 
   return { delta30d: null };
-}
-
-// ── Call 3: SERP features (AI Overview detection) ──
-interface SerpFeatures {
-  ai_overview: boolean;
-  featured_snippet: boolean;
-  local_pack: boolean;
-  knowledge_panel: boolean;
-}
-
-async function fetchSerpFeatures(
-  keyword: string,
-  headers: Record<string, string>
-): Promise<{ serpFeatures: SerpFeatures; aiImpactPercent: number }> {
-  const res = await fetchWithRetry(
-    `${DATAFORSEO_BASE}/serp/google/organic/live/advanced`,
-    {
-      method: "POST",
-      headers,
-      body: JSON.stringify([
-        {
-          keyword,
-          location_name: "United States",
-          language_code: "en",
-          device: "desktop",
-          os: "windows",
-          depth: 20,
-        },
-      ]),
-    }
-  );
-
-  const data = await res.json();
-  const items = data?.tasks?.[0]?.result?.[0]?.items ?? [];
-  const extraInfo = data?.tasks?.[0]?.result?.[0]?.item_types ?? [];
-
-  let aiOverview = false;
-  let featuredSnippet = false;
-  let localPack = false;
-  let knowledgePanel = false;
-
-  for (const item of items) {
-    const t = item.type?.toLowerCase() ?? "";
-    if (t.includes("ai_overview") || t === "ai_overview") aiOverview = true;
-    if (t === "featured_snippet") featuredSnippet = true;
-    if (t === "local_pack") localPack = true;
-    if (t === "knowledge_graph" || t === "knowledge_panel") knowledgePanel = true;
-  }
-
-  for (const t of extraInfo) {
-    const tl = (t as string).toLowerCase();
-    if (tl.includes("ai_overview")) aiOverview = true;
-    if (tl === "featured_snippet") featuredSnippet = true;
-    if (tl === "local_pack") localPack = true;
-    if (tl.includes("knowledge")) knowledgePanel = true;
-  }
-
-  const nonOrganic = items.filter(
-    (i: { type: string; rank_absolute: number }) =>
-      i.type !== "organic" && i.rank_absolute <= 10
-  ).length;
-  const aiImpactPercent = Math.min(100, Math.round((nonOrganic / 10) * 100));
-
-  return {
-    serpFeatures: { ai_overview: aiOverview, featured_snippet: featuredSnippet, local_pack: localPack, knowledge_panel: knowledgePanel },
-    aiImpactPercent,
-  };
 }
 
 // ── AI Narrative generation ──
@@ -369,14 +347,25 @@ function calculateProofScore(params: {
   return Math.max(0, Math.min(100, final));
 }
 
+// ── Service-role client helper ──
+function getServiceClient() {
+  const url = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) throw new Error("Missing Supabase service config");
+  return createClient(url, key);
+}
+
 // ── Main handler ──
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Capture proof_id early for error handler
+  let proofId: string | null = null;
+
   try {
-    // Auth
+    // ── Auth ──
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "unauthorized" }), {
@@ -385,11 +374,18 @@ serve(async (req) => {
       });
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return new Response(JSON.stringify({ error: "internal_error" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -399,21 +395,88 @@ serve(async (req) => {
       });
     }
 
-    // Parse + validate
-    const { domain, keyword, proof_id } = await req.json();
-    const cleanDomain = sanitize(domain);
-    const cleanKeyword = sanitize(keyword);
-
-    const validationError = validateInputs(cleanDomain, cleanKeyword);
-    if (validationError) {
-      return new Response(JSON.stringify({ error: validationError }), {
+    // ── Parse + validate with Zod ──
+    let rawBody: unknown;
+    try {
+      rawBody = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Mark as processing
-    await supabase.from("proofs").update({ status: "processing" }).eq("id", proof_id);
+    const parsed = RequestSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(
+        JSON.stringify({ error: parsed.error.issues[0]?.message ?? "Invalid input" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { domain: cleanDomain, keyword: cleanKeyword, proof_id } = parsed.data;
+    proofId = proof_id;
+
+    // ── Ownership check: verify proof belongs to authenticated user ──
+    const serviceClient = getServiceClient();
+
+    const { data: proofRow, error: proofFetchError } = await serviceClient
+      .from("proofs")
+      .select("user_id")
+      .eq("id", proof_id)
+      .single();
+
+    if (proofFetchError || !proofRow) {
+      return new Response(JSON.stringify({ error: "Proof not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (proofRow.user_id !== user.id) {
+      return new Response(JSON.stringify({ error: "forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Plan enforcement: check proofs_used vs proofs_limit BEFORE DataForSEO ──
+    const { data: profile, error: profileError } = await serviceClient
+      .from("profiles")
+      .select("proofs_used, proofs_limit")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return new Response(JSON.stringify({ error: "Profile not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const proofsUsed = profile.proofs_used ?? 0;
+    const proofsLimit = profile.proofs_limit ?? 3; // free plan default
+
+    if (proofsUsed >= proofsLimit) {
+      // Mark proof as failed so UI shows proper state
+      await serviceClient.from("proofs").update({
+        status: "failed",
+        error_message: "Plan limit reached. Upgrade to generate more proofs.",
+      }).eq("id", proof_id);
+
+      return new Response(
+        JSON.stringify({
+          error: "plan_limit_reached",
+          message: "You have reached your proof generation limit. Please upgrade your plan.",
+          proofs_used: proofsUsed,
+          proofs_limit: proofsLimit,
+        }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── Mark as processing ──
+    await serviceClient.from("proofs").update({ status: "processing" }).eq("id", proof_id);
 
     // ── Check Redis cache ──
     const redis = getRedis();
@@ -431,84 +494,88 @@ serve(async (req) => {
     if (cachedData) {
       const cached = typeof cachedData === "string" ? JSON.parse(cachedData) : cachedData;
 
-      await supabase.from("proofs").update({
-        score: cached.proof_score ?? cached.score ?? 0,
-        current_rank: cached.ranking_position ?? cached.current_rank ?? null,
-        delta_30: cached.ranking_delta ?? cached.delta_30 ?? null,
+      await serviceClient.from("proofs").update({
+        score: cached.score ?? 0,
+        current_rank: cached.current_rank ?? null,
+        delta_30: cached.delta_30 ?? null,
         ai_overview: cached.ai_overview ?? false,
-        rankings: cached.ranking_data ?? cached.rankings ?? null,
-        narrative: null,
+        rankings: cached.rankings ?? null,
+        narrative: cached.narrative ?? null,
+        serp_features: cached.serp_features ?? null,
         status: "complete",
       }).eq("id", proof_id);
 
+      // Increment proofs_used even for cached results
+      await serviceClient.rpc("increment_proofs_used", { user_id_input: user.id }).then(
+        () => {},
+        () => {
+          // Fallback: direct update if RPC doesn't exist
+          serviceClient.from("profiles")
+            .update({ proofs_used: proofsUsed + 1 })
+            .eq("id", user.id)
+            .then(() => {}, (e) => console.error("proofs_used increment failed:", e));
+        }
+      );
+
       return new Response(
-        JSON.stringify({ proof_id, proof_score: cached.proof_score, status: "complete", cached: true }),
+        JSON.stringify({ proof_id, proof_score: cached.score, status: "complete", cached: true }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // ── DataForSEO calls via Promise.allSettled ──
-    let apiCostUnits = 0;
+    // ── DataForSEO calls: 2 parallel calls (merged organic + SERP, history) ──
     const { authHeader: dfsAuth } = getDataForSEOAuth();
     const dfsHeaders = { Authorization: dfsAuth, "Content-Type": "application/json" };
 
     const results = await Promise.race([
       Promise.allSettled([
-        fetchOrganicRankings(cleanKeyword, cleanDomain, dfsHeaders),
+        fetchOrganicAndSerpFeatures(cleanKeyword, cleanDomain, dfsHeaders),
         fetchOrganicHistory(cleanKeyword, cleanDomain, dfsHeaders),
-        fetchSerpFeatures(cleanKeyword, dfsHeaders),
       ]),
       new Promise<PromiseSettledResult<never>[]>((_, reject) =>
         setTimeout(() => reject(new Error("TIMEOUT")), 24000)
       ),
     ]);
 
-    let organicResult: OrganicResult = { rankPosition: null, items: [], kwDifficulty: 50 };
-    let historyResult: { delta30d: number | null } = { delta30d: null };
-    let serpResult: { serpFeatures: SerpFeatures; aiImpactPercent: number } = {
+    let organicAndSerpResult: OrganicAndSerpResult = {
+      rankPosition: null,
+      items: [],
+      kwDifficulty: 50,
       serpFeatures: { ai_overview: false, featured_snippet: false, local_pack: false, knowledge_panel: false },
       aiImpactPercent: 0,
     };
+    let historyResult: { delta30d: number | null } = { delta30d: null };
 
     if (results[0]?.status === "fulfilled") {
-      organicResult = results[0].value as OrganicResult;
-      apiCostUnits++;
+      organicAndSerpResult = results[0].value as OrganicAndSerpResult;
     } else {
-      console.error("Call 1 (organic) failed:", (results[0] as PromiseRejectedResult)?.reason);
+      console.error("Call 1 (organic+serp) failed:", (results[0] as PromiseRejectedResult)?.reason);
     }
 
     if (results[1]?.status === "fulfilled") {
       historyResult = results[1].value as { delta30d: number | null };
-      apiCostUnits++;
     } else {
       console.error("Call 2 (history) failed:", (results[1] as PromiseRejectedResult)?.reason);
     }
 
-    if (results[2]?.status === "fulfilled") {
-      serpResult = results[2].value as { serpFeatures: SerpFeatures; aiImpactPercent: number };
-      apiCostUnits++;
-    } else {
-      console.error("Call 3 (serp features) failed:", (results[2] as PromiseRejectedResult)?.reason);
-    }
-
     // ── Calculate score ──
     const proofScore = calculateProofScore({
-      rankPosition: organicResult.rankPosition,
+      rankPosition: organicAndSerpResult.rankPosition,
       delta30d: historyResult.delta30d,
-      aiOverviewPresent: serpResult.serpFeatures.ai_overview,
-      aiImpactPercent: serpResult.aiImpactPercent,
-      kwDifficulty: organicResult.kwDifficulty,
+      aiOverviewPresent: organicAndSerpResult.serpFeatures.ai_overview,
+      aiImpactPercent: organicAndSerpResult.aiImpactPercent,
+      kwDifficulty: organicAndSerpResult.kwDifficulty,
     });
 
     // ── Build ranking_data ──
     const rankingData = {
-      rankings: organicResult.items.map((item) => ({
+      rankings: organicAndSerpResult.items.map((item) => ({
         keyword: item.title,
         position: item.rank_absolute,
         url: item.url,
         etv: item.etv,
       })),
-      domain_position: organicResult.rankPosition,
+      domain_position: organicAndSerpResult.rankPosition,
     };
 
     // ── Generate AI narrative ──
@@ -516,29 +583,40 @@ serve(async (req) => {
       domain: cleanDomain,
       keyword: cleanKeyword,
       proofScore,
-      rankPosition: organicResult.rankPosition,
+      rankPosition: organicAndSerpResult.rankPosition,
       rankingDelta: historyResult.delta30d,
-      serpFeatures: serpResult.serpFeatures,
+      serpFeatures: organicAndSerpResult.serpFeatures,
     });
 
-    // ── Update proof row ──
+    // ── Update proof row (service_role for reliability) ──
     const updatePayload = {
       score: proofScore,
-      current_rank: organicResult.rankPosition,
+      current_rank: organicAndSerpResult.rankPosition,
       delta_30: historyResult.delta30d,
-      ai_overview: serpResult.serpFeatures.ai_overview,
+      ai_overview: organicAndSerpResult.serpFeatures.ai_overview,
       rankings: rankingData,
       narrative: aiNarrative,
+      serp_features: organicAndSerpResult.serpFeatures,
       status: "complete",
     };
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await serviceClient
       .from("proofs")
       .update(updatePayload)
       .eq("id", proof_id);
 
     if (updateError) {
       throw new Error(updateError.message);
+    }
+
+    // ── Increment proofs_used on profile ──
+    const { error: incrementError } = await serviceClient
+      .from("profiles")
+      .update({ proofs_used: proofsUsed + 1 })
+      .eq("id", user.id);
+
+    if (incrementError) {
+      console.error("proofs_used increment failed:", incrementError.message);
     }
 
     // ── Cache result in Redis ──
@@ -557,25 +635,25 @@ serve(async (req) => {
   } catch (err) {
     console.error("generate-proof error:", err);
 
-    // Try to mark as failed if we have proof_id
-    try {
-      const body = await req.clone().json().catch(() => null);
-      if (body?.proof_id) {
-        const supabase = createClient(
-          Deno.env.get("SUPABASE_URL")!,
-          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-        );
+    // Mark as failed using service_role client
+    if (proofId) {
+      try {
+        const svc = getServiceClient();
         const errorMsg = (err as Error).message === "TIMEOUT" ? "Request timed out" : "Data collection failed";
-        await supabase.from("proofs").update({
+        await svc.from("proofs").update({
           status: "failed",
           error_message: errorMsg,
-        }).eq("id", body.proof_id);
-      }
-    } catch { /* ignore cleanup error */ }
+        }).eq("id", proofId);
+      } catch { /* ignore cleanup error */ }
+    }
 
+    const isTimeout = (err as Error).message === "TIMEOUT";
     return new Response(
-      JSON.stringify({ error: (err as Error).message === "TIMEOUT" ? "timeout" : "internal_error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: isTimeout ? "timeout" : "internal_error" }),
+      {
+        status: isTimeout ? 504 : 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
     );
   }
 });

@@ -1,1 +1,4 @@
 project_id = "tnriaigsdmnscfmrlbrh"
+
+[functions.generate-proof]
+verify_jwt = false
