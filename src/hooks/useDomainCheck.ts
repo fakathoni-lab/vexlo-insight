@@ -13,8 +13,24 @@ interface DomainCheckResult {
   premium: boolean;
   pricing: Record<string, DomainPricing>;
   currency: string;
-  error?: string;
+  checked_at: string;
+  source: "cache" | "live";
+  ttl: number;
 }
+
+interface DomainCheckError {
+  success: false;
+  error: string;
+  message: string;
+}
+
+const ERROR_MESSAGES: Record<string, string> = {
+  INVALID_DOMAIN: "Invalid domain format. Try something like example.com",
+  RATE_LIMITED: "Too many requests. Please wait a minute and try again.",
+  SERVICE_UNAVAILABLE: "Domain lookup service is temporarily unavailable. Try again shortly.",
+  INTERNAL_ERROR: "Something went wrong. Please try again.",
+  UNAUTHORIZED: "Please log in to check domains.",
+};
 
 export function useDomainCheck() {
   const [data, setData] = useState<DomainCheckResult | null>(null);
@@ -38,7 +54,9 @@ export function useDomainCheck() {
       }
 
       if (!res?.success) {
-        setError(res?.error ?? "Domain check failed");
+        const errRes = res as DomainCheckError;
+        const msg = ERROR_MESSAGES[errRes.error] ?? errRes.message ?? "Domain check failed";
+        setError(msg);
         return null;
       }
 

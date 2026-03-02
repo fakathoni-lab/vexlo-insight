@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Globe, CheckCircle2, XCircle, Loader2, Crown } from "lucide-react";
+import { Search, Globe, CheckCircle2, XCircle, Loader2, Crown, Database, Radio } from "lucide-react";
 import { useDomainCheck } from "@/hooks/useDomainCheck";
 import SEO from "@/components/SEO";
 
@@ -13,6 +13,8 @@ const DomainSearch = () => {
     if (!trimmed) return;
     checkDomain(trimmed);
   };
+
+  const ttlMinutes = data ? Math.max(1, Math.round(data.ttl / 60)) : 0;
 
   return (
     <div className="max-w-[720px] mx-auto space-y-6">
@@ -109,7 +111,7 @@ const DomainSearch = () => {
             ) : (
               <XCircle className="w-6 h-6 shrink-0" style={{ color: "var(--accent-danger)" }} />
             )}
-            <div>
+            <div className="flex-1">
               <p className="font-body font-medium" style={{ fontSize: 16, color: "var(--text)" }}>
                 {data.domain}
               </p>
@@ -117,19 +119,38 @@ const DomainSearch = () => {
                 {data.available ? "This domain is available!" : "This domain is already taken."}
               </p>
             </div>
-            {data.premium && (
-              <span
-                className="ml-auto flex items-center gap-1.5 font-mono uppercase text-[9px] tracking-widest px-3 py-1 rounded-full border shrink-0"
-                style={{
-                  color: "var(--accent)",
-                  borderColor: "var(--accent-border)",
-                  backgroundColor: "var(--accent-dim)",
-                }}
-              >
-                <Crown className="w-3 h-3" />
-                Premium
-              </span>
+            <div className="flex items-center gap-3 shrink-0">
+              {data.premium && (
+                <span
+                  className="flex items-center gap-1.5 font-mono uppercase text-[9px] tracking-widest px-3 py-1 rounded-full border"
+                  style={{
+                    color: "var(--accent)",
+                    borderColor: "var(--accent-border)",
+                    backgroundColor: "var(--accent-dim)",
+                  }}
+                >
+                  <Crown className="w-3 h-3" />
+                  Premium
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Source indicator */}
+          <div className="flex items-center gap-2 px-1">
+            {data.source === "cache" ? (
+              <Database className="w-3 h-3" style={{ color: "var(--text-muted)" }} />
+            ) : (
+              <Radio className="w-3 h-3" style={{ color: "var(--accent-success)" }} />
             )}
+            <span
+              className="font-mono uppercase tracking-widest"
+              style={{ fontSize: 9, color: "var(--text-muted)" }}
+            >
+              {data.source === "cache"
+                ? `Cached result · refreshes in ${ttlMinutes} min`
+                : "Live result"}
+            </span>
           </div>
 
           {/* Pricing Table */}
