@@ -29,7 +29,7 @@ const Hero = () => {
         <h1
           className="font-sans font-bold tracking-tight"
           style={{
-            fontSize: "clamp(36px, 5vw, 56px)",
+            fontSize: "clamp(52px, 8vw, 108px)",
             color: "#FFFFFF",
             lineHeight: 1.1,
             marginBottom: "16px",
