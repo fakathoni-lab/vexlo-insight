@@ -61,7 +61,7 @@ const Navbar = () => {
       </div>
 
       {/* Right — ghost CTA + mobile menu */}
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2.5" style={{ position: "relative", zIndex: 10 }}>
         {!loading && !user && (
           <>
             <button
