@@ -29,7 +29,7 @@ const SerpFeatureGrid = ({ serpFeatures }: { serpFeatures: SerpFeatures }) => (
         >
           <Icon
             size={20}
-            style={{ color: active ? "var(--accent-light)" : "var(--text-muted)" }}
+            style={{ color: active ? "var(--accent-purple-light)" : "var(--text-muted)" }}
           />
           <span
             className="font-mono text-[10px] uppercase tracking-widest text-center"
