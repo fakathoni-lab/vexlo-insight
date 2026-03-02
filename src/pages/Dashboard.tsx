@@ -41,7 +41,7 @@ const Dashboard = () => {
         .limit(5),
     ]).then(([profileRes, proofsRes]) => {
       if (profileRes.data) setProfile(profileRes.data);
-      if (proofsRes.data) setRecentProofs(proofsRes.data as Proof[]);
+      if (proofsRes.data) setRecentProofs((proofsRes.data as any[]).map(p => ({ ...p, status: p.status ?? (p.score > 0 ? "complete" : "pending") })) as Proof[]);
     });
   }, [user]);
 

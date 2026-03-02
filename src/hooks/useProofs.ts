@@ -28,10 +28,10 @@ export async function shareProof(proofId: string, existingSlug: string | null): 
   if (error?.code === "23505") {
     // Unique constraint violation — retry once
     const retrySlug = generateSlug();
-    const { error: retryError } = await supabase
+    const { error: retryError } = await (supabase
       .from("proofs")
-      .update({ public_slug: retrySlug, is_public: true })
-      .eq("id", proofId);
+      .update({ public_slug: retrySlug, is_public: true } as any)
+      .eq("id", proofId) as any);
 
     if (retryError) throw new Error("Failed to generate share link");
     const url = `${window.location.origin}/proof/public/${retrySlug}`;

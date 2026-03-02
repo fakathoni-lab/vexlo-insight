@@ -37,9 +37,8 @@ const PublicProof = () => {
     let pollCount = 0;
 
     const fetchProof = async () => {
-      const { data, error: fetchError } = await supabase
-        .from("proofs")
-        .select("*")
+      const query = supabase.from("proofs").select("*") as any;
+      const { data, error: fetchError } = await query
         .eq("public_slug", slug)
         .eq("is_public", true)
         .maybeSingle();

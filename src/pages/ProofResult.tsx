@@ -72,7 +72,7 @@ const ProofResult = () => {
       setLoading(false);
 
       // If pending, invoke edge function
-      if (data.status === "pending" && !edgeFunctionInvoked.current) {
+      if ((data as any).status === "pending" && !edgeFunctionInvoked.current) {
         edgeFunctionInvoked.current = true;
         supabase.functions.invoke("generate-proof", {
           body: { domain: data.domain, keyword: data.keyword, proof_id: data.id },
