@@ -66,6 +66,9 @@ const ProofResult = () => {
 
       setProof(data as Proof);
       setLoading(false);
+
+      // Fetch view count
+      getViewCount(data.id).then(setViewCount);
     };
 
     fetchProof();
