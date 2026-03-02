@@ -84,6 +84,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          onboarding_completed: boolean
           plan: string | null
           plan_status: string | null
           proofs_limit: number | null
@@ -100,6 +101,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          onboarding_completed?: boolean
           plan?: string | null
           plan_status?: string | null
           proofs_limit?: number | null
@@ -116,6 +118,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          onboarding_completed?: boolean
           plan?: string | null
           plan_status?: string | null
           proofs_limit?: number | null
