@@ -20,10 +20,10 @@ export async function shareProof(proofId: string, existingSlug: string | null): 
 
   // Generate new slug with collision retry
   const slug = generateSlug();
-  const { error } = await supabase
+  const { error } = await (supabase
     .from("proofs")
-    .update({ public_slug: slug, is_public: true })
-    .eq("id", proofId);
+    .update({ public_slug: slug, is_public: true } as any)
+    .eq("id", proofId) as any);
 
   if (error?.code === "23505") {
     // Unique constraint violation — retry once
