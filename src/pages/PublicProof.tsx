@@ -13,17 +13,13 @@ import { toast } from "sonner";
 interface Proof {
   id: string;
   domain: string;
-  target_keyword: string;
-  proof_score: number | null;
-  ranking_position: number | null;
-  ranking_delta: number | null;
+  keyword: string;
+  score: number;
+  current_rank: number | null;
+  delta_30: number | null;
   ai_overview: boolean | null;
-  ranking_data: { rankings: { keyword: string; position: number; url: string; etv: number }[]; domain_position: number | null } | null;
-  serp_features: { ai_overview: boolean; featured_snippet: boolean; local_pack: boolean; knowledge_panel: boolean } | null;
-  ai_narrative: string | null;
-  status: string;
-  is_public: boolean;
-  public_slug: string | null;
+  rankings: { rankings: { keyword: string; position: number; url: string; etv: number }[]; domain_position: number | null } | null;
+  narrative: string | null;
   created_at: string;
 }
 
@@ -62,7 +58,8 @@ const PublicProof = () => {
       setProof(typedData);
       setLoading(false);
 
-      if (typedData.status === "complete" || typedData.status === "failed") {
+      // Stop polling once complete (score > 0) or failed (score < 0)
+      if (typedData.score !== 0) {
         if (pollInterval) clearInterval(pollInterval);
       }
     };
@@ -115,7 +112,9 @@ const PublicProof = () => {
     );
   }
 
-  const isProcessing = proof.status === "processing" || proof.status === "pending";
+  const isProcessing = proof.score === 0;
+  const isFailed = proof.score < 0;
+  const isComplete = proof.score > 0;
   const formattedDate = new Date(proof.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 
   return (
@@ -137,7 +136,7 @@ const PublicProof = () => {
             <span style={{ color: "var(--text-muted)" }}>·</span>
             <span className="font-mono text-[11px]" style={{ color: "var(--text-muted)" }}>{formattedDate}</span>
           </div>
-          <h1 className="font-headline text-3xl sm:text-4xl mb-3" style={{ color: "var(--text)" }}>"{proof.target_keyword}"</h1>
+          <h1 className="font-headline text-3xl sm:text-4xl mb-3" style={{ color: "var(--text)" }}>"{proof.keyword}"</h1>
         </div>
 
         {isProcessing && (
@@ -147,42 +146,37 @@ const PublicProof = () => {
           </div>
         )}
 
-        {proof.status === "complete" && (
+        {isComplete && (
           <div className="flex flex-col gap-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="rounded-[var(--radii-outer)] p-6 flex flex-col items-center gap-3" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}>
                 <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Proof Score</p>
-                <ScoreRing score={proof.proof_score ?? 0} size={120} />
+                <ScoreRing score={proof.score} size={120} />
               </div>
               <div className="rounded-[var(--radii-outer)] p-6 flex flex-col gap-3" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}>
                 <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Ranking Position</p>
                 <div className="flex items-end gap-3">
                   <span className="font-headline text-5xl" style={{ color: "var(--text)" }}>
-                    {proof.ranking_position ? `#${proof.ranking_position}` : "—"}
+                    {proof.current_rank ? `#${proof.current_rank}` : "—"}
                   </span>
-                  {proof.ranking_delta !== null && proof.ranking_delta !== 0 && (
-                    <span className="font-mono text-sm mb-1" style={{ color: (proof.ranking_delta ?? 0) > 0 ? "var(--accent-success)" : "var(--accent-danger)" }}>
-                      {(proof.ranking_delta ?? 0) > 0 ? "▲" : "▼"} {Math.abs(proof.ranking_delta ?? 0)} in 30d
+                  {proof.delta_30 !== null && proof.delta_30 !== 0 && (
+                    <span className="font-mono text-sm mb-1" style={{ color: proof.delta_30 > 0 ? "var(--accent-success)" : "var(--accent-danger)" }}>
+                      {proof.delta_30 > 0 ? "▲" : "▼"} {Math.abs(proof.delta_30)} in 30d
                     </span>
                   )}
                 </div>
-                {proof.ranking_position && <RankBar keyword={proof.target_keyword} position={proof.ranking_position} />}
+                {proof.current_rank && <RankBar keyword={proof.keyword} position={proof.current_rank} />}
               </div>
             </div>
 
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest mb-3" style={{ color: "var(--text-dim)" }}>SERP Features</p>
-              <SerpFeatureGrid serpFeatures={proof.serp_features ?? { ai_overview: false, featured_snippet: false, local_pack: false, knowledge_panel: false }} />
-            </div>
-
-            {proof.ranking_data?.rankings && proof.ranking_data.rankings.length > 0 && (
+            {proof.rankings?.rankings && proof.rankings.rankings.length > 0 && (
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-widest mb-3" style={{ color: "var(--text-dim)" }}>Top 20 Rankings</p>
-                <RankingsTable rankings={proof.ranking_data.rankings} domainPosition={proof.ranking_data.domain_position} domain={proof.domain} />
+                <RankingsTable rankings={proof.rankings.rankings} domainPosition={proof.rankings.domain_position} domain={proof.domain} />
               </div>
             )}
 
-            <NarrativeCard narrative={proof.ai_narrative} />
+            <NarrativeCard narrative={proof.narrative} />
 
             <div className="text-center pt-4 pb-8">
               <Link to="/">
@@ -197,7 +191,7 @@ const PublicProof = () => {
           </div>
         )}
 
-        {proof.status === "failed" && (
+        {isFailed && (
           <div className="rounded-[var(--radii-outer)] p-8 flex flex-col items-center gap-4" style={{ backgroundColor: "var(--bg-card)", border: "1px solid rgba(255,71,71,0.2)" }}>
             <AlertTriangle size={32} style={{ color: "var(--accent-danger)" }} />
             <p className="font-body text-sm" style={{ color: "var(--text-dim)" }}>Proof generation failed.</p>

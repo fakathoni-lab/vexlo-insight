@@ -424,7 +424,7 @@ serve(async (req) => {
     }
 
     // Mark as processing
-    await supabase.from("proofs").update({ status: "processing" }).eq("id", proof_id);
+    // Mark as processing (no status column yet — skip)
 
     // ── Check Redis cache ──
     const redis = getRedis();
@@ -444,15 +444,12 @@ serve(async (req) => {
       const cached = typeof cachedData === "string" ? JSON.parse(cachedData) : cachedData;
 
       await supabase.from("proofs").update({
-        proof_score: cached.proof_score,
-        ranking_position: cached.ranking_position,
-        ranking_delta: cached.ranking_delta,
-        ai_overview: cached.ai_overview,
-        ranking_data: cached.ranking_data,
-        serp_features: cached.serp_features,
-        ai_narrative: null,
-        status: "complete",
-        api_cost_units: 0,
+        score: cached.proof_score ?? cached.score ?? 0,
+        current_rank: cached.ranking_position ?? cached.current_rank ?? null,
+        delta_30: cached.ranking_delta ?? cached.delta_30 ?? null,
+        ai_overview: cached.ai_overview ?? false,
+        rankings: cached.ranking_data ?? cached.rankings ?? null,
+        narrative: null,
       }).eq("id", proof_id);
 
       return new Response(
@@ -539,15 +536,12 @@ serve(async (req) => {
 
     // ── Update proof row ──
     const updatePayload = {
-      proof_score: proofScore,
-      ranking_position: organicResult.rankPosition,
-      ranking_delta: historyResult.delta30d,
+      score: proofScore,
+      current_rank: organicResult.rankPosition,
+      delta_30: historyResult.delta30d,
       ai_overview: serpResult.serpFeatures.ai_overview,
-      ranking_data: rankingData,
-      serp_features: serpResult.serpFeatures,
-      ai_narrative: aiNarrative,
-      status: "complete",
-      api_cost_units: apiCostUnits,
+      rankings: rankingData,
+      narrative: aiNarrative,
     };
 
     const { error: updateError } = await supabase
@@ -583,9 +577,10 @@ serve(async (req) => {
           Deno.env.get("SUPABASE_URL")!,
           Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
         );
+        // Mark failed by setting score to -1 as error indicator
         await supabase.from("proofs").update({
-          status: "failed",
-          error_message: (err as Error).message === "TIMEOUT" ? "Request timed out" : "Data collection failed",
+          score: -1,
+          narrative: (err as Error).message === "TIMEOUT" ? "Request timed out" : "Data collection failed",
         }).eq("id", body.proof_id);
       }
     } catch { /* ignore cleanup error */ }

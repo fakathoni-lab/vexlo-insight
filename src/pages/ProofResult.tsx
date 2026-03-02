@@ -1,42 +1,30 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { getViewCount } from "@/hooks/useProofs";
 import { useAuth } from "@/hooks/useAuth";
 import ProofScoreRing from "@/components/proof/ProofScoreRing";
 import RankingChart from "@/components/proof/RankingChart";
 import AIOverviewBadge from "@/components/proof/AIOverviewBadge";
 import TrendDelta from "@/components/proof/TrendDelta";
 import SalesNarrative from "@/components/proof/SalesNarrative";
-import ProofActions from "@/components/proof/ProofActions";
 import { Loader2, AlertTriangle, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Proof {
   id: string;
   domain: string;
-  target_keyword: string;
-  proof_score: number | null;
-  ranking_position: number | null;
-  ranking_delta: number | null;
+  keyword: string;
+  score: number;
+  current_rank: number | null;
+  delta_30: number | null;
   ai_overview: boolean | null;
-  ranking_data: {
+  rankings: {
     rankings: { keyword: string; position: number; url: string; etv: number }[];
     domain_position: number | null;
   } | null;
-  serp_features: {
-    ai_overview: boolean;
-    featured_snippet: boolean;
-    local_pack: boolean;
-    knowledge_panel: boolean;
-  } | null;
-  ai_narrative: string | null;
-  status: string;
-  is_public: boolean;
-  public_slug: string | null;
+  narrative: string | null;
   created_at: string;
   user_id: string;
-  error_message: string | null;
 }
 
 const loadingSteps = [
@@ -53,16 +41,19 @@ const ProofResult = () => {
   const [proof, setProof] = useState<Proof | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewCount, setViewCount] = useState<number>(0);
   const [activeStep, setActiveStep] = useState(0);
   const edgeFunctionInvoked = useRef(false);
+
+  // Derive status: 0 = pending/processing, -1 = failed, >0 = complete
+  const derivedStatus = proof ? (proof.score > 0 ? "complete" : proof.score < 0 ? "failed" : "processing") : "loading";
 
   useEffect(() => {
     if (!id || !user) return;
 
     const fetchProof = async () => {
-      const query = supabase.from("proofs").select("*") as any;
-      const { data, error: fetchError } = await query
+      const { data, error: fetchError } = await supabase
+        .from("proofs")
+        .select("*")
         .eq("id", id)
         .eq("user_id", user.id)
         .single();
@@ -73,19 +64,14 @@ const ProofResult = () => {
         return;
       }
 
-      setProof(data as Proof);
+      setProof(data as unknown as Proof);
       setLoading(false);
 
-      // Fetch view count for completed proofs
-      if (data.status === "complete") {
-        getViewCount(data.id).then(setViewCount);
-      }
-
-      // Option B: If pending, invoke edge function from here
-      if (data.status === "pending" && !edgeFunctionInvoked.current) {
+      // If score is 0 (pending), invoke edge function
+      if (data.score === 0 && !edgeFunctionInvoked.current) {
         edgeFunctionInvoked.current = true;
         supabase.functions.invoke("generate-proof", {
-          body: { domain: data.domain, keyword: data.target_keyword, proof_id: data.id },
+          body: { domain: data.domain, keyword: data.keyword, proof_id: data.id },
         }).catch((err) => {
           console.error("Edge function invocation failed:", err);
         });
@@ -94,7 +80,7 @@ const ProofResult = () => {
 
     fetchProof();
 
-    // Realtime subscription for processing proofs
+    // Realtime subscription for updates
     const channel = supabase
       .channel(`proof-${id}`)
       .on(
@@ -106,11 +92,7 @@ const ProofResult = () => {
           filter: `id=eq.${id}`,
         },
         (payload: any) => {
-          const updated = payload.new as Proof;
-          setProof(updated);
-          if (updated.status === "complete") {
-            getViewCount(updated.id).then(setViewCount);
-          }
+          setProof(payload.new as Proof);
         }
       )
       .subscribe();
@@ -122,12 +104,12 @@ const ProofResult = () => {
 
   // Progressive loading step animation
   useEffect(() => {
-    if (!proof || (proof.status !== "pending" && proof.status !== "processing")) return;
+    if (derivedStatus !== "processing") return;
     const interval = setInterval(() => {
       setActiveStep((prev) => (prev < loadingSteps.length - 1 ? prev + 1 : prev));
     }, 2500);
     return () => clearInterval(interval);
-  }, [proof?.status]);
+  }, [derivedStatus]);
 
   // ── Loading ──
   if (loading) {
@@ -159,7 +141,7 @@ const ProofResult = () => {
   }
 
   // ── Processing / Pending ──
-  if (proof.status === "pending" || proof.status === "processing") {
+  if (derivedStatus === "processing") {
     return (
       <div className="flex items-center justify-center py-24">
         <div
@@ -204,16 +186,14 @@ const ProofResult = () => {
           <p className="font-body text-sm text-center mt-2" style={{ color: "var(--text-dim)" }}>
             Typically ready in 15-30 seconds.
           </p>
-          <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
-            Status: {proof.status}
-          </p>
         </div>
       </div>
     );
   }
 
+
   // ── Failed ──
-  if (proof.status === "failed") {
+  if (derivedStatus === "failed") {
     return (
       <div className="flex items-center justify-center py-24">
         <div
@@ -225,7 +205,7 @@ const ProofResult = () => {
             Proof Generation Failed
           </h2>
           <p className="font-body text-sm text-center" style={{ color: "var(--text-dim)" }}>
-            {proof.error_message ?? "Something went wrong during data collection. Please try again."}
+            {proof.narrative ?? "Something went wrong during data collection. Please try again."}
           </p>
           <Button
             className="rounded-full h-10 px-6 font-mono text-[10px] uppercase tracking-widest"
@@ -244,9 +224,8 @@ const ProofResult = () => {
     year: "numeric", month: "short", day: "numeric",
   });
 
-  // Estimate AI impact from ranking_data
-  const rankingItems = proof.ranking_data?.rankings ?? [];
-  const aiImpactPercent = proof.serp_features?.ai_overview
+  const rankingItems = proof.rankings?.rankings ?? [];
+  const aiImpactPercent = proof.ai_overview
     ? Math.min(100, Math.round(((rankingItems.filter((r) => r.position <= 10).length || 1) / 10) * 30))
     : 0;
 
@@ -265,21 +244,18 @@ const ProofResult = () => {
             {proof.domain}
           </h1>
           <p className="font-body font-light mt-1" style={{ fontSize: 13, color: "var(--text-dim)" }}>
-            Keyword: {proof.target_keyword} · {formattedDate}
-            {viewCount > 0 && (
-              <span style={{ color: "var(--text-muted)" }}> · Viewed {viewCount} time{viewCount !== 1 ? "s" : ""}</span>
-            )}
+            Keyword: {proof.keyword} · {formattedDate}
           </p>
         </div>
         <div
           className="shrink-0 rounded-full px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest"
           style={{
-            backgroundColor: (proof.proof_score ?? 0) >= 70 ? "rgba(34,197,94,0.12)" : (proof.proof_score ?? 0) >= 40 ? "rgba(245,158,11,0.12)" : "rgba(239,68,68,0.12)",
-            color: (proof.proof_score ?? 0) >= 70 ? "#22c55e" : (proof.proof_score ?? 0) >= 40 ? "#f59e0b" : "#ef4444",
-            border: `1px solid ${(proof.proof_score ?? 0) >= 70 ? "rgba(34,197,94,0.25)" : (proof.proof_score ?? 0) >= 40 ? "rgba(245,158,11,0.25)" : "rgba(239,68,68,0.25)"}`,
+            backgroundColor: proof.score >= 70 ? "rgba(34,197,94,0.12)" : proof.score >= 40 ? "rgba(245,158,11,0.12)" : "rgba(239,68,68,0.12)",
+            color: proof.score >= 70 ? "#22c55e" : proof.score >= 40 ? "#f59e0b" : "#ef4444",
+            border: `1px solid ${proof.score >= 70 ? "rgba(34,197,94,0.25)" : proof.score >= 40 ? "rgba(245,158,11,0.25)" : "rgba(239,68,68,0.25)"}`,
           }}
         >
-          Score: {proof.proof_score ?? "—"}/100
+          Score: {proof.score}/100
         </div>
       </div>
 
@@ -292,7 +268,7 @@ const ProofResult = () => {
             className="rounded-xl p-6 flex justify-center"
             style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
           >
-            <ProofScoreRing score={proof.proof_score ?? 0} />
+            <ProofScoreRing score={proof.score} />
           </div>
 
           {/* Badges Card */}
@@ -300,10 +276,10 @@ const ProofResult = () => {
             className="rounded-xl p-6 flex flex-col gap-4"
             style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
           >
-            <TrendDelta delta={proof.ranking_delta} />
+            <TrendDelta delta={proof.delta_30} />
             <AIOverviewBadge
               aiOverview={proof.ai_overview ?? false}
-              serpFeatures={proof.serp_features}
+              serpFeatures={null}
               aiImpactPercent={aiImpactPercent}
             />
           </div>
@@ -319,21 +295,12 @@ const ProofResult = () => {
       </div>
 
       {/* ── Sales Narrative ── */}
-      <SalesNarrative narrative={proof.ai_narrative} />
+      <SalesNarrative narrative={proof.narrative} />
 
       {/* ── Disclaimer ── */}
       <p className="font-mono text-center" style={{ fontSize: 9, color: "var(--text-muted)" }}>
         * Estimated public data — for sales context only
       </p>
-
-      {/* ── Sticky Actions ── */}
-      <ProofActions
-        proofId={proof.id}
-        narrative={proof.ai_narrative}
-        publicSlug={proof.public_slug}
-        isPublic={proof.is_public}
-        onSlugUpdate={(slug) => setProof({ ...proof, public_slug: slug, is_public: true })}
-      />
     </div>
   );
 };

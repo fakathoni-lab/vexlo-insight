@@ -49,9 +49,9 @@ const NewProof = () => {
       .insert({
         user_id: user.id,
         domain: data.domain,
-        target_keyword: data.keyword,
-        status: "pending",
-      } as any)
+        keyword: data.keyword,
+        score: 0,
+      })
       .select("id")
       .single();
 
