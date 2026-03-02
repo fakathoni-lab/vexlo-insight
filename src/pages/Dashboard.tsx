@@ -55,8 +55,8 @@ const Dashboard = () => {
     { label: "Credits Used", value: `${proofsUsed}/${proofsLimit}`, icon: BarChart3 },
   ];
 
-  const scoreColor = (score: number) => {
-    if (score <= 0) return "rgba(240,240,238,0.25)";
+  const scoreColor = (score: number, status: string) => {
+    if (status !== "complete") return "rgba(240,240,238,0.25)";
     if (score <= 30) return "#ef4444";
     if (score <= 60) return "#f59e0b";
     return "#22c55e";
