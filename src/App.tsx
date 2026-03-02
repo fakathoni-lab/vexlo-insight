@@ -28,6 +28,7 @@ const App = () => (
         <Route path="/proof/:id" element={<ProofReport />} />
         <Route path="/proof/public/:slug" element={<ProofPublic />} />
         <Route path="/p/:slug" element={<PublicProof />} />
+        <Route path="/check" element={<DomainSearch />} />
         <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/new" element={<NewProof />} />
