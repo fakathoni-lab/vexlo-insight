@@ -21,7 +21,7 @@ interface Proof {
   current_rank: number | null;
   delta_30: number | null;
   ai_overview: boolean | null;
-  rankings: { keyword: string; position: number; url: string; etv: number }[] | null;
+  rankings: { rankings: { keyword: string; position: number; url: string; etv: number }[]; domain_position: number | null } | null;
   serp_features: { ai_overview: boolean; featured_snippet: boolean; local_pack: boolean; knowledge_panel: boolean } | null;
   narrative: string | null;
   status: string;
