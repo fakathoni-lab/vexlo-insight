@@ -206,17 +206,26 @@ Deno.serve(async (req) => {
     }
 
     const dynaData = await dynaRes.json();
+    log({ request_id: requestId, event: "dynadot_response", data: JSON.stringify(dynaData).slice(0, 500) });
 
-    // ── Normalize response ──
+    // ── Normalize legacy API v3 response ──
+    const searchHeader = dynaData?.SearchResponse?.SearchHeader;
     const searchResults = dynaData?.SearchResponse?.SearchResults ?? [];
-    const result = searchResults[0] ?? {};
+    
+    if (searchHeader?.Status === "error") {
+      log({ request_id: requestId, event: "dynadot_api_error", error: searchHeader?.Error });
+      return errResponse("SERVICE_UNAVAILABLE", "Domain lookup failed. Please try again.", 503);
+    }
 
-    const available = result?.Available === "yes" || result?.Available === true;
+    const result = Array.isArray(searchResults) ? searchResults[0] : searchResults;
+    const domainName = result?.DomainName ?? domain;
+
+    const available = result?.Available === "yes";
     const premium = result?.IsPremium === "yes" || result?.IsPremium === true;
 
     const pricing: Record<string, { registration: number; renewal: number }> = {};
-    const regPrice = parseFloat(result?.Price?.Registration ?? result?.Price ?? "0");
-    const renewPrice = parseFloat(result?.Price?.Renewal ?? result?.Price ?? "0");
+    const regPrice = parseFloat(result?.Price ?? "0");
+    const renewPrice = parseFloat(result?.RenewalPrice ?? result?.Price ?? "0");
 
     for (let y = 1; y <= 3; y++) {
       pricing[String(y)] = {
