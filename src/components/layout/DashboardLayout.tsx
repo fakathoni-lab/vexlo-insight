@@ -37,7 +37,21 @@ const DashboardLayout = () => {
     .toUpperCase()
     .slice(0, 2) ?? user?.email?.slice(0, 2).toUpperCase() ?? "U";
 
-  const plan = "free"; // will be pulled from profiles later
+  const [plan, setPlan] = useState<string | null>(null);
+  const [planLoading, setPlanLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setPlan(data?.plan ?? "free");
+        setPlanLoading(false);
+      });
+  }, [user]);
 
   const sidebarContent = (
     <>
