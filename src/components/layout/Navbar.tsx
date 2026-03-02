@@ -62,17 +62,45 @@ const Navbar = () => {
 
       {/* Right — ghost CTA + mobile menu */}
       <div className="flex items-center gap-2.5">
-        <button
-          onClick={() => handleNavClick("#waitlist")}
-          className="nav-cta hidden md:inline-flex"
-          style={{
-            background: "transparent",
-            color: "var(--text)",
-            border: "1.5px solid var(--border-strong)",
-          }}
-        >
-          Get Early Access
-        </button>
+        {!loading && !user && (
+          <>
+            <button
+              onClick={() => navigate("/login")}
+              className="nav-cta hidden md:inline-flex"
+              style={{
+                background: "transparent",
+                color: "var(--text-dim)",
+                border: "1.5px solid var(--border-strong)",
+              }}
+            >
+              Login
+            </button>
+            <button
+              onClick={() => navigate("/signup")}
+              className="nav-cta hidden md:inline-flex"
+              style={{
+                background: "var(--accent)",
+                color: "#fff",
+                border: "none",
+              }}
+            >
+              Get Started
+            </button>
+          </>
+        )}
+        {!loading && user && (
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="nav-cta hidden md:inline-flex"
+            style={{
+              background: "transparent",
+              color: "var(--text)",
+              border: "1.5px solid var(--border-strong)",
+            }}
+          >
+            Dashboard
+          </button>
+        )}
 
         {/* Mobile hamburger */}
         <Sheet open={open} onOpenChange={setOpen}>
@@ -100,10 +128,26 @@ const Navbar = () => {
                   {link.label}
                 </button>
               ))}
-              <div className="px-4 mt-4">
-                <button onClick={() => handleNavClick("#waitlist")} className="btn-ghost w-full">
-                  Get Early Access
-                </button>
+              <div className="px-4 mt-4 flex flex-col gap-2">
+                {!loading && !user && (
+                  <>
+                    <button onClick={() => { setOpen(false); navigate("/login"); }} className="btn-ghost w-full">
+                      Login
+                    </button>
+                    <button
+                      onClick={() => { setOpen(false); navigate("/signup"); }}
+                      className="w-full rounded-full h-10 text-xs uppercase tracking-widest"
+                      style={{ fontFamily: "var(--font-mono)", background: "var(--accent)", color: "#fff" }}
+                    >
+                      Get Started
+                    </button>
+                  </>
+                )}
+                {!loading && user && (
+                  <button onClick={() => { setOpen(false); navigate("/dashboard"); }} className="btn-ghost w-full">
+                    Dashboard
+                  </button>
+                )}
               </div>
             </div>
           </SheetContent>
