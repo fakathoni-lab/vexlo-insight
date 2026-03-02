@@ -101,6 +101,18 @@ const Settings = () => {
     reset: resetPassword,
   } = useForm<PasswordData>({ resolver: zodResolver(passwordSchema) });
 
+  /* Checkout success toast */
+  useEffect(() => {
+    if (searchParams.get("checkout") === "success") {
+      toast.success("Subscription activated! Welcome to Premium.");
+    }
+  }, [searchParams]);
+
+  /* Checkout error toast */
+  useEffect(() => {
+    if (checkoutError) toast.error(checkoutError);
+  }, [checkoutError]);
+
   /* Fetch profile */
   useEffect(() => {
     if (!user) return;
