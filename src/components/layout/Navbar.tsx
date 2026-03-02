@@ -17,6 +17,7 @@ const Navbar = () => {
   const scrolled = useNavScroll();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const { user, loading } = useAuth();
 
   const handleNavClick = (href: string, isRoute?: boolean) => {
     setOpen(false);
