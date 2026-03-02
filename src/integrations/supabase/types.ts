@@ -16,9 +16,12 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          agency_name: string | null
           avatar_url: string | null
-          created_at: string
-          email: string
+          brand_color: string | null
+          brand_logo_url: string | null
+          created_at: string | null
+          email: string | null
           full_name: string | null
           id: string
           plan: string | null
@@ -26,12 +29,15 @@ export type Database = {
           proofs_limit: number | null
           proofs_used: number | null
           stripe_id: string | null
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
+          agency_name?: string | null
           avatar_url?: string | null
-          created_at?: string
-          email: string
+          brand_color?: string | null
+          brand_logo_url?: string | null
+          created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id: string
           plan?: string | null
@@ -39,12 +45,15 @@ export type Database = {
           proofs_limit?: number | null
           proofs_used?: number | null
           stripe_id?: string | null
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
+          agency_name?: string | null
           avatar_url?: string | null
-          created_at?: string
-          email?: string
+          brand_color?: string | null
+          brand_logo_url?: string | null
+          created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id?: string
           plan?: string | null
@@ -52,53 +61,145 @@ export type Database = {
           proofs_limit?: number | null
           proofs_used?: number | null
           stripe_id?: string | null
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: []
+      }
+      proof_views: {
+        Row: {
+          created_at: string
+          id: string
+          proof_id: string
+          user_agent: string | null
+          viewer_ip_hash: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          proof_id: string
+          user_agent?: string | null
+          viewer_ip_hash?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          proof_id?: string
+          user_agent?: string | null
+          viewer_ip_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proof_views_proof_id_fkey"
+            columns: ["proof_id"]
+            isOneToOne: false
+            referencedRelation: "proofs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       proofs: {
         Row: {
           ai_overview: boolean | null
-          created_at: string
+          api_cost_units: number | null
+          created_at: string | null
           current_rank: number | null
           delta_30: number | null
           domain: string
+          error_message: string | null
           id: string
+          is_public: boolean
           keyword: string
           narrative: string | null
+          public_slug: string | null
           rankings: Json | null
-          score: number
+          score: number | null
+          serp_features: Json | null
+          status: string | null
           user_id: string
         }
         Insert: {
           ai_overview?: boolean | null
-          created_at?: string
+          api_cost_units?: number | null
+          created_at?: string | null
           current_rank?: number | null
           delta_30?: number | null
           domain: string
+          error_message?: string | null
           id?: string
+          is_public?: boolean
           keyword: string
           narrative?: string | null
+          public_slug?: string | null
           rankings?: Json | null
-          score: number
+          score?: number | null
+          serp_features?: Json | null
+          status?: string | null
           user_id: string
         }
         Update: {
           ai_overview?: boolean | null
-          created_at?: string
+          api_cost_units?: number | null
+          created_at?: string | null
           current_rank?: number | null
           delta_30?: number | null
           domain?: string
+          error_message?: string | null
           id?: string
+          is_public?: boolean
           keyword?: string
           narrative?: string | null
+          public_slug?: string | null
           rankings?: Json | null
-          score?: number
+          score?: number | null
+          serp_features?: Json | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan: string
+          status: string
+          stripe_price_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan: string
+          status?: string
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan?: string
+          status?: string
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "proofs_user_id_fkey"
+            foreignKeyName: "subscriptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -108,28 +209,28 @@ export type Database = {
       }
       waitlist: {
         Row: {
-          created_at: string
+          created_at: string | null
           email: string
           id: string
           ip_hash: string | null
           referrer: string | null
-          source: string
+          source: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           email: string
           id?: string
           ip_hash?: string | null
           referrer?: string | null
-          source?: string
+          source?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           email?: string
           id?: string
           ip_hash?: string | null
           referrer?: string | null
-          source?: string
+          source?: string | null
         }
         Relationships: []
       }
