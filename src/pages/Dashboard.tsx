@@ -35,7 +35,7 @@ const Dashboard = () => {
         .single(),
       supabase
         .from("proofs")
-        .select("id, domain, keyword, score, status, current_rank, created_at")
+        .select("id, domain, keyword, score, current_rank, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(5),
