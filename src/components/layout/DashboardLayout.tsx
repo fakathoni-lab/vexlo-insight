@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Outlet, useLocation, Link } from "react-router-dom";
-import { LayoutDashboard, Plus, History, Settings, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Plus, History, Settings, LogOut, Menu, X, Globe } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
