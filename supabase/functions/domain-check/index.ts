@@ -185,17 +185,29 @@ Deno.serve(async (req) => {
     const dynadotUrl = `https://api.dynadot.com/api3.json?key=${encodeURIComponent(apiKey)}&command=search&domain0=${encodeURIComponent(domain)}&show_price=1&currency=USD`;
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10_000);
+    const timeout = setTimeout(() => controller.abort(), 15_000);
+
+    // Route through static-IP proxy so Dynadot IP whitelist works
+    const proxyUrl = Deno.env.get("PROXY_URL");
+    const fetchOptions: RequestInit & { client?: Deno.HttpClient } = {
+      method: "GET",
+      signal: controller.signal,
+    };
+
+    if (proxyUrl) {
+      try {
+        fetchOptions.client = Deno.createHttpClient({ proxy: { url: proxyUrl } });
+      } catch (proxyErr) {
+        log({ request_id: requestId, event: "proxy_init_error", error: String(proxyErr) });
+      }
+    }
 
     let dynaRes: Response;
     try {
-      dynaRes = await fetch(dynadotUrl, {
-        method: "GET",
-        signal: controller.signal,
-      });
+      dynaRes = await fetch(dynadotUrl, fetchOptions);
     } catch (_fetchErr) {
       clearTimeout(timeout);
-      log({ request_id: requestId, domain_tld: tld, event: "dynadot_error", latency_ms: Date.now() - startMs });
+      log({ request_id: requestId, domain_tld: tld, event: "dynadot_error", error: String(_fetchErr), latency_ms: Date.now() - startMs });
       return errResponse("SERVICE_UNAVAILABLE", "Domain lookup service temporarily unavailable.", 503);
     }
     clearTimeout(timeout);
