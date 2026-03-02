@@ -2,3 +2,9 @@ project_id = "yyrcbjsoszezgwsoxdzj"
 
 [functions.domain-check]
 verify_jwt = false
+
+[functions.polar-checkout]
+verify_jwt = false
+
+[functions.polar-webhook]
+verify_jwt = false
