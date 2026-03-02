@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, accent: false },
   { title: "New Proof", url: "/dashboard/new", icon: Plus, accent: true },
+  { title: "Domain Search", url: "/dashboard/domains", icon: Globe, accent: false },
   { title: "Proof History", url: "/dashboard/history", icon: History, accent: false },
   { title: "Settings", url: "/settings", icon: Settings, accent: false },
 ];
