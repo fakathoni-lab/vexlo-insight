@@ -16,14 +16,14 @@ import { toast } from "sonner";
 interface Proof {
   id: string;
   domain: string;
-  target_keyword: string;
-  proof_score: number | null;
-  ranking_position: number | null;
-  ranking_delta: number | null;
+  keyword: string;
+  score: number | null;
+  current_rank: number | null;
+  delta_30: number | null;
   ai_overview: boolean | null;
-  ranking_data: { rankings: { keyword: string; position: number; url: string; etv: number }[]; domain_position: number | null } | null;
+  rankings: { keyword: string; position: number; url: string; etv: number }[] | null;
   serp_features: { ai_overview: boolean; featured_snippet: boolean; local_pack: boolean; knowledge_panel: boolean } | null;
-  ai_narrative: string | null;
+  narrative: string | null;
   status: string;
   is_public: boolean;
   public_slug: string | null;
@@ -63,16 +63,14 @@ const ProofReport = () => {
 
     let pollInterval: ReturnType<typeof setInterval> | null = null;
     let pollCount = 0;
-    const maxPolls = 15; // 30s at 2s intervals
+    const maxPolls = 15;
 
     const fetchProof = async () => {
-      // Use type assertion because auto-generated types.ts still has old column names
-      // but the actual DB schema uses the target columns
-      const { data, error: fetchError } = await (supabase
+      const { data, error: fetchError } = await supabase
         .from("proofs")
         .select("*")
         .eq("id", id)
-        .maybeSingle() as unknown as Promise<{ data: Proof | null; error: { message: string } | null }>);
+        .maybeSingle();
 
       if (fetchError) {
         setError("Failed to load proof.");
@@ -86,19 +84,35 @@ const ProofReport = () => {
         return;
       }
 
-      setProof(data);
-      setIsPublic(data.is_public ?? false);
+      const mapped: Proof = {
+        id: data.id,
+        domain: data.domain,
+        keyword: data.keyword,
+        score: data.score,
+        current_rank: data.current_rank,
+        delta_30: data.delta_30,
+        ai_overview: data.ai_overview,
+        rankings: data.rankings as Proof["rankings"],
+        serp_features: data.serp_features as Proof["serp_features"],
+        narrative: data.narrative,
+        status: data.status ?? "pending",
+        is_public: data.is_public,
+        public_slug: data.public_slug,
+        created_at: data.created_at ?? "",
+        user_id: data.user_id,
+      };
+
+      setProof(mapped);
+      setIsPublic(mapped.is_public);
       setLoading(false);
 
-      // Stop polling if complete or failed
-      if (data.status === "complete" || data.status === "failed") {
+      if (mapped.status === "complete" || mapped.status === "failed") {
         if (pollInterval) clearInterval(pollInterval);
       }
     };
 
     fetchProof();
 
-    // Start polling for processing proofs
     pollInterval = setInterval(() => {
       pollCount++;
       if (pollCount >= maxPolls) {
@@ -128,10 +142,10 @@ const ProofReport = () => {
   const handleToggleVisibility = async (checked: boolean) => {
     if (!proof) return;
     setToggling(true);
-    const { error: updateError } = await (supabase
+    const { error: updateError } = await supabase
       .from("proofs")
-      .update({ is_public: checked } as any)
-      .eq("id", proof.id) as any);
+      .update({ is_public: checked })
+      .eq("id", proof.id);
 
     if (updateError) {
       toast.error("Failed to update visibility");
@@ -143,7 +157,6 @@ const ProofReport = () => {
     setToggling(false);
   };
 
-  // ── Loading skeleton ──
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "var(--bg)" }}>
@@ -157,7 +170,6 @@ const ProofReport = () => {
     );
   }
 
-  // ── Error state ──
   if (error || !proof) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "var(--bg)" }}>
@@ -183,7 +195,7 @@ const ProofReport = () => {
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
       <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
 
-        {/* ── Nav row ── */}
+        {/* Nav row */}
         <div className="flex items-center justify-between mb-8">
           <Link to="/dashboard" className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest transition-colors hover:opacity-80" style={{ color: "var(--text-dim)" }}>
             <ArrowLeft size={14} /> Dashboard
@@ -215,7 +227,7 @@ const ProofReport = () => {
           </div>
         </div>
 
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-2">
             <span className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--text-dim)" }}>
@@ -227,12 +239,12 @@ const ProofReport = () => {
             </span>
           </div>
           <h1 className="font-headline text-3xl sm:text-4xl mb-3" style={{ color: "var(--text)" }}>
-            "{proof.target_keyword}"
+            "{proof.keyword}"
           </h1>
           <StatusBadge status={proof.status} />
         </div>
 
-        {/* ── Processing state ── */}
+        {/* Processing state */}
         {isProcessing && (
           <div
             className="rounded-[var(--radii-outer)] p-8 flex flex-col items-center gap-4 mb-10"
@@ -248,11 +260,9 @@ const ProofReport = () => {
           </div>
         )}
 
-        {/* ── Score + Rank row ── */}
+        {/* Score + Rank row */}
         {proof.status === "complete" && (
           <div className="flex flex-col gap-8">
-
-            {/* Score & Rank */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Score card */}
               <div
@@ -262,7 +272,7 @@ const ProofReport = () => {
                 <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
                   Proof Score
                 </p>
-                <ScoreRing score={proof.proof_score ?? 0} size={120} />
+                <ScoreRing score={proof.score ?? 0} size={120} />
               </div>
 
               {/* Rank card */}
@@ -275,24 +285,24 @@ const ProofReport = () => {
                 </p>
                 <div className="flex items-end gap-3">
                   <span className="font-headline text-5xl" style={{ color: "var(--text)" }}>
-                    {proof.ranking_position ? `#${proof.ranking_position}` : "—"}
+                    {proof.current_rank ? `#${proof.current_rank}` : "—"}
                   </span>
-                  {proof.ranking_delta !== null && proof.ranking_delta !== 0 && (
+                  {proof.delta_30 !== null && proof.delta_30 !== 0 && (
                     <span
                       className="font-mono text-sm mb-1"
-                      style={{ color: proof.ranking_delta > 0 ? "var(--accent-success)" : "var(--accent-danger)" }}
+                      style={{ color: proof.delta_30 > 0 ? "var(--accent-success)" : "var(--accent-danger)" }}
                     >
-                      {proof.ranking_delta > 0 ? "▲" : "▼"} {Math.abs(proof.ranking_delta)} in 30d
+                      {proof.delta_30 > 0 ? "▲" : "▼"} {Math.abs(proof.delta_30)} in 30d
                     </span>
                   )}
                 </div>
-                {proof.ranking_position && (
-                  <RankBar keyword={proof.target_keyword} position={proof.ranking_position} />
+                {proof.current_rank && (
+                  <RankBar keyword={proof.keyword} position={proof.current_rank} />
                 )}
               </div>
             </div>
 
-            {/* ── SERP Features ── */}
+            {/* SERP Features */}
             <div>
               <p className="font-mono text-[10px] uppercase tracking-widest mb-3" style={{ color: "var(--text-dim)" }}>
                 SERP Features
@@ -302,24 +312,24 @@ const ProofReport = () => {
               />
             </div>
 
-            {/* ── Rankings Table ── */}
-            {proof.ranking_data?.rankings && proof.ranking_data.rankings.length > 0 && (
+            {/* Rankings Table */}
+            {proof.rankings && Array.isArray(proof.rankings) && proof.rankings.length > 0 && (
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-widest mb-3" style={{ color: "var(--text-dim)" }}>
                   Top 20 Rankings
                 </p>
                 <RankingsTable
-                  rankings={proof.ranking_data.rankings}
-                  domainPosition={proof.ranking_data.domain_position}
+                  rankings={proof.rankings}
+                  domainPosition={proof.current_rank ?? null}
                   domain={proof.domain}
                 />
               </div>
             )}
 
-            {/* ── AI Narrative ── */}
-            <NarrativeCard narrative={proof.ai_narrative} />
+            {/* AI Narrative */}
+            <NarrativeCard narrative={proof.narrative} />
 
-            {/* ── CTA Footer ── */}
+            {/* CTA Footer */}
             <div className="text-center pt-4 pb-8">
               <Link to="/">
                 <Button
@@ -337,7 +347,7 @@ const ProofReport = () => {
           </div>
         )}
 
-        {/* ── Failed state ── */}
+        {/* Failed state */}
         {proof.status === "failed" && (
           <div
             className="rounded-[var(--radii-outer)] p-8 flex flex-col items-center gap-4"
