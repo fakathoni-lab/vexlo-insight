@@ -1,8 +1,23 @@
 import { ChevronDown } from "lucide-react";
+import { useStarfield } from "@/hooks/useStarfield";
 
 const Hero = () => {
+  const canvasRef = useStarfield();
+
   return (
     <section className="hero">
+      <canvas
+        ref={canvasRef}
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
       <div className="hero-atmosphere" />
       <div className="light-streaks" />
       <div className="hero-vignette" />
@@ -14,7 +29,7 @@ const Hero = () => {
         <h1
           className="font-sans font-bold tracking-tight"
           style={{
-            fontSize: "clamp(36px, 5vw, 56px)",
+            fontSize: "clamp(52px, 8vw, 108px)",
             color: "#FFFFFF",
             lineHeight: 1.1,
             marginBottom: "16px",
