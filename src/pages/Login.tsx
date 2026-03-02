@@ -106,7 +106,13 @@ const Login = () => {
           </Button>
         </form>
 
-        <p className="text-center font-body text-sm mt-6" style={{ color: "rgba(240,240,238,0.45)" }}>
+        <p className="text-center font-body text-xs mt-4" style={{ color: "rgba(240,240,238,0.35)" }}>
+          <Link to="/forgot-password" className="transition-colors duration-200 hover:text-[#f0f0ee]" style={{ color: "rgba(240,240,238,0.45)" }}>
+            Forgot your password?
+          </Link>
+        </p>
+
+        <p className="text-center font-body text-sm mt-4" style={{ color: "rgba(240,240,238,0.45)" }}>
           Don't have an account?{" "}
           <Link to="/signup" className="transition-colors duration-200 hover:text-[#f0f0ee]" style={{ color: "hsl(263,84%,58%)" }}>
             Sign up

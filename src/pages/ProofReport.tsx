@@ -313,14 +313,14 @@ const ProofReport = () => {
             </div>
 
             {/* Rankings Table */}
-            {proof.rankings && Array.isArray(proof.rankings) && proof.rankings.length > 0 && (
+            {proof.rankings?.rankings && proof.rankings.rankings.length > 0 && (
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-widest mb-3" style={{ color: "var(--text-dim)" }}>
                   Top 20 Rankings
                 </p>
                 <RankingsTable
-                  rankings={proof.rankings}
-                  domainPosition={proof.current_rank ?? null}
+                  rankings={proof.rankings.rankings}
+                  domainPosition={proof.rankings.domain_position}
                   domain={proof.domain}
                 />
               </div>

@@ -40,7 +40,7 @@ export async function shareProof(proofId: string, existingSlug: string | null): 
 
   if (error) throw new Error("Failed to generate share link");
 
-  const url = `${window.location.origin}/proof/public/${slug}`;
+  const url = `${window.location.origin}/p/${slug}`;
   return { slug, url };
 }
 
