@@ -191,6 +191,34 @@ const ProofResult = () => {
     );
   }
 
+
+  // ── Failed ──
+  if (derivedStatus === "failed") {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div
+          className="rounded-xl p-10 flex flex-col items-center gap-5 max-w-md w-full"
+          style={{ backgroundColor: "var(--bg-card)", border: "1px solid rgba(255,71,71,0.2)" }}
+        >
+          <AlertTriangle size={40} style={{ color: "var(--accent-danger)" }} />
+          <h2 className="font-headline text-xl" style={{ color: "var(--text)" }}>
+            Proof Generation Failed
+          </h2>
+          <p className="font-body text-sm text-center" style={{ color: "var(--text-dim)" }}>
+            {proof.narrative ?? "Something went wrong during data collection. Please try again."}
+          </p>
+          <Button
+            className="rounded-full h-10 px-6 font-mono text-[10px] uppercase tracking-widest"
+            style={{ backgroundColor: "var(--accent)", color: "#fff" }}
+            onClick={() => navigate("/dashboard/new")}
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // ── Complete ──
   const formattedDate = new Date(proof.created_at).toLocaleDateString("en-US", {
     year: "numeric", month: "short", day: "numeric",
