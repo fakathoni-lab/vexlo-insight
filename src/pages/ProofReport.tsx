@@ -81,7 +81,7 @@ const ProofReport = () => {
       setLoading(false);
 
       // Stop polling if complete or failed
-      if (typedProof.status === "complete" || typedProof.status === "failed") {
+      if (data.status === "complete" || data.status === "failed") {
         if (pollInterval) clearInterval(pollInterval);
       }
     };
