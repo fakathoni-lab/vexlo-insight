@@ -39,6 +39,13 @@ interface Proof {
   error_message: string | null;
 }
 
+const loadingSteps = [
+  "Fetching Rankings",
+  "Analyzing SERP Features",
+  "Calculating Proof Score",
+  "Generating Sales Narrative",
+];
+
 const ProofResult = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -47,6 +54,8 @@ const ProofResult = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewCount, setViewCount] = useState<number>(0);
+  const [activeStep, setActiveStep] = useState(0);
+  const edgeFunctionInvoked = useRef(false);
 
   useEffect(() => {
     if (!id || !user) return;
@@ -67,8 +76,20 @@ const ProofResult = () => {
       setProof(data as Proof);
       setLoading(false);
 
-      // Fetch view count
-      getViewCount(data.id).then(setViewCount);
+      // Fetch view count for completed proofs
+      if (data.status === "complete") {
+        getViewCount(data.id).then(setViewCount);
+      }
+
+      // Option B: If pending, invoke edge function from here
+      if (data.status === "pending" && !edgeFunctionInvoked.current) {
+        edgeFunctionInvoked.current = true;
+        supabase.functions.invoke("generate-proof", {
+          body: { domain: data.domain, keyword: data.target_keyword, proof_id: data.id },
+        }).catch((err) => {
+          console.error("Edge function invocation failed:", err);
+        });
+      }
     };
 
     fetchProof();
@@ -87,6 +108,9 @@ const ProofResult = () => {
         (payload: any) => {
           const updated = payload.new as Proof;
           setProof(updated);
+          if (updated.status === "complete") {
+            getViewCount(updated.id).then(setViewCount);
+          }
         }
       )
       .subscribe();
@@ -95,6 +119,15 @@ const ProofResult = () => {
       supabase.removeChannel(channel);
     };
   }, [id, user]);
+
+  // Progressive loading step animation
+  useEffect(() => {
+    if (!proof || (proof.status !== "pending" && proof.status !== "processing")) return;
+    const interval = setInterval(() => {
+      setActiveStep((prev) => (prev < loadingSteps.length - 1 ? prev + 1 : prev));
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [proof?.status]);
 
   // ── Loading ──
   if (loading) {
