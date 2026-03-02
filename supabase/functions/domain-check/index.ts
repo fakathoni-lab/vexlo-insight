@@ -8,33 +8,41 @@ const corsHeaders = {
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-/** Sanitize & validate a domain string */
 function sanitizeDomain(raw: string): string | null {
   let d = raw.trim().toLowerCase();
-  // strip protocol
   d = d.replace(/^https?:\/\//, "");
-  // strip path / query / hash
   d = d.split("/")[0].split("?")[0].split("#")[0];
-  // strip leading www.
   d = d.replace(/^www\./, "");
-  // basic validation: must have at least one dot, ASCII only, 3-253 chars
   if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z]{2,})+$/.test(d)) return null;
   if (d.length < 3 || d.length > 253) return null;
   return d;
 }
 
-/** Simple in-memory rate limiter (per isolate – good enough for edge) */
-const rateBuckets = new Map<string, { count: number; reset: number }>();
-function checkRate(userId: string, limit = 10, windowMs = 60_000): boolean {
-  const now = Date.now();
-  const bucket = rateBuckets.get(userId);
-  if (!bucket || now > bucket.reset) {
-    rateBuckets.set(userId, { count: 1, reset: now + windowMs });
-    return true;
-  }
-  if (bucket.count >= limit) return false;
-  bucket.count++;
-  return true;
+function extractTld(domain: string): string {
+  const parts = domain.split(".");
+  return parts.length > 1 ? `.${parts[parts.length - 1]}` : "unknown";
+}
+
+async function hashString(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function log(fields: Record<string, unknown>) {
+  console.log(JSON.stringify({ ts: new Date().toISOString(), fn: "domain-check", ...fields }));
+}
+
+function errResponse(
+  code: string,
+  message: string,
+  status: number
+): Response {
+  return new Response(
+    JSON.stringify({ success: false, error: code, message }),
+    { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
 }
 
 // ── Main Handler ────────────────────────────────────────────────────
@@ -44,55 +52,117 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const requestId = crypto.randomUUID();
+  const startMs = Date.now();
+
   try {
     // ── Auth ──
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errResponse("UNAUTHORIZED", "Authentication required", 401);
     }
 
-    const supabase = createClient(
+    // User-scoped client for auth validation
+    const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const { data: { user }, error: userErr } = await supabaseUser.auth.getUser();
+    if (userErr || !user) {
+      return errResponse("UNAUTHORIZED", "Authentication required", 401);
     }
-    const userId = claimsData.claims.sub as string;
+    const userId = user.id;
 
-    // ── Rate limit ──
-    if (!checkRate(userId)) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Rate limit exceeded. Try again in a minute." }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // Service-role client for DB ops (cache + rate limit tables have restrictive RLS)
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const userIdHash = await hashString(userId);
+
+    // ── Rate limit (DB-backed) ──
+    const windowStart = new Date(Date.now() - 60_000).toISOString();
+
+    const { data: rateRow } = await supabaseAdmin
+      .from("domain_check_rate_limit")
+      .select("id, request_count, window_start")
+      .eq("user_id", userId)
+      .gte("window_start", windowStart)
+      .maybeSingle();
+
+    if (rateRow && rateRow.request_count >= 10) {
+      log({ request_id: requestId, event: "rate_limited", user_id_hash: userIdHash });
+      return errResponse("RATE_LIMITED", "Too many requests. Try again in a minute.", 429);
+    }
+
+    // Upsert rate counter
+    if (rateRow) {
+      await supabaseAdmin
+        .from("domain_check_rate_limit")
+        .update({ request_count: rateRow.request_count + 1 })
+        .eq("id", rateRow.id);
+    } else {
+      // Delete old windows for this user, then insert fresh
+      await supabaseAdmin
+        .from("domain_check_rate_limit")
+        .delete()
+        .eq("user_id", userId)
+        .lt("window_start", windowStart);
+
+      await supabaseAdmin
+        .from("domain_check_rate_limit")
+        .insert({ user_id: userId, request_count: 1, window_start: new Date().toISOString() });
     }
 
     // ── Input validation ──
     const body = await req.json();
     const rawDomain = body?.domain;
     if (typeof rawDomain !== "string" || !rawDomain) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Missing 'domain' field" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errResponse("INVALID_DOMAIN", "Please provide a domain name.", 400);
     }
 
     const domain = sanitizeDomain(rawDomain);
     if (!domain) {
+      return errResponse("INVALID_DOMAIN", "Invalid domain format. Example: example.com", 400);
+    }
+
+    const tld = extractTld(domain);
+
+    // ── Cache check ──
+    const { data: cached } = await supabaseAdmin
+      .from("domain_availability_cache")
+      .select("*")
+      .eq("domain", domain)
+      .gt("expires_at", new Date().toISOString())
+      .maybeSingle();
+
+    if (cached) {
+      const ttl = Math.max(0, Math.round((new Date(cached.expires_at).getTime() - Date.now()) / 1000));
+      log({
+        request_id: requestId,
+        domain_tld: tld,
+        cache_hit: true,
+        available: cached.available,
+        latency_ms: Date.now() - startMs,
+        user_id_hash: userIdHash,
+      });
+
       return new Response(
-        JSON.stringify({ success: false, error: "Invalid domain format" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          success: true,
+          domain: cached.domain,
+          available: cached.available,
+          premium: cached.premium ?? false,
+          pricing: cached.pricing ?? {},
+          currency: cached.currency ?? "USD",
+          checked_at: cached.checked_at,
+          source: "cache" as const,
+          ttl,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -100,10 +170,7 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get("DYNADOT_API_KEY");
     if (!apiKey) {
       console.error("DYNADOT_API_KEY not configured");
-      return new Response(
-        JSON.stringify({ success: false, error: "Service temporarily unavailable" }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errResponse("SERVICE_UNAVAILABLE", "Domain lookup service temporarily unavailable.", 503);
     }
 
     const dynadotUrl = `https://api.dynadot.com/restful/v2/domains/${encodeURIComponent(domain)}/search?show_price=true&currency=usd`;
@@ -121,35 +188,27 @@ Deno.serve(async (req) => {
         },
         signal: controller.signal,
       });
-    } catch (fetchErr) {
+    } catch (_fetchErr) {
       clearTimeout(timeout);
-      console.error("Dynadot fetch error:", fetchErr);
-      return new Response(
-        JSON.stringify({ success: false, error: "Domain lookup service unavailable" }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      log({ request_id: requestId, domain_tld: tld, event: "dynadot_error", latency_ms: Date.now() - startMs });
+      return errResponse("SERVICE_UNAVAILABLE", "Domain lookup service temporarily unavailable.", 503);
     }
     clearTimeout(timeout);
 
     if (!dynaRes.ok) {
-      console.error(`Dynadot API returned ${dynaRes.status}`);
-      return new Response(
-        JSON.stringify({ success: false, error: "Domain lookup failed" }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      log({ request_id: requestId, domain_tld: tld, event: "dynadot_http_error", status: dynaRes.status, latency_ms: Date.now() - startMs });
+      return errResponse("SERVICE_UNAVAILABLE", "Domain lookup service temporarily unavailable.", 503);
     }
 
     const dynaData = await dynaRes.json();
 
     // ── Normalize response ──
-    // Dynadot v2 search returns: { "SearchResponse": { "SearchHeader": {...}, "SearchResults": [...] } }
     const searchResults = dynaData?.SearchResponse?.SearchResults ?? [];
     const result = searchResults[0] ?? {};
 
     const available = result?.Available === "yes" || result?.Available === true;
     const premium = result?.IsPremium === "yes" || result?.IsPremium === true;
 
-    // Build multi-year pricing from Dynadot response
     const pricing: Record<string, { registration: number; renewal: number }> = {};
     const regPrice = parseFloat(result?.Price?.Registration ?? result?.Price ?? "0");
     const renewPrice = parseFloat(result?.Price?.Renewal ?? result?.Price ?? "0");
@@ -161,6 +220,38 @@ Deno.serve(async (req) => {
       };
     }
 
+    const checkedAt = new Date().toISOString();
+    // Available domains cached 1h, unavailable 10min
+    const ttlSeconds = available ? 3600 : 600;
+    const expiresAt = new Date(Date.now() + ttlSeconds * 1000).toISOString();
+
+    // ── Write cache (upsert) ──
+    await supabaseAdmin
+      .from("domain_availability_cache")
+      .upsert(
+        {
+          domain,
+          available,
+          premium,
+          pricing,
+          price: regPrice > 0 ? regPrice : null,
+          currency: "USD",
+          checked_at: checkedAt,
+          expires_at: expiresAt,
+          source: "live",
+        },
+        { onConflict: "domain" }
+      );
+
+    log({
+      request_id: requestId,
+      domain_tld: tld,
+      cache_hit: false,
+      available,
+      latency_ms: Date.now() - startMs,
+      user_id_hash: userIdHash,
+    });
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -169,14 +260,15 @@ Deno.serve(async (req) => {
         premium,
         pricing,
         currency: "USD",
+        checked_at: checkedAt,
+        source: "live" as const,
+        ttl: ttlSeconds,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
+    log({ request_id: requestId, event: "unhandled_error", latency_ms: Date.now() - startMs });
     console.error("domain-check error:", err);
-    return new Response(
-      JSON.stringify({ success: false, error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return errResponse("INTERNAL_ERROR", "An unexpected error occurred.", 500);
   }
 });

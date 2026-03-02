@@ -1,57 +1,163 @@
 
+## Domain A — Database Audit Fixes
 
-## Production Domain Check System Upgrade
+### Status: READY TO APPLY
 
-### What Changes
+Run the following SQL in **Supabase SQL Editor** (Dashboard → SQL Editor → New Query → paste → Run).
 
-The existing `domain-check` Edge Function works but uses in-memory rate limiting (resets on cold start) and has no caching. This upgrade adds database-backed caching and rate limiting, structured error codes, observability logging, and cache cleanup.
+This single script fixes all 4 CRITICAL FAILS and 8 MAJOR WARNS from the audit.
 
-### Step 1: Database Migration
+---
 
-New migration creating two tables:
+### SQL Migration (copy & run in Supabase SQL Editor)
 
-- **`domain_availability_cache`** — stores domain check results with `expires_at` for TTL-based cache. Unique on `domain`. Indexed on `domain` and `expires_at`.
-- **`domain_check_rate_limit`** — tracks per-user request counts with sliding window. Indexed on `user_id` (not IP hash — we already authenticate users, and Supabase Edge Functions don't reliably expose client IPs behind the proxy).
+```sql
+-- ============================================================
+-- VEXLO Database Audit Fixes — Domain A
+-- Addresses: 4 CRITICAL FAILS + 8 MAJOR WARNS
+-- Safe to run idempotently (uses IF NOT EXISTS / DROP IF EXISTS)
+-- ============================================================
 
-RLS enabled on both. Policies: only `service_role` can read/write (Edge Functions use `SUPABASE_SERVICE_ROLE_KEY`).
+-- ────────────────────────────────────────────────────────────
+-- FIX 1: Add ON DELETE CASCADE to all foreign keys
+-- ────────────────────────────────────────────────────────────
 
-### Step 2: Rewrite `domain-check/index.ts`
+-- proofs.user_id → profiles.id
+ALTER TABLE public.proofs
+  DROP CONSTRAINT IF EXISTS proofs_user_id_fkey;
+ALTER TABLE public.proofs
+  ADD CONSTRAINT proofs_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
-Major changes from current implementation:
+-- subscriptions.user_id → profiles.id
+ALTER TABLE public.subscriptions
+  DROP CONSTRAINT IF EXISTS subscriptions_user_id_fkey;
+ALTER TABLE public.subscriptions
+  ADD CONSTRAINT subscriptions_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
-1. **Auth** — keep existing `getClaims` pattern but use `service_role` client for DB operations (cache/rate-limit tables have restrictive RLS)
-2. **Rate limiting** — move from in-memory Map to `domain_check_rate_limit` table. Upsert pattern: if user has >10 requests in last 60s, return `RATE_LIMITED`
-3. **Cache check** — before calling Dynadot, query `domain_availability_cache` where `domain = $1 AND expires_at > now()`. If hit, return cached result with `source: "cache"`
-4. **Dynadot call** — same API call, but on success/failure write to cache table. Available domains cached 1 hour, unavailable cached 10 minutes
-5. **Normalized error codes** — all Dynadot failures (timeout, auth, API error) return `SERVICE_UNAVAILABLE`. Input errors return `INVALID_DOMAIN`. Rate limit returns `RATE_LIMITED`
-6. **Response shape** — add `checked_at`, `source`, `ttl` fields alongside existing `pricing`, `premium`, `available`
-7. **Structured logging** — JSON logs with `request_id`, `domain_tld` (TLD only), `cache_hit`, `latency_ms`, `user_id_hash`. Never log full domain or raw Dynadot response
-8. **IP hashing** — hash user ID (not IP) with SHA-256 for logging, since we're behind Supabase proxy
+-- proof_views.proof_id → proofs.id
+ALTER TABLE public.proof_views
+  DROP CONSTRAINT IF EXISTS proof_views_proof_id_fkey;
+ALTER TABLE public.proof_views
+  ADD CONSTRAINT proof_views_proof_id_fkey
+  FOREIGN KEY (proof_id) REFERENCES public.proofs(id) ON DELETE CASCADE;
 
-**CORS note**: The frontend uses `supabase.functions.invoke()` which proxies through the Supabase URL. Custom origin restriction in the Edge Function would break this pattern. Keeping `Access-Control-Allow-Origin: *` is the standard Supabase approach — access control is handled by the auth token, not CORS.
+-- ────────────────────────────────────────────────────────────
+-- FIX 2: Add missing columns to proofs
+-- ────────────────────────────────────────────────────────────
 
-### Step 3: Update `useDomainCheck` Hook
+ALTER TABLE public.proofs ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
+ALTER TABLE public.proofs ADD COLUMN IF NOT EXISTS public_slug TEXT;
+ALTER TABLE public.proofs ADD COLUMN IF NOT EXISTS is_public BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.proofs ADD COLUMN IF NOT EXISTS error_message TEXT;
+ALTER TABLE public.proofs ADD COLUMN IF NOT EXISTS serp_features JSONB;
 
-Update the `DomainCheckResult` interface to include new fields: `checked_at`, `source`, `ttl`. Map error codes to user-friendly messages.
+-- Unique index on public_slug (partial — only non-null)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_proofs_public_slug
+  ON public.proofs (public_slug) WHERE public_slug IS NOT NULL;
 
-### Step 4: Update `DomainSearch.tsx` UI
+-- ────────────────────────────────────────────────────────────
+-- FIX 3: Add CHECK constraints
+-- ────────────────────────────────────────────────────────────
 
-Add a subtle indicator showing whether the result came from cache or live lookup (e.g., "Cached result · refreshes in X min"). No major layout changes needed.
+DO $$ BEGIN
+  ALTER TABLE public.proofs ADD CONSTRAINT chk_proofs_status
+    CHECK (status IN ('pending', 'processing', 'complete', 'failed'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-### Step 5: Cache Cleanup via pg_cron
+DO $$ BEGIN
+  ALTER TABLE public.proofs ADD CONSTRAINT chk_proofs_score
+    CHECK (score >= 0 AND score <= 100);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-SQL to schedule a cron job every 30 minutes that deletes expired rows from `domain_availability_cache` and stale rate limit entries older than 2 minutes.
+DO $$ BEGIN
+  ALTER TABLE public.profiles ADD CONSTRAINT chk_profiles_plan
+    CHECK (plan IN ('free', 'starter', 'pro', 'elite'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-### Files Modified
-| File | Action |
-|---|---|
-| `supabase/migrations/[new].sql` | Create tables, indexes, RLS |
-| `supabase/functions/domain-check/index.ts` | Full rewrite |
-| `src/hooks/useDomainCheck.ts` | Update interface + error mapping |
-| `src/pages/DomainSearch.tsx` | Add cache/source indicator |
+DO $$ BEGIN
+  ALTER TABLE public.profiles ADD CONSTRAINT chk_profiles_plan_status
+    CHECK (plan_status IN ('active', 'past_due', 'canceled', 'trialing'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-### Not Changing
-- `domain-register/index.ts` — remains Phase 2 scaffold
-- `supabase/config.toml` — already configured
-- CORS approach — stays wildcard per Supabase standard
+-- ────────────────────────────────────────────────────────────
+-- FIX 4: RLS — UPDATE policy on proofs + fix public SELECT + subscriptions
+-- ────────────────────────────────────────────────────────────
 
+ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their own subscriptions" ON public.subscriptions;
+CREATE POLICY "Users can view their own subscriptions"
+  ON public.subscriptions FOR SELECT
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update their own proofs" ON public.proofs;
+CREATE POLICY "Users can update their own proofs"
+  ON public.proofs FOR UPDATE
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "public_proofs" ON public.proofs;
+CREATE POLICY "public_proofs"
+  ON public.proofs FOR SELECT
+  USING (is_public = true AND status = 'complete');
+
+-- ────────────────────────────────────────────────────────────
+-- FIX 5: Missing indexes
+-- ────────────────────────────────────────────────────────────
+
+CREATE INDEX IF NOT EXISTS idx_proofs_user_created
+  ON public.proofs (user_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_proof_views_proof_id
+  ON public.proof_views (proof_id);
+
+CREATE INDEX IF NOT EXISTS idx_profiles_stripe_id
+  ON public.profiles (stripe_id) WHERE stripe_id IS NOT NULL;
+
+-- ────────────────────────────────────────────────────────────
+-- FIX 6: Secure handle_new_user() with explicit search_path
+-- ────────────────────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name)
+  VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'full_name');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- ────────────────────────────────────────────────────────────
+-- Backfill: Mark existing proofs with score > 0 as 'complete'
+-- ────────────────────────────────────────────────────────────
+
+UPDATE public.proofs SET status = 'complete' WHERE score > 0 AND status = 'pending';
+```
+
+---
+
+### What This Fixes
+
+| # | Issue | Fix |
+|---|-------|-----|
+| C1 | No ON DELETE CASCADE on FKs | Added CASCADE to all 3 FKs |
+| C2 | proofs UPDATE RLS missing | Added UPDATE policy |
+| C3 | public SELECT references missing columns | Added columns first, then recreated policy |
+| C4 | subscriptions RLS not enabled | Enabled + added SELECT policy |
+| W1 | No CHECK constraints | Added on status, score, plan, plan_status |
+| W2 | Missing proof_views index | Added idx_proof_views_proof_id |
+| W3 | Missing profiles.stripe_id index | Added idx_profiles_stripe_id |
+| W4 | handle_new_user lacks search_path | Recreated with SET search_path |
+| W5 | score=0 ambiguity | Added status column + backfill |
+| W6 | Missing public_slug/is_public | Added columns + unique index |
+
+### After Running
+
+1. Confirm "Success" in SQL Editor
+2. Go to **Table Editor → proofs** and verify `status`, `public_slug`, `is_public` columns exist
+3. Come back here and tell me it's done — I'll update the app code to use the new columns
