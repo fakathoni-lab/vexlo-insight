@@ -44,8 +44,8 @@ const ProofResult = () => {
   const [activeStep, setActiveStep] = useState(0);
   const edgeFunctionInvoked = useRef(false);
 
-  // Derive status from score: 0 = pending/processing, >0 = complete
-  const derivedStatus = proof ? (proof.score > 0 ? "complete" : "processing") : "loading";
+  // Derive status: 0 = pending/processing, -1 = failed, >0 = complete
+  const derivedStatus = proof ? (proof.score > 0 ? "complete" : proof.score < 0 ? "failed" : "processing") : "loading";
 
   useEffect(() => {
     if (!id || !user) return;
