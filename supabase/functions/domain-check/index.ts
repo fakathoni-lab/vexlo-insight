@@ -181,6 +181,8 @@ Deno.serve(async (req) => {
       return errResponse("SERVICE_UNAVAILABLE", "Domain lookup service temporarily unavailable.", 503);
     }
 
+    log({ request_id: requestId, event: "api_key_debug", key_length: apiKey.length, key_prefix: apiKey.slice(0, 4) });
+
     const dynadotUrl = `https://api.dynadot.com/restful/v2/domains/${encodeURIComponent(domain)}/search?show_price=true&currency=usd`;
 
     const controller = new AbortController();
