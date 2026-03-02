@@ -8,6 +8,7 @@ import PricingPage from "./pages/PricingPage";
 import Dashboard from "./pages/Dashboard";
 import NewProof from "./pages/NewProof";
 import ProofReport from "./pages/ProofReport";
+import ProofResult from "./pages/ProofResult";
 import PublicProof from "./pages/PublicProof";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -27,6 +28,7 @@ const App = () => (
         <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/new" element={<NewProof />} />
+          <Route path="/dashboard/proof/:id" element={<ProofResult />} />
           <Route path="/dashboard/history" element={<div className="font-body" style={{ color: "var(--text-dim)" }}>Proof History 
 coming soon</div>} />
           <Route path="/settings" element={<Settings />} />
