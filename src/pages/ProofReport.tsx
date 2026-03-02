@@ -87,6 +87,7 @@ const ProofReport = () => {
       }
 
       setProof(data);
+      setIsPublic(data.is_public ?? false);
       setLoading(false);
 
       // Stop polling if complete or failed
