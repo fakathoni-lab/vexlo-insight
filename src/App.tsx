@@ -8,6 +8,7 @@ import PricingPage from "./pages/PricingPage";
 import Dashboard from "./pages/Dashboard";
 import NewProof from "./pages/NewProof";
 import ProofReport from "./pages/ProofReport";
+import PublicProof from "./pages/PublicProof";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
