@@ -34,7 +34,7 @@ export async function shareProof(proofId: string, existingSlug: string | null): 
       .eq("id", proofId) as any);
 
     if (retryError) throw new Error("Failed to generate share link");
-    const url = `${window.location.origin}/proof/public/${retrySlug}`;
+    const url = `${window.location.origin}/p/${retrySlug}`;
     return { slug: retrySlug, url };
   }
 
