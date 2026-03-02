@@ -256,9 +256,11 @@ const ProofResult = () => {
 
       {/* ── Sticky Actions ── */}
       <ProofActions
+        proofId={proof.id}
         narrative={proof.ai_narrative}
         publicSlug={proof.public_slug}
         isPublic={proof.is_public}
+        onSlugUpdate={(slug) => setProof({ ...proof, public_slug: slug, is_public: true })}
       />
     </div>
   );
