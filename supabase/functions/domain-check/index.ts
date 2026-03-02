@@ -175,13 +175,14 @@ Deno.serve(async (req) => {
     }
 
     // ── Dynadot API call ──
-    const apiSecret = Deno.env.get("DYNADOT_API_SECRET");
-    if (!apiSecret) {
-      console.error("DYNADOT_API_SECRET not configured");
+    const apiKey = Deno.env.get("DYNADOT_API_KEY");
+    if (!apiKey) {
+      console.error("DYNADOT_API_KEY not configured");
       return errResponse("SERVICE_UNAVAILABLE", "Domain lookup service temporarily unavailable.", 503);
     }
 
-    const dynadotUrl = `https://api.dynadot.com/restful/v2/domains/${encodeURIComponent(domain)}/search?show_price=true&currency=usd`;
+    // Use legacy API v3 (query param auth, XML response)
+    const dynadotUrl = `https://api.dynadot.com/api3.json?key=${encodeURIComponent(apiKey)}&command=search&domain0=${encodeURIComponent(domain)}&show_price=1&currency=USD`;
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10_000);
@@ -190,10 +191,6 @@ Deno.serve(async (req) => {
     try {
       dynaRes = await fetch(dynadotUrl, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${apiSecret}`,
-          Accept: "application/json",
-        },
         signal: controller.signal,
       });
     } catch (_fetchErr) {
