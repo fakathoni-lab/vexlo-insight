@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Outlet, useLocation, Link } from "react-router-dom";
-import { LayoutDashboard, Plus, History, Settings, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Plus, History, Settings, LogOut, Menu, X, Globe } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, accent: false },
   { title: "New Proof", url: "/dashboard/new", icon: Plus, accent: true },
+  { title: "Domain Search", url: "/dashboard/domains", icon: Globe, accent: false },
   { title: "Proof History", url: "/dashboard/history", icon: History, accent: false },
   { title: "Settings", url: "/settings", icon: Settings, accent: false },
 ];
@@ -16,6 +17,7 @@ const navItems = [
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/dashboard/new": "New Proof",
+  "/dashboard/domains": "Domain Search",
   "/dashboard/history": "Proof History",
   "/settings": "Settings",
 };
