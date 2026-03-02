@@ -188,13 +188,16 @@ Deno.serve(async (req) => {
     const timeout = setTimeout(() => controller.abort(), 15_000);
 
     // Route through static-IP proxy so Dynadot IP whitelist works
-    const proxyUrl = Deno.env.get("PROXY_URL");
+    let rawProxyUrl = Deno.env.get("PROXY_URL") ?? "";
+    // Handle if user pasted full curl command instead of just URL
+    const proxyMatch = rawProxyUrl.match(/https?:\/\/[^\s"']+@[^\s"'/]+:\d+/);
+    if (proxyMatch) rawProxyUrl = proxyMatch[0];
+    
     let httpClient: Deno.HttpClient | undefined;
 
-    if (proxyUrl) {
+    if (rawProxyUrl && rawProxyUrl.startsWith("http")) {
       try {
-        // Parse proxy URL: http://user:pass@host:port
-        const parsed = new URL(proxyUrl);
+        const parsed = new URL(rawProxyUrl);
         const proxyBase = `${parsed.protocol}//${parsed.hostname}:${parsed.port}`;
         const proxyAuth = parsed.username && parsed.password
           ? { username: decodeURIComponent(parsed.username), password: decodeURIComponent(parsed.password) }
@@ -206,6 +209,8 @@ Deno.serve(async (req) => {
       } catch (proxyErr) {
         log({ request_id: requestId, event: "proxy_init_error", error: String(proxyErr) });
       }
+    } else {
+      log({ request_id: requestId, event: "no_proxy", raw_length: rawProxyUrl.length });
     }
 
     let dynaRes: Response;
