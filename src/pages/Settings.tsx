@@ -408,19 +408,40 @@ const Settings = () => {
 
           <Separator className="bg-[var(--border)]" />
 
-          {/* Upgrade CTA */}
+          {/* Upgrade / Manage CTA */}
           <div className="flex items-center justify-between">
             <p className="font-body text-xs" style={{ color: "var(--text-dim)" }}>
-              Need more proofs or premium features?
+              {plan === "free"
+                ? "Need more proofs or premium features?"
+                : "Manage your subscription"}
             </p>
-            <Button
-              variant="outline"
-              className="rounded-[100px] font-mono text-[9px] uppercase tracking-widest border-[var(--border-strong)] hover:border-[var(--accent-purple-border)] hover:text-[var(--accent-purple)] transition-all duration-200 h-8 px-5"
-              style={{ color: "var(--text-dim)" }}
-              onClick={() => window.open("/pricing", "_blank")}
-            >
-              View Plans
-            </Button>
+            {plan === "free" ? (
+              <Button
+                disabled={checkoutLoading}
+                className="rounded-[100px] font-mono text-[10px] uppercase tracking-widest bg-[var(--text)] text-[var(--bg)] hover:brightness-95 active:scale-[0.98] transition-all duration-200 h-8 px-5"
+                style={{ boxShadow: "var(--emboss-shadow), var(--inset-shadow)" }}
+                onClick={() => checkout()}
+              >
+                {checkoutLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <span className="flex items-center gap-1.5">
+                    Upgrade to Premium <ExternalLink className="w-3 h-3" />
+                  </span>
+                )}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="rounded-[100px] font-mono text-[9px] uppercase tracking-widest border-[var(--border-strong)] hover:border-[var(--accent-purple-border)] hover:text-[var(--accent-purple)] transition-all duration-200 h-8 px-5"
+                style={{ color: "var(--text-dim)" }}
+                onClick={() => window.open("https://polar.sh/settings/subscriptions", "_blank")}
+              >
+                <span className="flex items-center gap-1.5">
+                  Manage on Polar <ExternalLink className="w-3 h-3" />
+                </span>
+              </Button>
+            )}
           </div>
         </div>
       </Section>
