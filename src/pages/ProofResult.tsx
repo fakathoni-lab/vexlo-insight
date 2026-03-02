@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getViewCount } from "@/hooks/useProofs";
@@ -9,7 +9,7 @@ import AIOverviewBadge from "@/components/proof/AIOverviewBadge";
 import TrendDelta from "@/components/proof/TrendDelta";
 import SalesNarrative from "@/components/proof/SalesNarrative";
 import ProofActions from "@/components/proof/ProofActions";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Proof {
@@ -39,6 +39,13 @@ interface Proof {
   error_message: string | null;
 }
 
+const loadingSteps = [
+  "Fetching Rankings",
+  "Analyzing SERP Features",
+  "Calculating Proof Score",
+  "Generating Sales Narrative",
+];
+
 const ProofResult = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -47,6 +54,8 @@ const ProofResult = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewCount, setViewCount] = useState<number>(0);
+  const [activeStep, setActiveStep] = useState(0);
+  const edgeFunctionInvoked = useRef(false);
 
   useEffect(() => {
     if (!id || !user) return;
@@ -67,8 +76,20 @@ const ProofResult = () => {
       setProof(data as Proof);
       setLoading(false);
 
-      // Fetch view count
-      getViewCount(data.id).then(setViewCount);
+      // Fetch view count for completed proofs
+      if (data.status === "complete") {
+        getViewCount(data.id).then(setViewCount);
+      }
+
+      // Option B: If pending, invoke edge function from here
+      if (data.status === "pending" && !edgeFunctionInvoked.current) {
+        edgeFunctionInvoked.current = true;
+        supabase.functions.invoke("generate-proof", {
+          body: { domain: data.domain, keyword: data.target_keyword, proof_id: data.id },
+        }).catch((err) => {
+          console.error("Edge function invocation failed:", err);
+        });
+      }
     };
 
     fetchProof();
@@ -87,6 +108,9 @@ const ProofResult = () => {
         (payload: any) => {
           const updated = payload.new as Proof;
           setProof(updated);
+          if (updated.status === "complete") {
+            getViewCount(updated.id).then(setViewCount);
+          }
         }
       )
       .subscribe();
@@ -95,6 +119,15 @@ const ProofResult = () => {
       supabase.removeChannel(channel);
     };
   }, [id, user]);
+
+  // Progressive loading step animation
+  useEffect(() => {
+    if (!proof || (proof.status !== "pending" && proof.status !== "processing")) return;
+    const interval = setInterval(() => {
+      setActiveStep((prev) => (prev < loadingSteps.length - 1 ? prev + 1 : prev));
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [proof?.status]);
 
   // ── Loading ──
   if (loading) {
@@ -137,8 +170,39 @@ const ProofResult = () => {
           <h2 className="font-headline text-xl" style={{ color: "var(--text)" }}>
             Generating Proof…
           </h2>
-          <p className="font-body text-sm text-center" style={{ color: "var(--text-dim)" }}>
-            Analyzing SERP data and calculating your proof score. This usually takes 15-25 seconds.
+
+          {/* Progressive steps */}
+          <div className="flex flex-col gap-3 w-full mt-2">
+            {loadingSteps.map((step, i) => {
+              const isDone = i < activeStep;
+              const isActive = i === activeStep;
+              return (
+                <div key={step} className="flex items-center gap-3">
+                  <div className="w-5 h-5 flex items-center justify-center">
+                    {isDone ? (
+                      <Check className="w-4 h-4" style={{ color: "#22c55e" }} />
+                    ) : isActive ? (
+                      <Loader2 className="w-4 h-4 animate-spin" style={{ color: "var(--accent)" }} />
+                    ) : (
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "var(--text-muted)" }} />
+                    )}
+                  </div>
+                  <span
+                    className="font-body text-sm"
+                    style={{
+                      color: isDone ? "#22c55e" : isActive ? "var(--text)" : "var(--text-muted)",
+                      transition: "color 0.3s",
+                    }}
+                  >
+                    {step}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="font-body text-sm text-center mt-2" style={{ color: "var(--text-dim)" }}>
+            Typically ready in 15-30 seconds.
           </p>
           <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
             Status: {proof.status}
