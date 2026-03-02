@@ -1,7 +1,6 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Redis } from "https://deno.land/x/upstash_redis@v1.22.0/mod.ts";
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { Redis } from "npm:@upstash/redis@1.34.3";
+import { z } from "npm:zod@3.23.8";
 
 // ── CORS ──
 const corsHeaders = {
