@@ -7,6 +7,7 @@ import Signup from "./pages/Signup";
 import PricingPage from "./pages/PricingPage";
 import Dashboard from "./pages/Dashboard";
 import NewProof from "./pages/NewProof";
+import ProofReport from "./pages/ProofReport";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -20,6 +21,7 @@ const App = () => (
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/proof/:id" element={<ProofReport />} />
         <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/new" element={<NewProof />} />
