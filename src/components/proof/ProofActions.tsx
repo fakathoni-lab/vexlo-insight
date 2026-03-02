@@ -1,15 +1,20 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Copy, Share2, Plus } from "lucide-react";
+import { Copy, Share2, Plus, Check } from "lucide-react";
 import { toast } from "sonner";
+import { shareProof } from "@/hooks/useProofs";
 
 interface ProofActionsProps {
+  proofId: string;
   narrative: string | null;
   publicSlug: string | null;
   isPublic: boolean;
+  onSlugUpdate?: (slug: string) => void;
 }
 
-const ProofActions = ({ narrative, publicSlug, isPublic }: ProofActionsProps) => {
+const ProofActions = ({ proofId, narrative, publicSlug, isPublic, onSlugUpdate }: ProofActionsProps) => {
   const navigate = useNavigate();
+  const [shareState, setShareState] = useState<"idle" | "loading" | "copied">("idle");
 
   const handleCopyNarrative = async () => {
     if (!narrative) {
@@ -25,16 +30,25 @@ const ProofActions = ({ narrative, publicSlug, isPublic }: ProofActionsProps) =>
   };
 
   const handleShare = async () => {
-    if (isPublic && publicSlug) {
-      const url = `${window.location.origin}/p/${publicSlug}`;
+    setShareState("loading");
+    try {
+      const result = await shareProof(proofId, publicSlug);
+
       try {
-        await navigator.clipboard.writeText(url);
-        toast.success("Share link copied to clipboard");
+        await navigator.clipboard.writeText(result.url);
       } catch {
-        toast.error("Failed to copy link");
+        // Fallback for older browsers
+        window.prompt("Copy this link:", result.url);
       }
-    } else {
-      toast("Make the proof public first to share it");
+
+      onSlugUpdate?.(result.slug);
+      setShareState("copied");
+      toast.success("Link copied! Valid for anyone with this URL.");
+
+      setTimeout(() => setShareState("idle"), 3000);
+    } catch (err) {
+      setShareState("idle");
+      toast.error("Failed to generate share link");
     }
   };
 
@@ -55,10 +69,15 @@ const ProofActions = ({ narrative, publicSlug, isPublic }: ProofActionsProps) =>
       </button>
       <button
         onClick={handleShare}
+        disabled={shareState === "loading"}
         className="inline-flex items-center gap-2 h-10 px-5 rounded-full font-mono text-[10px] uppercase tracking-widest border transition-all duration-200 hover:bg-[rgba(255,255,255,0.05)]"
-        style={{ borderColor: "var(--border-strong)", color: "var(--text-dim)" }}
+        style={{
+          borderColor: shareState === "copied" ? "rgba(34,197,94,0.25)" : "var(--border-strong)",
+          color: shareState === "copied" ? "#22c55e" : "var(--text-dim)",
+        }}
       >
-        <Share2 size={14} /> Share Link
+        {shareState === "copied" ? <Check size={14} /> : <Share2 size={14} />}
+        {shareState === "copied" ? "Copied!" : shareState === "loading" ? "Generating…" : "Share Link"}
       </button>
       <button
         onClick={() => navigate("/dashboard/new")}
