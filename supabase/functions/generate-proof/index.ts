@@ -527,6 +527,16 @@ serve(async (req) => {
       domain_position: organicResult.rankPosition,
     };
 
+    // ── Generate AI narrative ──
+    const aiNarrative = await generateNarrative({
+      domain: cleanDomain,
+      keyword: cleanKeyword,
+      proofScore,
+      rankPosition: organicResult.rankPosition,
+      rankingDelta: historyResult.delta30d,
+      serpFeatures: serpResult.serpFeatures,
+    });
+
     // ── Update proof row ──
     const updatePayload = {
       proof_score: proofScore,
@@ -535,7 +545,7 @@ serve(async (req) => {
       ai_overview: serpResult.serpFeatures.ai_overview,
       ranking_data: rankingData,
       serp_features: serpResult.serpFeatures,
-      ai_narrative: null,
+      ai_narrative: aiNarrative,
       status: "complete",
       api_cost_units: apiCostUnits,
     };
