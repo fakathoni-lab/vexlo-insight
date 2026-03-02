@@ -170,8 +170,39 @@ const ProofResult = () => {
           <h2 className="font-headline text-xl" style={{ color: "var(--text)" }}>
             Generating Proof…
           </h2>
-          <p className="font-body text-sm text-center" style={{ color: "var(--text-dim)" }}>
-            Analyzing SERP data and calculating your proof score. This usually takes 15-25 seconds.
+
+          {/* Progressive steps */}
+          <div className="flex flex-col gap-3 w-full mt-2">
+            {loadingSteps.map((step, i) => {
+              const isDone = i < activeStep;
+              const isActive = i === activeStep;
+              return (
+                <div key={step} className="flex items-center gap-3">
+                  <div className="w-5 h-5 flex items-center justify-center">
+                    {isDone ? (
+                      <Check className="w-4 h-4" style={{ color: "#22c55e" }} />
+                    ) : isActive ? (
+                      <Loader2 className="w-4 h-4 animate-spin" style={{ color: "var(--accent)" }} />
+                    ) : (
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "var(--text-muted)" }} />
+                    )}
+                  </div>
+                  <span
+                    className="font-body text-sm"
+                    style={{
+                      color: isDone ? "#22c55e" : isActive ? "var(--text)" : "var(--text-muted)",
+                      transition: "color 0.3s",
+                    }}
+                  >
+                    {step}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="font-body text-sm text-center mt-2" style={{ color: "var(--text-dim)" }}>
+            Typically ready in 15-30 seconds.
           </p>
           <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
             Status: {proof.status}
