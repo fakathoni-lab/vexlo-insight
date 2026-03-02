@@ -41,7 +41,7 @@ const RankingsTable = ({
                 className="transition-colors duration-200"
                 style={{
                   borderTop: "1px solid var(--border)",
-                  backgroundColor: isDomain ? "rgba(124,58,237,0.08)" : "transparent",
+                  backgroundColor: isDomain ? "var(--accent-purple-dim)" : "transparent",
                 }}
               >
                 <td className="px-4 py-2.5 font-mono text-xs" style={{ color: isDomain ? "var(--accent-light)" : "var(--text-dim)" }}>

@@ -25,14 +25,21 @@
   --text:             #f0f0ee;
   --text-dim:         rgba(240,240,238,0.45);
   --text-muted:       rgba(240,240,238,0.25);
-  --accent:           #7C3AED;
-  --accent-light:     #9333EA;
-  --accent-glow:      #A855F7;
-  --accent-dim:       rgba(124,58,237,0.12);
-  --accent-border:    rgba(124,58,237,0.25);
+  --accent:           #ff6308;
+  --accent-light:     #ff7a2e;
+  --accent-glow:      #ff9147;
+  --accent-dim:       rgba(255,99,8,0.12);
+  --accent-border:    rgba(255,99,8,0.25);
   --accent-blue:      #4169e1;
   --accent-magenta:   #e040fb;
   --accent-red:       #e11d48;
+
+  /* Purple accent — branding / dashboard / structural highlights */
+  --accent-purple:        #7C3AED;
+  --accent-purple-light:  #9333EA;
+  --accent-purple-glow:   #A855F7;
+  --accent-purple-dim:    rgba(124,58,237,0.12);
+  --accent-purple-border: rgba(124,58,237,0.25);
 
   /* VEXLO-specific accent tokens */
   --accent-proof:    #E8FF47;
@@ -79,14 +86,14 @@
   /* HSL variables for Tailwind / shadcn compatibility */
   --background: 0 0% 3.1%;
   --foreground: 60 7% 94.1%;
-  --accent-hsl: 263 84% 58%;
+  --accent-hsl: 24 100% 50%;
   --accent-foreground: 0 0% 100%;
   --border-hsl: 0 0% 18%;
   --border-strong-hsl: 0 0% 100% / 0.13;
   --muted-hsl: 0 0% 60%;
   --muted-foreground: 0 0% 60%;
   --input: 0 0% 18%;
-  --ring: 263 84% 58%;
+  --ring: 24 100% 50%;
   --radius-card: 12px;
   --radius-button: 100px;
   --radius-input: 2px;

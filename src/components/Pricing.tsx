@@ -83,7 +83,7 @@ const Pricing = () => {
             style={{
               backgroundColor: "var(--bg-card)",
               border: tier.featured
-                ? "1px solid rgba(124,58,237,0.4)"
+                ? "1px solid var(--accent-purple-border)"
                 : "1px solid var(--border)",
               transform: tier.featured ? "scale(1.02)" : undefined,
             }}

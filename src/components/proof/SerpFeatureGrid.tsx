@@ -23,13 +23,13 @@ const SerpFeatureGrid = ({ serpFeatures }: { serpFeatures: SerpFeatures }) => (
           key={key}
           className="flex flex-col items-center gap-2 rounded-[var(--radii-inner)] p-4 transition-colors duration-300"
           style={{
-            backgroundColor: active ? "rgba(124,58,237,0.12)" : "rgba(255,255,255,0.03)",
-            border: `1px solid ${active ? "rgba(124,58,237,0.25)" : "var(--border)"}`,
+            backgroundColor: active ? "var(--accent-purple-dim)" : "rgba(255,255,255,0.03)",
+            border: `1px solid ${active ? "var(--accent-purple-border)" : "var(--border)"}`,
           }}
         >
           <Icon
             size={20}
-            style={{ color: active ? "var(--accent-light)" : "var(--text-muted)" }}
+            style={{ color: active ? "var(--accent-purple-light)" : "var(--text-muted)" }}
           />
           <span
             className="font-mono text-[10px] uppercase tracking-widest text-center"

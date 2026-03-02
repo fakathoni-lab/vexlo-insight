@@ -8,7 +8,7 @@ const AIOverview = () => {
       className="py-[120px] px-10 max-sm:py-[80px] max-sm:px-5"
       style={{
         borderBottom: "1px solid var(--border)",
-        background: "linear-gradient(180deg, var(--bg) 0%, rgba(124,58,237,0.03) 50%, var(--bg) 100%)",
+        background: "linear-gradient(180deg, var(--bg) 0%, rgba(255,99,8,0.03) 50%, var(--bg) 100%)",
       }}
     >
       <div className="max-w-[800px] mx-auto text-center">
