@@ -23,6 +23,7 @@ interface Proof {
   ai_narrative: string | null;
   status: string;
   is_public: boolean;
+  public_slug: string | null;
   created_at: string;
   user_id: string;
 }
