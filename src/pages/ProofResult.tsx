@@ -15,28 +15,18 @@ import { Button } from "@/components/ui/button";
 interface Proof {
   id: string;
   domain: string;
-  target_keyword: string;
-  proof_score: number | null;
-  ranking_position: number | null;
-  ranking_delta: number | null;
+  keyword: string;
+  score: number;
+  current_rank: number | null;
+  delta_30: number | null;
   ai_overview: boolean | null;
-  ranking_data: {
+  rankings: {
     rankings: { keyword: string; position: number; url: string; etv: number }[];
     domain_position: number | null;
   } | null;
-  serp_features: {
-    ai_overview: boolean;
-    featured_snippet: boolean;
-    local_pack: boolean;
-    knowledge_panel: boolean;
-  } | null;
-  ai_narrative: string | null;
-  status: string;
-  is_public: boolean;
-  public_slug: string | null;
+  narrative: string | null;
   created_at: string;
   user_id: string;
-  error_message: string | null;
 }
 
 const loadingSteps = [

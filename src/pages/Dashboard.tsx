@@ -8,10 +8,9 @@ import SEO from "@/components/SEO";
 interface Proof {
   id: string;
   domain: string;
-  target_keyword: string;
-  proof_score: number | null;
-  ranking_position: number | null;
-  status: string;
+  keyword: string;
+  score: number;
+  current_rank: number | null;
   created_at: string;
 }
 
