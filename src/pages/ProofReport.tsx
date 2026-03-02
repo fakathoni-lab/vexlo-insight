@@ -188,14 +188,31 @@ const ProofReport = () => {
           <Link to="/dashboard" className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest transition-colors hover:opacity-80" style={{ color: "var(--text-dim)" }}>
             <ArrowLeft size={14} /> Dashboard
           </Link>
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-full gap-2 font-mono text-[10px] uppercase tracking-widest"
-            onClick={handleShare}
-          >
-            <Share2 size={12} /> Share
-          </Button>
+          <div className="flex items-center gap-4">
+            {isOwner && (
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="visibility"
+                  checked={isPublic}
+                  onCheckedChange={handleToggleVisibility}
+                  disabled={toggling}
+                />
+                <Label htmlFor="visibility" className="font-mono text-[10px] uppercase tracking-widest cursor-pointer" style={{ color: "var(--text-dim)" }}>
+                  {isPublic ? "Public" : "Private"}
+                </Label>
+              </div>
+            )}
+            {isPublic && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full gap-2 font-mono text-[10px] uppercase tracking-widest"
+                onClick={handleShare}
+              >
+                <Share2 size={12} /> Share
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* ── Header ── */}
