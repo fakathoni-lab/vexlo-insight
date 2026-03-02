@@ -125,6 +125,24 @@ const ProofReport = () => {
     }
   };
 
+  const handleToggleVisibility = async (checked: boolean) => {
+    if (!proof) return;
+    setToggling(true);
+    const { error: updateError } = await (supabase
+      .from("proofs")
+      .update({ is_public: checked } as any)
+      .eq("id", proof.id) as any);
+
+    if (updateError) {
+      toast.error("Failed to update visibility");
+    } else {
+      setIsPublic(checked);
+      setProof({ ...proof, is_public: checked });
+      toast.success(checked ? "Proof is now public" : "Proof is now private");
+    }
+    setToggling(false);
+  };
+
   // ── Loading skeleton ──
   if (loading) {
     return (
