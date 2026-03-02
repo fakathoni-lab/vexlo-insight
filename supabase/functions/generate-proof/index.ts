@@ -577,9 +577,10 @@ serve(async (req) => {
           Deno.env.get("SUPABASE_URL")!,
           Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
         );
+        // Mark failed by setting score to -1 as error indicator
         await supabase.from("proofs").update({
-          status: "failed",
-          error_message: (err as Error).message === "TIMEOUT" ? "Request timed out" : "Data collection failed",
+          score: -1,
+          narrative: (err as Error).message === "TIMEOUT" ? "Request timed out" : "Data collection failed",
         }).eq("id", body.proof_id);
       }
     } catch { /* ignore cleanup error */ }
