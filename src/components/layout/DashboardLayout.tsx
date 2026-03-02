@@ -17,6 +17,7 @@ const navItems = [
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/dashboard/new": "New Proof",
+  "/dashboard/domains": "Domain Search",
   "/dashboard/history": "Proof History",
   "/settings": "Settings",
 };
