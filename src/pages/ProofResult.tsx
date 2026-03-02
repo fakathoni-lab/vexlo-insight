@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getViewCount } from "@/hooks/useProofs";
 import { useAuth } from "@/hooks/useAuth";
 import ProofScoreRing from "@/components/proof/ProofScoreRing";
 import RankingChart from "@/components/proof/RankingChart";
@@ -45,6 +46,7 @@ const ProofResult = () => {
   const [proof, setProof] = useState<Proof | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewCount, setViewCount] = useState<number>(0);
 
   useEffect(() => {
     if (!id || !user) return;
@@ -64,6 +66,9 @@ const ProofResult = () => {
 
       setProof(data as Proof);
       setLoading(false);
+
+      // Fetch view count
+      getViewCount(data.id).then(setViewCount);
     };
 
     fetchProof();
@@ -197,6 +202,9 @@ const ProofResult = () => {
           </h1>
           <p className="font-body font-light mt-1" style={{ fontSize: 13, color: "var(--text-dim)" }}>
             Keyword: {proof.target_keyword} · {formattedDate}
+            {viewCount > 0 && (
+              <span style={{ color: "var(--text-muted)" }}> · Viewed {viewCount} time{viewCount !== 1 ? "s" : ""}</span>
+            )}
           </p>
         </div>
         <div
@@ -256,9 +264,11 @@ const ProofResult = () => {
 
       {/* ── Sticky Actions ── */}
       <ProofActions
+        proofId={proof.id}
         narrative={proof.ai_narrative}
         publicSlug={proof.public_slug}
         isPublic={proof.is_public}
+        onSlugUpdate={(slug) => setProof({ ...proof, public_slug: slug, is_public: true })}
       />
     </div>
   );
