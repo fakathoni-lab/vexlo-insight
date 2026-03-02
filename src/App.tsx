@@ -14,6 +14,7 @@ import ProofReport from "./pages/ProofReport";
 import ProofResult from "./pages/ProofResult";
 import PublicProof from "./pages/PublicProof";
 import Settings from "./pages/Settings";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -28,6 +29,7 @@ const App = () => (
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/proof/:id" element={<ProofReport />} />
         <Route path="/p/:slug" element={<PublicProof />} />
         <Route path="/check" element={<DomainSearch />} />
