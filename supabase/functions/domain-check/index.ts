@@ -208,6 +208,13 @@ Deno.serve(async (req) => {
     const dynaData = await dynaRes.json();
     log({ request_id: requestId, event: "dynadot_response", data: JSON.stringify(dynaData).slice(0, 500) });
 
+    // ── Check for top-level API errors (unauthorized IP, bad key, etc.) ──
+    if (dynaData?.Response?.ResponseCode === "-1" || dynaData?.Response?.Error) {
+      const apiErr = dynaData.Response.Error ?? "Unknown API error";
+      log({ request_id: requestId, event: "dynadot_api_error", error: apiErr });
+      return errResponse("SERVICE_UNAVAILABLE", "Domain lookup failed. Please try again.", 503);
+    }
+
     // ── Normalize legacy API v3 response ──
     const searchHeader = dynaData?.SearchResponse?.SearchHeader;
     const searchResults = dynaData?.SearchResponse?.SearchResults ?? [];
