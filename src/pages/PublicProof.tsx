@@ -1,0 +1,214 @@
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import ScoreRing from "@/components/proof/ScoreRing";
+import RankBar from "@/components/proof/RankBar";
+import SerpFeatureGrid from "@/components/proof/SerpFeatureGrid";
+import RankingsTable from "@/components/proof/RankingsTable";
+import NarrativeCard from "@/components/proof/NarrativeCard";
+import { Button } from "@/components/ui/button";
+import { Share2, Loader2, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
+
+interface Proof {
+  id: string;
+  domain: string;
+  target_keyword: string;
+  proof_score: number | null;
+  ranking_position: number | null;
+  ranking_delta: number | null;
+  ai_overview: boolean | null;
+  ranking_data: { rankings: { keyword: string; position: number; url: string; etv: number }[]; domain_position: number | null } | null;
+  serp_features: { ai_overview: boolean; featured_snippet: boolean; local_pack: boolean; knowledge_panel: boolean } | null;
+  ai_narrative: string | null;
+  status: string;
+  is_public: boolean;
+  public_slug: string | null;
+  created_at: string;
+}
+
+const PublicProof = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const [proof, setProof] = useState<Proof | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!slug) return;
+
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
+    let pollCount = 0;
+
+    const fetchProof = async () => {
+      const query = supabase.from("proofs").select("*") as any;
+      const { data, error: fetchError } = await query
+        .eq("public_slug", slug)
+        .eq("is_public", true)
+        .maybeSingle();
+
+      if (fetchError) {
+        setError("Failed to load proof.");
+        setLoading(false);
+        return;
+      }
+
+      if (!data) {
+        setError("Proof not found or is private.");
+        setLoading(false);
+        return;
+      }
+
+      const typedData = data as Proof;
+      setProof(typedData);
+      setLoading(false);
+
+      if (typedData.status === "complete" || typedData.status === "failed") {
+        if (pollInterval) clearInterval(pollInterval);
+      }
+    };
+
+    fetchProof();
+
+    pollInterval = setInterval(() => {
+      pollCount++;
+      if (pollCount >= 15) {
+        if (pollInterval) clearInterval(pollInterval);
+        return;
+      }
+      fetchProof();
+    }, 2000);
+
+    return () => { if (pollInterval) clearInterval(pollInterval); };
+  }, [slug]);
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied to clipboard");
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "var(--bg)" }}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-20 h-20 rounded-full animate-pulse" style={{ backgroundColor: "rgba(255,255,255,0.05)" }} />
+          <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Loading proof...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !proof) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "var(--bg)" }}>
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertTriangle size={32} style={{ color: "var(--accent-danger)" }} />
+          <p className="font-body text-lg" style={{ color: "var(--text)" }}>{error ?? "Proof not found"}</p>
+          <Link to="/">
+            <Button variant="outline" className="rounded-full">Back to Home</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const isProcessing = proof.status === "processing" || proof.status === "pending";
+  const formattedDate = new Date(proof.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
+      <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
+
+        {/* Nav */}
+        <div className="flex items-center justify-between mb-8">
+          <Link to="/" className="font-headline text-lg" style={{ color: "var(--text)" }}>VEXLO</Link>
+          <Button variant="outline" size="sm" className="rounded-full gap-2 font-mono text-[10px] uppercase tracking-widest" onClick={handleShare}>
+            <Share2 size={12} /> Share
+          </Button>
+        </div>
+
+        {/* Header */}
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--text-dim)" }}>{proof.domain}</span>
+            <span style={{ color: "var(--text-muted)" }}>·</span>
+            <span className="font-mono text-[11px]" style={{ color: "var(--text-muted)" }}>{formattedDate}</span>
+          </div>
+          <h1 className="font-headline text-3xl sm:text-4xl mb-3" style={{ color: "var(--text)" }}>"{proof.target_keyword}"</h1>
+        </div>
+
+        {isProcessing && (
+          <div className="rounded-[var(--radii-outer)] p-8 flex flex-col items-center gap-4 mb-10" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}>
+            <Loader2 size={32} className="animate-spin" style={{ color: "var(--accent-light)" }} />
+            <p className="font-body text-sm" style={{ color: "var(--text-dim)" }}>Analyzing SERP data and generating proof score...</p>
+          </div>
+        )}
+
+        {proof.status === "complete" && (
+          <div className="flex flex-col gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="rounded-[var(--radii-outer)] p-6 flex flex-col items-center gap-3" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}>
+                <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Proof Score</p>
+                <ScoreRing score={proof.proof_score ?? 0} size={120} />
+              </div>
+              <div className="rounded-[var(--radii-outer)] p-6 flex flex-col gap-3" style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}>
+                <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Ranking Position</p>
+                <div className="flex items-end gap-3">
+                  <span className="font-headline text-5xl" style={{ color: "var(--text)" }}>
+                    {proof.ranking_position ? `#${proof.ranking_position}` : "—"}
+                  </span>
+                  {proof.ranking_delta !== null && proof.ranking_delta !== 0 && (
+                    <span className="font-mono text-sm mb-1" style={{ color: (proof.ranking_delta ?? 0) > 0 ? "var(--accent-success)" : "var(--accent-danger)" }}>
+                      {(proof.ranking_delta ?? 0) > 0 ? "▲" : "▼"} {Math.abs(proof.ranking_delta ?? 0)} in 30d
+                    </span>
+                  )}
+                </div>
+                {proof.ranking_position && <RankBar keyword={proof.target_keyword} position={proof.ranking_position} />}
+              </div>
+            </div>
+
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest mb-3" style={{ color: "var(--text-dim)" }}>SERP Features</p>
+              <SerpFeatureGrid serpFeatures={proof.serp_features ?? { ai_overview: false, featured_snippet: false, local_pack: false, knowledge_panel: false }} />
+            </div>
+
+            {proof.ranking_data?.rankings && proof.ranking_data.rankings.length > 0 && (
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest mb-3" style={{ color: "var(--text-dim)" }}>Top 20 Rankings</p>
+                <RankingsTable rankings={proof.ranking_data.rankings} domainPosition={proof.ranking_data.domain_position} domain={proof.domain} />
+              </div>
+            )}
+
+            <NarrativeCard narrative={proof.ai_narrative} />
+
+            <div className="text-center pt-4 pb-8">
+              <Link to="/">
+                <Button
+                  className="rounded-full h-[var(--taxbutton-height)] px-8 font-mono text-[10px] uppercase tracking-widest"
+                  style={{ backgroundColor: "var(--text)", color: "var(--bg)", boxShadow: "var(--emboss-shadow), var(--inset-shadow)" }}
+                >
+                  Generate Your Own Proof →
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {proof.status === "failed" && (
+          <div className="rounded-[var(--radii-outer)] p-8 flex flex-col items-center gap-4" style={{ backgroundColor: "var(--bg-card)", border: "1px solid rgba(255,71,71,0.2)" }}>
+            <AlertTriangle size={32} style={{ color: "var(--accent-danger)" }} />
+            <p className="font-body text-sm" style={{ color: "var(--text-dim)" }}>Proof generation failed.</p>
+            <Link to="/">
+              <Button variant="outline" className="rounded-full">Generate Your Own</Button>
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default PublicProof;

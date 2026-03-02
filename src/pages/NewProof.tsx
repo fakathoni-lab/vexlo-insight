@@ -76,7 +76,8 @@ const NewProof = () => {
     setState("loading");
     setActiveStep(0);
 
-    // 1. Insert pending proof row (target schema columns)
+    // 1. Insert pending proof row with public_slug
+    const publicSlug = crypto.randomUUID().slice(0, 8);
     const { data: proofRow, error: insertError } = await supabase
       .from("proofs")
       .insert({
@@ -84,6 +85,8 @@ const NewProof = () => {
         domain: data.domain,
         target_keyword: data.keyword,
         status: "pending",
+        public_slug: publicSlug,
+        is_public: true,
       } as any)
       .select("id")
       .single();
