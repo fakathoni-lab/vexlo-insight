@@ -444,15 +444,12 @@ serve(async (req) => {
       const cached = typeof cachedData === "string" ? JSON.parse(cachedData) : cachedData;
 
       await supabase.from("proofs").update({
-        proof_score: cached.proof_score,
-        ranking_position: cached.ranking_position,
-        ranking_delta: cached.ranking_delta,
-        ai_overview: cached.ai_overview,
-        ranking_data: cached.ranking_data,
-        serp_features: cached.serp_features,
-        ai_narrative: null,
-        status: "complete",
-        api_cost_units: 0,
+        score: cached.proof_score ?? cached.score ?? 0,
+        current_rank: cached.ranking_position ?? cached.current_rank ?? null,
+        delta_30: cached.ranking_delta ?? cached.delta_30 ?? null,
+        ai_overview: cached.ai_overview ?? false,
+        rankings: cached.ranking_data ?? cached.rankings ?? null,
+        narrative: null,
       }).eq("id", proof_id);
 
       return new Response(
