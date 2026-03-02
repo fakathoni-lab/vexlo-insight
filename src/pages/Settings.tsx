@@ -78,6 +78,8 @@ const Section = ({
 /* ── Main ── */
 const Settings = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { checkout, isLoading: checkoutLoading, error: checkoutError } = usePolarCheckout();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileSaved, setProfileSaved] = useState(false);
