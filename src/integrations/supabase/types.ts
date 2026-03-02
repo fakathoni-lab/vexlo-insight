@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      domain_availability_cache: {
+        Row: {
+          available: boolean
+          checked_at: string
+          currency: string | null
+          domain: string
+          expires_at: string
+          id: string
+          premium: boolean | null
+          price: number | null
+          pricing: Json | null
+          source: string | null
+        }
+        Insert: {
+          available: boolean
+          checked_at?: string
+          currency?: string | null
+          domain: string
+          expires_at: string
+          id?: string
+          premium?: boolean | null
+          price?: number | null
+          pricing?: Json | null
+          source?: string | null
+        }
+        Update: {
+          available?: boolean
+          checked_at?: string
+          currency?: string | null
+          domain?: string
+          expires_at?: string
+          id?: string
+          premium?: boolean | null
+          price?: number | null
+          pricing?: Json | null
+          source?: string | null
+        }
+        Relationships: []
+      }
+      domain_check_rate_limit: {
+        Row: {
+          id: string
+          request_count: number | null
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          id?: string
+          request_count?: number | null
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          id?: string
+          request_count?: number | null
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           agency_name: string | null
