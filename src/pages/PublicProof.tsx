@@ -40,14 +40,11 @@ const PublicProof = () => {
     let pollCount = 0;
 
     const fetchProof = async () => {
-      const { data, error: fetchError } = await supabase
-        .from("proofs")
-        .select("*")
-        .eq("public_slug" as any, slug)
-        .eq("is_public" as any, true)
+      const query = supabase.from("proofs").select("*") as any;
+      const { data, error: fetchError } = await query
+        .eq("public_slug", slug)
+        .eq("is_public", true)
         .maybeSingle();
-
-      const typedData = data as unknown as Proof | null;
 
       if (fetchError) {
         setError("Failed to load proof.");
@@ -61,10 +58,11 @@ const PublicProof = () => {
         return;
       }
 
-      setProof(data);
+      const typedData = data as Proof;
+      setProof(typedData);
       setLoading(false);
 
-      if (data.status === "complete" || data.status === "failed") {
+      if (typedData.status === "complete" || typedData.status === "failed") {
         if (pollInterval) clearInterval(pollInterval);
       }
     };
