@@ -424,7 +424,7 @@ serve(async (req) => {
     }
 
     // Mark as processing
-    await supabase.from("proofs").update({ status: "processing" }).eq("id", proof_id);
+    // Mark as processing (no status column yet — skip)
 
     // ── Check Redis cache ──
     const redis = getRedis();
