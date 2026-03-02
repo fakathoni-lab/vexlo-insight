@@ -2,3 +2,9 @@ project_id = "tnriaigsdmnscfmrlbrh"
 
 [functions.generate-proof]
 verify_jwt = false
+
+[functions.domain-check]
+verify_jwt = false
+
+[functions.domain-register]
+verify_jwt = false

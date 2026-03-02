@@ -1,109 +1,163 @@
 
+## Domain A — Database Audit Fixes
 
-## Dynadot Domain Integration for VEXLO
+### Status: READY TO APPLY
 
-### Context
-VEXLO needs domain availability checking, pricing retrieval, and future registration capability via Dynadot's RESTful API v2. All logic runs exclusively in Supabase Edge Functions. No frontend exposure of API keys.
+Run the following SQL in **Supabase SQL Editor** (Dashboard → SQL Editor → New Query → paste → Run).
 
-### Prerequisites -- Secret Setup
-Two secrets are needed before implementation:
-- `DYNADOT_API_KEY` -- from Dynadot account > Tools > API
-- `DYNADOT_API_SECRET` -- for HMAC-SHA256 request signing (required for transactional endpoints like register)
+This single script fixes all 4 CRITICAL FAILS and 8 MAJOR WARNS from the audit.
 
-I will prompt you to add these secrets before writing the Edge Functions.
+---
 
-### Architecture
+### SQL Migration (copy & run in Supabase SQL Editor)
 
-```text
-Frontend (React)
-    │
-    ▼
-supabase.functions.invoke("domain-check")
-supabase.functions.invoke("domain-register")
-    │
-    ▼
-Edge Functions (Deno)
-    ├── domain-check/index.ts     ← search + pricing (read-only)
-    └── domain-register/index.ts  ← registration (transactional, X-Signature)
-    │
-    ▼
-Dynadot REST API v2
-    GET /restful/v2/domains/{domain}/search?show_price=true&currency=usd
-    POST /restful/v2/domains/{domain}/register (requires HMAC signing)
+```sql
+-- ============================================================
+-- VEXLO Database Audit Fixes — Domain A
+-- Addresses: 4 CRITICAL FAILS + 8 MAJOR WARNS
+-- Safe to run idempotently (uses IF NOT EXISTS / DROP IF EXISTS)
+-- ============================================================
+
+-- ────────────────────────────────────────────────────────────
+-- FIX 1: Add ON DELETE CASCADE to all foreign keys
+-- ────────────────────────────────────────────────────────────
+
+-- proofs.user_id → profiles.id
+ALTER TABLE public.proofs
+  DROP CONSTRAINT IF EXISTS proofs_user_id_fkey;
+ALTER TABLE public.proofs
+  ADD CONSTRAINT proofs_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+-- subscriptions.user_id → profiles.id
+ALTER TABLE public.subscriptions
+  DROP CONSTRAINT IF EXISTS subscriptions_user_id_fkey;
+ALTER TABLE public.subscriptions
+  ADD CONSTRAINT subscriptions_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+-- proof_views.proof_id → proofs.id
+ALTER TABLE public.proof_views
+  DROP CONSTRAINT IF EXISTS proof_views_proof_id_fkey;
+ALTER TABLE public.proof_views
+  ADD CONSTRAINT proof_views_proof_id_fkey
+  FOREIGN KEY (proof_id) REFERENCES public.proofs(id) ON DELETE CASCADE;
+
+-- ────────────────────────────────────────────────────────────
+-- FIX 2: Add missing columns to proofs
+-- ────────────────────────────────────────────────────────────
+
+ALTER TABLE public.proofs ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
+ALTER TABLE public.proofs ADD COLUMN IF NOT EXISTS public_slug TEXT;
+ALTER TABLE public.proofs ADD COLUMN IF NOT EXISTS is_public BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.proofs ADD COLUMN IF NOT EXISTS error_message TEXT;
+ALTER TABLE public.proofs ADD COLUMN IF NOT EXISTS serp_features JSONB;
+
+-- Unique index on public_slug (partial — only non-null)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_proofs_public_slug
+  ON public.proofs (public_slug) WHERE public_slug IS NOT NULL;
+
+-- ────────────────────────────────────────────────────────────
+-- FIX 3: Add CHECK constraints
+-- ────────────────────────────────────────────────────────────
+
+DO $$ BEGIN
+  ALTER TABLE public.proofs ADD CONSTRAINT chk_proofs_status
+    CHECK (status IN ('pending', 'processing', 'complete', 'failed'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.proofs ADD CONSTRAINT chk_proofs_score
+    CHECK (score >= 0 AND score <= 100);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.profiles ADD CONSTRAINT chk_profiles_plan
+    CHECK (plan IN ('free', 'starter', 'pro', 'elite'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.profiles ADD CONSTRAINT chk_profiles_plan_status
+    CHECK (plan_status IN ('active', 'past_due', 'canceled', 'trialing'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- ────────────────────────────────────────────────────────────
+-- FIX 4: RLS — UPDATE policy on proofs + fix public SELECT + subscriptions
+-- ────────────────────────────────────────────────────────────
+
+ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their own subscriptions" ON public.subscriptions;
+CREATE POLICY "Users can view their own subscriptions"
+  ON public.subscriptions FOR SELECT
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update their own proofs" ON public.proofs;
+CREATE POLICY "Users can update their own proofs"
+  ON public.proofs FOR UPDATE
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "public_proofs" ON public.proofs;
+CREATE POLICY "public_proofs"
+  ON public.proofs FOR SELECT
+  USING (is_public = true AND status = 'complete');
+
+-- ────────────────────────────────────────────────────────────
+-- FIX 5: Missing indexes
+-- ────────────────────────────────────────────────────────────
+
+CREATE INDEX IF NOT EXISTS idx_proofs_user_created
+  ON public.proofs (user_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_proof_views_proof_id
+  ON public.proof_views (proof_id);
+
+CREATE INDEX IF NOT EXISTS idx_profiles_stripe_id
+  ON public.profiles (stripe_id) WHERE stripe_id IS NOT NULL;
+
+-- ────────────────────────────────────────────────────────────
+-- FIX 6: Secure handle_new_user() with explicit search_path
+-- ────────────────────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name)
+  VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'full_name');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- ────────────────────────────────────────────────────────────
+-- Backfill: Mark existing proofs with score > 0 as 'complete'
+-- ────────────────────────────────────────────────────────────
+
+UPDATE public.proofs SET status = 'complete' WHERE score > 0 AND status = 'pending';
 ```
 
-### Implementation Plan
+---
 
-#### 1. Add Supabase Secrets
-- `DYNADOT_API_KEY` and `DYNADOT_API_SECRET`
+### What This Fixes
 
-#### 2. Edge Function: `domain-check`
-Single function handling availability + multi-year pricing in one call.
+| # | Issue | Fix |
+|---|-------|-----|
+| C1 | No ON DELETE CASCADE on FKs | Added CASCADE to all 3 FKs |
+| C2 | proofs UPDATE RLS missing | Added UPDATE policy |
+| C3 | public SELECT references missing columns | Added columns first, then recreated policy |
+| C4 | subscriptions RLS not enabled | Enabled + added SELECT policy |
+| W1 | No CHECK constraints | Added on status, score, plan, plan_status |
+| W2 | Missing proof_views index | Added idx_proof_views_proof_id |
+| W3 | Missing profiles.stripe_id index | Added idx_profiles_stripe_id |
+| W4 | handle_new_user lacks search_path | Recreated with SET search_path |
+| W5 | score=0 ambiguity | Added status column + backfill |
+| W6 | Missing public_slug/is_public | Added columns + unique index |
 
-- **Auth**: Authenticated users only (getClaims)
-- **Input**: `{ domain: "example.com" }` validated with Zod
-- **Dynadot call**: `GET /restful/v2/domains/{domain}/search?show_price=true&currency=usd`
-- **Response normalization**:
-```json
-{
-  "success": true,
-  "domain": "example.com",
-  "available": true,
-  "premium": false,
-  "pricing": {
-    "1": { "registration": 10.99, "renewal": 12.99 },
-    "2": { "registration": 21.98, "renewal": 25.98 },
-    "3": { "registration": 32.97, "renewal": 38.97 }
-  },
-  "currency": "USD"
-}
-```
-- **Caching**: Uses existing Upstash Redis with 5-minute TTL for availability, 1-hour TTL for pricing
-- **Rate limiting**: Per-user limit (10 checks/minute) via Redis sliding window
-- **Security**: Domain input sanitized, lowercased, stripped of protocol/path; no raw Dynadot errors leaked
+### After Running
 
-#### 3. Edge Function: `domain-register` (Phase 2 -- architecture only)
-Registration is a financial transaction. This function will be scaffolded but not wired to the frontend yet, matching the existing constraint that Dynadot registration is deferred from MVP Stage 1.
-
-- **Auth**: Authenticated + plan check
-- **Input**: `{ domain, years, contact_info }` with Zod
-- **HMAC-SHA256 signing**: Uses `DYNADOT_API_SECRET` to compute `X-Signature` header
-- **Idempotency**: `X-Request-ID` header with UUID per request
-- **DB logging**: Insert into a new `domain_orders` table before calling Dynadot, update status after
-
-#### 4. Database Migration
-New `domain_orders` table (for Phase 2 readiness):
-- `id` (uuid), `user_id` (fk profiles), `domain` (text), `years` (int), `status` (pending/processing/complete/failed), `dynadot_order_id` (text nullable), `amount` (numeric), `created_at`, `updated_at`
-- RLS: users can only read their own orders
-
-#### 5. Update `supabase/config.toml`
-Add `[functions.domain-check]` and `[functions.domain-register]` with `verify_jwt = false`.
-
-#### 6. Frontend Hook: `useDomainCheck`
-- Custom hook wrapping `supabase.functions.invoke("domain-check")`
-- Returns `{ data, isLoading, error, checkDomain }`
-- Used in a future Domain Search UI component
-
-### Security Notes
-- API key stored as Supabase secret, accessed only in Edge Functions via `Deno.env.get()`
-- HMAC-SHA256 signature prevents request tampering on transactional endpoints
-- All domain inputs sanitized server-side (lowercase, ASCII-only, no subdomains)
-- Per-user rate limiting via Redis prevents abuse
-- Raw Dynadot error messages are never forwarded to the client
-- No `.env` files -- Lovable uses Supabase secrets exclusively
-
-### What Gets Built Now vs Later
-| Now (this implementation) | Later (Phase 2) |
-|---|---|
-| `domain-check` Edge Function (fully functional) | `domain-register` Edge Function (scaffolded, not wired) |
-| Redis caching + rate limiting | Domain purchase UI flow |
-| `useDomainCheck` hook | `domain_orders` table + full registration |
-| Config.toml updates | Stripe payment integration for domains |
-
-### Technical Details
-- **Dynadot API v2 base URL**: `https://api.dynadot.com/restful/v2`
-- **Auth header**: `Authorization: Bearer {DYNADOT_API_KEY}`
-- **Accept header**: `application/json`
-- **Search endpoint returns** pricing for 1-10 years automatically when `show_price=true`
-- **Rate limits**: Regular tier = 1 req/sec, 60/min
-
+1. Confirm "Success" in SQL Editor
+2. Go to **Table Editor → proofs** and verify `status`, `public_slug`, `is_public` columns exist
+3. Come back here and tell me it's done — I'll update the app code to use the new columns
