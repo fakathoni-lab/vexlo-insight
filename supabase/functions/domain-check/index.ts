@@ -30,15 +30,17 @@ async function hashString(input: string): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+/** Convert a hex hash to a deterministic UUID v4 format for storage in uuid column */
+function hashToUuid(hex: string): string {
+  const h = hex.slice(0, 32);
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}
+
 function log(fields: Record<string, unknown>) {
   console.log(JSON.stringify({ ts: new Date().toISOString(), fn: "domain-check", ...fields }));
 }
 
-function errResponse(
-  code: string,
-  message: string,
-  status: number
-): Response {
+function errResponse(code: string, message: string, status: number): Response {
   return new Response(
     JSON.stringify({ success: false, error: code, message }),
     { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -56,32 +58,40 @@ Deno.serve(async (req) => {
   const startMs = Date.now();
 
   try {
-    // ── Auth ──
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return errResponse("UNAUTHORIZED", "Authentication required", 401);
-    }
-
-    // User-scoped client for auth validation
-    const supabaseUser = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: userErr } = await supabaseUser.auth.getUser();
-    if (userErr || !user) {
-      return errResponse("UNAUTHORIZED", "Authentication required", 401);
-    }
-    const userId = user.id;
-
-    // Service-role client for DB ops (cache + rate limit tables have restrictive RLS)
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const userIdHash = await hashString(userId);
+    // ── Auth (optional) ──
+    let userId: string | null = null;
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const supabaseUser = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      const { data: { user } } = await supabaseUser.auth.getUser();
+      userId = user?.id ?? null;
+    }
+
+    // Rate limit identifier: user_id if logged in, otherwise IP hash → deterministic UUID
+    let rateLimitId: string;
+    let logHash: string;
+
+    if (userId) {
+      rateLimitId = userId;
+      logHash = await hashString(userId);
+    } else {
+      const clientIp =
+        req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+        req.headers.get("cf-connecting-ip") ||
+        "unknown";
+      const ipHash = await hashString(clientIp);
+      rateLimitId = hashToUuid(ipHash);
+      logHash = ipHash.slice(0, 16);
+    }
 
     // ── Rate limit (DB-backed) ──
     const windowStart = new Date(Date.now() - 60_000).toISOString();
@@ -89,32 +99,30 @@ Deno.serve(async (req) => {
     const { data: rateRow } = await supabaseAdmin
       .from("domain_check_rate_limit")
       .select("id, request_count, window_start")
-      .eq("user_id", userId)
+      .eq("user_id", rateLimitId)
       .gte("window_start", windowStart)
       .maybeSingle();
 
     if (rateRow && rateRow.request_count >= 10) {
-      log({ request_id: requestId, event: "rate_limited", user_id_hash: userIdHash });
+      log({ request_id: requestId, event: "rate_limited", id_hash: logHash });
       return errResponse("RATE_LIMITED", "Too many requests. Try again in a minute.", 429);
     }
 
-    // Upsert rate counter
     if (rateRow) {
       await supabaseAdmin
         .from("domain_check_rate_limit")
         .update({ request_count: rateRow.request_count + 1 })
         .eq("id", rateRow.id);
     } else {
-      // Delete old windows for this user, then insert fresh
       await supabaseAdmin
         .from("domain_check_rate_limit")
         .delete()
-        .eq("user_id", userId)
+        .eq("user_id", rateLimitId)
         .lt("window_start", windowStart);
 
       await supabaseAdmin
         .from("domain_check_rate_limit")
-        .insert({ user_id: userId, request_count: 1, window_start: new Date().toISOString() });
+        .insert({ user_id: rateLimitId, request_count: 1, window_start: new Date().toISOString() });
     }
 
     // ── Input validation ──
@@ -147,7 +155,7 @@ Deno.serve(async (req) => {
         cache_hit: true,
         available: cached.available,
         latency_ms: Date.now() - startMs,
-        user_id_hash: userIdHash,
+        id_hash: logHash,
       });
 
       return new Response(
@@ -221,7 +229,6 @@ Deno.serve(async (req) => {
     }
 
     const checkedAt = new Date().toISOString();
-    // Available domains cached 1h, unavailable 10min
     const ttlSeconds = available ? 3600 : 600;
     const expiresAt = new Date(Date.now() + ttlSeconds * 1000).toISOString();
 
@@ -249,7 +256,7 @@ Deno.serve(async (req) => {
       cache_hit: false,
       available,
       latency_ms: Date.now() - startMs,
-      user_id_hash: userIdHash,
+      id_hash: logHash,
     });
 
     return new Response(
