@@ -1,7 +1,7 @@
+import { useNavigate } from "react-router-dom";
+
 const AIOverview = () => {
-  const scrollTo = (id: string) => {
-    document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
-  };
+  const navigate = useNavigate();
 
   return (
     <section
