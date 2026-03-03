@@ -44,16 +44,20 @@ function log(fields: Record<string, unknown>) {
   console.log(JSON.stringify({ ts: new Date().toISOString(), fn: "polar-webhook", ...fields }));
 }
 
-// Hardcoded plan→limit map until plans table exists (M7)
-function getPlanLimit(planName: string): number {
+// Query plans table for proofs_limit by plan name
+async function getPlanLimit(supabase: ReturnType<typeof createClient>, planName: string): Promise<number> {
   const normalized = planName.toLowerCase().replace(/[\s_-]+/g, "_");
-  const map: Record<string, number> = {
-    free: 5,
-    starter: 50,
-    agency_pro: 200,
-    agency_elite: 999999,
-  };
-  return map[normalized] ?? 5;
+  const { data, error } = await supabase
+    .from("plans")
+    .select("proofs_limit")
+    .eq("name", normalized)
+    .eq("is_active", true)
+    .single();
+  if (error || !data) {
+    log({ event: "plan_lookup_failed", plan: normalized, error: error?.message });
+    return 5; // fallback to free
+  }
+  return data.proofs_limit;
 }
 
 Deno.serve(async (req) => {
@@ -129,7 +133,7 @@ Deno.serve(async (req) => {
 
         // Update profile plan
         const planName = sub.product?.name?.toLowerCase() ?? "premium";
-        const planLimit = getPlanLimit(planName);
+        const planLimit = await getPlanLimit(supabaseAdmin, planName);
         await supabaseAdmin.from("profiles").update({
           plan: planName,
           proofs_limit: planLimit,
