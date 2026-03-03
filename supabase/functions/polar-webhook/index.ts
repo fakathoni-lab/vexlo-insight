@@ -154,11 +154,12 @@ Deno.serve(async (req) => {
 
         await supabaseAdmin.from("profiles").update({
           plan: "free",
+          proofs_limit: 5,
           plan_status: "canceled",
           updated_at: new Date().toISOString(),
         }).eq("id", userId);
 
-        log({ event: "subscription_canceled", user_id: userId });
+        log({ event: "subscription_canceled", user_id: userId, proofs_limit: 5 });
         break;
       }
 
