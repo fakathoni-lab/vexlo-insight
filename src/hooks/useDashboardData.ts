@@ -7,6 +7,8 @@ export interface DashboardMetrics {
   proofsGenerated: number;
   activeClients: number;
   closeRate: number;
+  proofsUsed: number;
+  proofsLimit: number;
 }
 
 export interface ProofSession {
