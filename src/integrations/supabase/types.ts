@@ -74,6 +74,36 @@ export type Database = {
         }
         Relationships: []
       }
+      plans: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          is_active: boolean
+          name: string
+          price_monthly: number
+          proofs_limit: number
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id?: string
+          is_active?: boolean
+          name: string
+          price_monthly?: number
+          proofs_limit: number
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_monthly?: number
+          proofs_limit?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           agency_name: string | null
