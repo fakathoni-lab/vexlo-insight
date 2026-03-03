@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
 
         // Update profile plan
         const planName = sub.product?.name?.toLowerCase() ?? "premium";
-        const planLimit = getPlanLimit(planName);
+        const planLimit = await getPlanLimit(supabaseAdmin, planName);
         await supabaseAdmin.from("profiles").update({
           plan: planName,
           proofs_limit: planLimit,
