@@ -1,22 +1,26 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Polar product ID for Premium $2/mo
-const POLAR_PREMIUM_PRODUCT_ID = "a59f2d3a-790d-4e95-a875-5e5c35e2e7dd";
+// Polar product IDs — replace with real IDs from Polar dashboard
+export const POLAR_PRODUCT_STARTER = "PLACEHOLDER_STARTER_PRODUCT_ID"; // [PLACEHOLDER] Replace with Polar Starter product ID
+export const POLAR_PRODUCT_AGENCY_PRO = "PLACEHOLDER_AGENCY_PRO_PRODUCT_ID"; // [PLACEHOLDER] Replace with Polar Agency Pro product ID
+export const POLAR_PRODUCT_AGENCY_ELITE = "PLACEHOLDER_AGENCY_ELITE_PRODUCT_ID"; // [PLACEHOLDER] Replace with Polar Agency Elite product ID
 
 export function usePolarCheckout() {
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const checkout = useCallback(async (productId?: string) => {
+  const checkout = useCallback(async (productId: string) => {
     setIsLoading(true);
+    setLoadingProductId(productId);
     setError(null);
 
     try {
       const { data, error: fnErr } = await supabase.functions.invoke("polar-checkout", {
         body: {
-          productId: productId || POLAR_PREMIUM_PRODUCT_ID,
-          successUrl: `${window.location.origin}/settings?checkout=success`,
+          productId,
+          successUrl: `${window.location.origin}/webhook-success`,
         },
       });
 
@@ -34,8 +38,9 @@ export function usePolarCheckout() {
       setError(e.message ?? "Unexpected error");
     } finally {
       setIsLoading(false);
+      setLoadingProductId(null);
     }
   }, []);
 
-  return { checkout, isLoading, error };
+  return { checkout, isLoading, loadingProductId, error };
 }
