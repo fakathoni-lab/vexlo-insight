@@ -85,7 +85,7 @@ const SegmentSelector = () => {
             <div>
               <p className="font-headline text-2xl mb-4" style={{ color: "var(--text)" }}>{seg.price}</p>
               <button
-                onClick={() => scrollTo(seg.href)}
+                onClick={() => navigate(seg.href)}
                 className={seg.highlight ? "btn-primary w-full" : "btn-ghost w-full"}
               >
                 {seg.cta}
