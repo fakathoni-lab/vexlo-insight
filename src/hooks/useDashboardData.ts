@@ -112,11 +112,16 @@ export const useDashboardData = (): DashboardData => {
         ? Math.round((closedCount / totalCount) * 1000) / 10
         : 0;
 
+      const proofsUsed = profileRes.data?.proofs_used ?? 0;
+      const proofsLimit = profileRes.data?.proofs_limit ?? 5;
+
       setMetrics({
-        totalRevenue: 0, // revenue not tracked in proofs table yet
+        totalRevenue: 0,
         proofsGenerated: totalCount,
         activeClients: clientsRes.count ?? 0,
         closeRate,
+        proofsUsed,
+        proofsLimit,
       });
 
       setRecentActivity(

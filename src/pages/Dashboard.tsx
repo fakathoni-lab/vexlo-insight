@@ -11,8 +11,8 @@ const Dashboard = () => {
   const { metrics, recentActivity, isLoading, error } = useDashboardData();
   const [errorDismissed, setErrorDismissed] = useState(false);
 
-  const proofsUsed = metrics?.proofsGenerated ?? 0;
-  const proofsLimit = 5; // fallback; real limit comes from profile
+  const proofsUsed = metrics?.proofsUsed ?? 0;
+  const proofsLimit = metrics?.proofsLimit ?? 5;
   const proofsRemaining = Math.max(0, proofsLimit - proofsUsed);
 
   const metricItems = [
