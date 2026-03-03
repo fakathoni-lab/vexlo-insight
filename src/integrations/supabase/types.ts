@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      clients: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          domain: string | null
+          id: string
+          name: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          domain?: string | null
+          id?: string
+          name?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          domain?: string | null
+          id?: string
+          name?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       domain_availability_cache: {
         Row: {
           available: boolean
@@ -299,6 +326,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_status: {
+        Row: {
+          id: number
+          service_name: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number
+          service_name: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number
+          service_name?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       waitlist: {
         Row: {
