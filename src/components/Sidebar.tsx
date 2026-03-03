@@ -91,7 +91,7 @@ const Sidebar = ({ isOpen, onToggle, activeItem, onNavClick }: SidebarProps) => 
               {/* Active indicator bar */}
               {active && (
                 <span
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-sm"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-sm animate-sidebar-glow"
                   style={{
                     height: "60%",
                     background: "#6366f1",
