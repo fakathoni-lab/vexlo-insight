@@ -16,6 +16,8 @@ import PublicProof from "./pages/PublicProof";
 import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
+import WebhookSuccess from "./pages/WebhookSuccess";
+import WebhookCancel from "./pages/WebhookCancel";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
