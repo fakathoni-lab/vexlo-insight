@@ -29,6 +29,22 @@ const NewProof = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
+  const [credits, setCredits] = useState<{ used: number; limit: number } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("proofs_used, proofs_limit")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) setCredits({ used: data.proofs_used ?? 0, limit: data.proofs_limit ?? 5 });
+      });
+  }, [user]);
+
+  const remaining = credits ? Math.max(0, credits.limit - credits.used) : null;
+  const isExhausted = remaining !== null && remaining <= 0;
 
   const {
     register,
