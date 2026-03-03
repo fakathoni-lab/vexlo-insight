@@ -98,10 +98,8 @@ const Hero = () => {
           </div>
           <button
             className="ann-btn"
-            onClick={() => {
-              const el = document.querySelector("#waitlist");
-              el?.scrollIntoView({ behavior: "smooth" });
-            }}
+            onClick={() => navigate("/pricing")}
+          >
           >
             Claim Founding Member Access
           </button>

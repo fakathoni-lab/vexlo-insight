@@ -56,7 +56,7 @@ const AIOverview = () => {
           </p>
         </div>
 
-        <button onClick={() => scrollTo("#waitlist")} className="btn-primary">
+        <button onClick={() => navigate("/pricing")} className="btn-primary">
           See AI Overview Impact Report Example
         </button>
       </div>
