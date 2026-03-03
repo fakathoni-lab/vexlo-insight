@@ -1,7 +1,9 @@
 import { ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useStarfield } from "@/hooks/useStarfield";
 
 const Hero = () => {
+  const navigate = useNavigate();
   const canvasRef = useStarfield();
 
   return (
@@ -96,10 +98,7 @@ const Hero = () => {
           </div>
           <button
             className="ann-btn"
-            onClick={() => {
-              const el = document.querySelector("#waitlist");
-              el?.scrollIntoView({ behavior: "smooth" });
-            }}
+            onClick={() => navigate("/pricing")}
           >
             Claim Founding Member Access
           </button>

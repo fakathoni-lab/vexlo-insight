@@ -1,9 +1,8 @@
 import { Award } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CategoryOwnership = () => {
-  const scrollTo = (id: string) => {
-    document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
-  };
+  const navigate = useNavigate();
 
   return (
     <section className="landing-section text-center">
@@ -43,7 +42,7 @@ const CategoryOwnership = () => {
         ))}
       </div>
 
-      <button onClick={() => scrollTo("#waitlist")} className="btn-primary">
+      <button onClick={() => navigate("/pricing")} className="btn-primary">
         Apply for Cohort 1
       </button>
     </section>

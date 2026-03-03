@@ -6,7 +6,7 @@ const segments = [
     pain: "Pitching without proof. Losing to bigger agencies.",
     price: "From $39/mo",
     cta: "Get Started",
-    href: "#waitlist",
+    href: "/pricing",
     highlight: false,
   },
   {
@@ -16,7 +16,7 @@ const segments = [
     pain: "Need a weapon for discovery calls that close.",
     price: "From $79/mo",
     cta: "Get Started",
-    href: "#waitlist",
+    href: "/pricing",
     highlight: true,
   },
   {
@@ -26,15 +26,15 @@ const segments = [
     pain: "Need infrastructure, not a tool that gets abandoned.",
     price: "Custom",
     cta: "Contact Sales",
-    href: "#waitlist",
+    href: "/pricing",
     highlight: false,
   },
 ];
 
+import { useNavigate } from "react-router-dom";
+
 const SegmentSelector = () => {
-  const scrollTo = (id: string) => {
-    document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
-  };
+  const navigate = useNavigate();
 
   return (
     <section className="landing-section">
@@ -85,7 +85,7 @@ const SegmentSelector = () => {
             <div>
               <p className="font-headline text-2xl mb-4" style={{ color: "var(--text)" }}>{seg.price}</p>
               <button
-                onClick={() => scrollTo(seg.href)}
+                onClick={() => navigate(seg.href)}
                 className={seg.highlight ? "btn-primary w-full" : "btn-ghost w-full"}
               >
                 {seg.cta}

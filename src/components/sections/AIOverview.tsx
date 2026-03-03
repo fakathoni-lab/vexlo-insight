@@ -1,7 +1,7 @@
+import { useNavigate } from "react-router-dom";
+
 const AIOverview = () => {
-  const scrollTo = (id: string) => {
-    document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
-  };
+  const navigate = useNavigate();
 
   return (
     <section
@@ -56,7 +56,7 @@ const AIOverview = () => {
           </p>
         </div>
 
-        <button onClick={() => scrollTo("#waitlist")} className="btn-primary">
+        <button onClick={() => navigate("/pricing")} className="btn-primary">
           See AI Overview Impact Report Example
         </button>
       </div>
