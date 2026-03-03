@@ -44,6 +44,18 @@ function log(fields: Record<string, unknown>) {
   console.log(JSON.stringify({ ts: new Date().toISOString(), fn: "polar-webhook", ...fields }));
 }
 
+// Hardcoded plan→limit map until plans table exists (M7)
+function getPlanLimit(planName: string): number {
+  const normalized = planName.toLowerCase().replace(/[\s_-]+/g, "_");
+  const map: Record<string, number> = {
+    free: 5,
+    starter: 50,
+    agency_pro: 200,
+    agency_elite: 999999,
+  };
+  return map[normalized] ?? 5;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -117,13 +129,15 @@ Deno.serve(async (req) => {
 
         // Update profile plan
         const planName = sub.product?.name?.toLowerCase() ?? "premium";
+        const planLimit = getPlanLimit(planName);
         await supabaseAdmin.from("profiles").update({
           plan: planName,
+          proofs_limit: planLimit,
           plan_status: sub.status === "active" ? "active" : sub.status,
           updated_at: new Date().toISOString(),
         }).eq("id", userId);
 
-        log({ event: "subscription_synced", user_id: userId, status: sub.status, plan: planName });
+        log({ event: "subscription_synced", user_id: userId, status: sub.status, plan: planName, proofs_limit: planLimit });
         break;
       }
 
@@ -140,11 +154,12 @@ Deno.serve(async (req) => {
 
         await supabaseAdmin.from("profiles").update({
           plan: "free",
+          proofs_limit: 5,
           plan_status: "canceled",
           updated_at: new Date().toISOString(),
         }).eq("id", userId);
 
-        log({ event: "subscription_canceled", user_id: userId });
+        log({ event: "subscription_canceled", user_id: userId, proofs_limit: 5 });
         break;
       }
 
