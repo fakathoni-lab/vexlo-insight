@@ -100,7 +100,6 @@ const Hero = () => {
             className="ann-btn"
             onClick={() => navigate("/pricing")}
           >
-          >
             Claim Founding Member Access
           </button>
         </div>
