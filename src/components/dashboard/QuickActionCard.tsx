@@ -13,7 +13,7 @@ const QuickActionCard = () => {
       </p>
       <button
         onClick={() => navigate("/dashboard/new")}
-        className="btn-primary"
+        className="btn-primary active:scale-[0.98] active:brightness-95 hover:-translate-y-px hover:brightness-110 transition-all duration-150"
       >
         Start New Proof
       </button>
