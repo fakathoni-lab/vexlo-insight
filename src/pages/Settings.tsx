@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
-import { usePolarCheckout } from "@/hooks/usePolarCheckout";
+import { usePolarCheckout, POLAR_PRODUCT_AGENCY_PRO } from "@/hooks/usePolarCheckout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SEO from "@/components/SEO";
