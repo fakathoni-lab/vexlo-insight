@@ -31,10 +31,10 @@ const segments = [
   },
 ];
 
+import { useNavigate } from "react-router-dom";
+
 const SegmentSelector = () => {
-  const scrollTo = (id: string) => {
-    document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
-  };
+  const navigate = useNavigate();
 
   return (
     <section className="landing-section">
