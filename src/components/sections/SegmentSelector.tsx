@@ -6,7 +6,7 @@ const segments = [
     pain: "Pitching without proof. Losing to bigger agencies.",
     price: "From $39/mo",
     cta: "Get Started",
-    href: "#waitlist",
+    href: "/pricing",
     highlight: false,
   },
   {
@@ -16,7 +16,7 @@ const segments = [
     pain: "Need a weapon for discovery calls that close.",
     price: "From $79/mo",
     cta: "Get Started",
-    href: "#waitlist",
+    href: "/pricing",
     highlight: true,
   },
   {
@@ -26,7 +26,7 @@ const segments = [
     pain: "Need infrastructure, not a tool that gets abandoned.",
     price: "Custom",
     cta: "Contact Sales",
-    href: "#waitlist",
+    href: "/pricing",
     highlight: false,
   },
 ];
