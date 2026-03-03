@@ -41,7 +41,7 @@ const TopNav = ({ onSidebarToggle, onToast }: TopNavProps) => {
       {/* Sidebar toggle */}
       <button
         onClick={onSidebarToggle}
-        className="p-[7px] rounded-lg transition-colors duration-200 hover:bg-white/10"
+        className="p-[7px] rounded-lg transition-all duration-150 hover:bg-white/10 active:scale-[0.98] active:brightness-95 hover:-translate-y-px hover:brightness-110"
         style={{
           background: "rgba(255,255,255,0.06)",
           border: "1px solid rgba(255,255,255,0.08)",
@@ -88,7 +88,7 @@ const TopNav = ({ onSidebarToggle, onToast }: TopNavProps) => {
       {/* Bell */}
       <button
         onClick={() => onToast("3 proof links viewed by prospects today", "info")}
-        className="relative p-[7px] rounded-lg transition-colors duration-200 hover:bg-white/10"
+        className="relative p-[7px] rounded-lg transition-all duration-150 hover:bg-white/10 active:scale-[0.98] active:brightness-95 hover:-translate-y-px hover:brightness-110"
         style={{
           background: "rgba(255,255,255,0.06)",
           border: "1px solid rgba(255,255,255,0.08)",

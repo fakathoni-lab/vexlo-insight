@@ -40,7 +40,7 @@ const RecentProofsTable = ({ proofs }: { proofs: Proof[] }) => {
         return (
           <div
             key={proof.id}
-            className="rounded-outer border border-border bg-bg-card p-5 flex items-center justify-between gap-4 transition-[border-color] duration-[250ms] hover:border-border-strong cursor-pointer"
+            className="rounded-outer border border-border bg-bg-card p-5 flex items-center justify-between gap-4 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(99,102,241,0.15)] hover:border-border-strong cursor-pointer"
             onClick={() => navigate(`/dashboard/proof/${proof.id}`)}
           >
             <div className="flex-1 min-w-0">

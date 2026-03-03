@@ -9,7 +9,7 @@ interface MetricCardProps {
 
 const MetricCard = ({ label, value, icon: Icon, trend }: MetricCardProps) => (
   <div
-    className="rounded-outer border border-border bg-bg-card p-5 transition-[border-color] duration-[250ms] hover:border-border-strong group"
+    className="rounded-outer border border-border bg-bg-card p-5 group transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(99,102,241,0.15)] hover:border-border-strong"
   >
     <div className="flex items-center gap-2 mb-3">
       <Icon className="w-3.5 h-3.5 text-text-muted" />

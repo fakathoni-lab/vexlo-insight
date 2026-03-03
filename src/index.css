@@ -1022,9 +1022,15 @@ body {
   to { opacity: 1; }
 }
 
-.animate-toast-in { animation: toast-in 0.3s ease forwards; }
+.animate-toast-in { animation: toast-in 0.3s cubic-bezier(0.4,0,0.2,1) forwards; }
 .animate-dropdown-in { animation: dropdown-in 0.15s ease-out forwards; }
 .animate-sidebar-label-in { animation: sidebar-label-in 0.2s 0.05s ease forwards; opacity: 0; }
+
+@keyframes sidebar-glow {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+.animate-sidebar-glow { animation: sidebar-glow 3s ease-in-out infinite; }
 
 /* Custom scrollbar for dashboard main */
 main::-webkit-scrollbar { width: 4px; }
