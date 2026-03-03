@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +29,22 @@ const NewProof = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
+  const [credits, setCredits] = useState<{ used: number; limit: number } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("proofs_used, proofs_limit")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) setCredits({ used: data.proofs_used ?? 0, limit: data.proofs_limit ?? 5 });
+      });
+  }, [user]);
+
+  const remaining = credits ? Math.max(0, credits.limit - credits.used) : null;
+  const isExhausted = remaining !== null && remaining <= 0;
 
   const {
     register,
@@ -118,17 +135,29 @@ const NewProof = () => {
             )}
           </div>
 
+          {/* Credits indicator */}
+          <div className="flex items-center justify-between px-1">
+            {credits === null ? (
+              <Skeleton className="h-3 w-28 bg-white/[0.08]" />
+            ) : (
+              <span className="font-mono text-[10px] uppercase tracking-wider" style={{ color: isExhausted ? "var(--accent-danger, #ef4444)" : "var(--text-muted)" }}>
+                {remaining} / {credits.limit} credits remaining
+              </span>
+            )}
+          </div>
+
           <Button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || isExhausted}
             className="w-full h-10 rounded-full font-mono text-[10px] uppercase tracking-widest transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
             style={{
-              backgroundColor: "var(--text)",
+              backgroundColor: isExhausted ? "var(--text-muted)" : "var(--text)",
               color: "var(--bg)",
-              boxShadow: "var(--emboss-shadow), var(--inset-shadow)",
+              boxShadow: isExhausted ? "none" : "var(--emboss-shadow), var(--inset-shadow)",
+              cursor: isExhausted ? "not-allowed" : undefined,
             }}
           >
-            {submitting ? "Creating…" : "Generate Proof Report"}
+            {submitting ? "Creating…" : isExhausted ? "No Credits Remaining" : "Generate Proof Report"}
           </Button>
         </form>
 
