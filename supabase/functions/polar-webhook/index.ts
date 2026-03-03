@@ -129,13 +129,15 @@ Deno.serve(async (req) => {
 
         // Update profile plan
         const planName = sub.product?.name?.toLowerCase() ?? "premium";
+        const planLimit = getPlanLimit(planName);
         await supabaseAdmin.from("profiles").update({
           plan: planName,
+          proofs_limit: planLimit,
           plan_status: sub.status === "active" ? "active" : sub.status,
           updated_at: new Date().toISOString(),
         }).eq("id", userId);
 
-        log({ event: "subscription_synced", user_id: userId, status: sub.status, plan: planName });
+        log({ event: "subscription_synced", user_id: userId, status: sub.status, plan: planName, proofs_limit: planLimit });
         break;
       }
 
