@@ -35,6 +35,8 @@ const App = () => (
         <Route path="/proof/:id" element={<ProofReport />} />
         <Route path="/p/:slug" element={<PublicProof />} />
         <Route path="/check" element={<DomainSearch />} />
+        <Route path="/webhook-success" element={<WebhookSuccess />} />
+        <Route path="/webhook-cancel" element={<WebhookCancel />} />
         <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/new" element={<NewProof />} />
