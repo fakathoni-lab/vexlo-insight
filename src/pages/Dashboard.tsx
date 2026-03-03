@@ -66,9 +66,14 @@ const Dashboard = () => {
     <div className="max-w-[1080px] mx-auto space-y-6">
       <SEO title="Dashboard — VEXLO" description="Manage your SEO proof reports." canonical="https://vexloai.com/dashboard" />
 
-      <h1 className="font-headline" style={{ fontSize: 28, color: "#f0f0ee" }}>
-        Welcome back, {firstName}
-      </h1>
+      <div className="mb-7">
+        <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: "#ffffff" }}>
+          Dashboard
+        </h1>
+        <p className="text-sm mt-1" style={{ color: "var(--text-dim)" }}>
+          {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · Sales Proof Intelligence
+        </p>
+      </div>
 
       {/* Quick Action Card */}
       <div

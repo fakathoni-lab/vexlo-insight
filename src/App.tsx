@@ -19,8 +19,9 @@ import NotFound from "./pages/NotFound";
 import WebhookSuccess from "./pages/WebhookSuccess";
 import WebhookCancel from "./pages/WebhookCancel";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-
+import DashboardLayoutLegacy from "@/components/layout/DashboardLayout";
+import DashboardLayoutNew from "@/layouts/DashboardLayout";
+// ...existing routes kept
 const App = () => (
   <BrowserRouter>
     <AuthProvider>
@@ -37,13 +38,12 @@ const App = () => (
         <Route path="/check" element={<DomainSearch />} />
         <Route path="/webhook-success" element={<WebhookSuccess />} />
         <Route path="/webhook-cancel" element={<WebhookCancel />} />
-        <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+        <Route element={<ProtectedRoute><DashboardLayoutNew /></ProtectedRoute>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/new" element={<NewProof />} />
           <Route path="/dashboard/domains" element={<DomainSearch />} />
           <Route path="/dashboard/proof/:id" element={<ProofResult />} />
-          <Route path="/dashboard/history" element={<div className="font-body" style={{ color: "var(--text-dim)" }}>Proof History 
-coming soon</div>} />
+          <Route path="/dashboard/history" element={<div className="font-sans" style={{ color: "var(--text-dim)" }}>Proof History coming soon</div>} />
           <Route path="/settings" element={<Settings />} />
         </Route>
         <Route path="*" element={<NotFound />} />

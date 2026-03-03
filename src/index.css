@@ -1007,3 +1007,26 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Dashboard shell animations */
+@keyframes toast-in {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes dropdown-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes sidebar-label-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-toast-in { animation: toast-in 0.3s ease forwards; }
+.animate-dropdown-in { animation: dropdown-in 0.15s ease-out forwards; }
+.animate-sidebar-label-in { animation: sidebar-label-in 0.2s 0.05s ease forwards; opacity: 0; }
+
+/* Custom scrollbar for dashboard main */
+main::-webkit-scrollbar { width: 4px; }
+main::-webkit-scrollbar-track { background: transparent; }
+main::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.19); border-radius: 2px; }
