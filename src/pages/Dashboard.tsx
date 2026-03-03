@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { BarChart3, Zap, FileText, ExternalLink } from "lucide-react";
+import { FileText, Zap, BarChart3 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import SEO from "@/components/SEO";
+import MetricCard from "@/components/dashboard/MetricCard";
+import QuickActionCard from "@/components/dashboard/QuickActionCard";
+import RecentProofsTable from "@/components/dashboard/RecentProofsTable";
 
 interface Proof {
   id: string;
@@ -17,12 +19,8 @@ interface Proof {
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [profile, setProfile] = useState<{ proofs_used: number | null; proofs_limit: number | null } | null>(null);
   const [recentProofs, setRecentProofs] = useState<Proof[]>([]);
-
-  const firstName =
-    (user?.user_metadata?.full_name as string)?.split(" ")[0] ?? "there";
 
   useEffect(() => {
     if (!user) return;
@@ -41,7 +39,13 @@ const Dashboard = () => {
         .limit(5),
     ]).then(([profileRes, proofsRes]) => {
       if (profileRes.data) setProfile(profileRes.data);
-      if (proofsRes.data) setRecentProofs((proofsRes.data as any[]).map(p => ({ ...p, status: p.status ?? (p.score > 0 ? "complete" : "pending") })) as Proof[]);
+      if (proofsRes.data)
+        setRecentProofs(
+          (proofsRes.data as any[]).map((p) => ({
+            ...p,
+            status: p.status ?? (p.score > 0 ? "complete" : "pending"),
+          })) as Proof[]
+        );
     });
   }, [user]);
 
@@ -55,144 +59,44 @@ const Dashboard = () => {
     { label: "Credits Used", value: `${proofsUsed}/${proofsLimit}`, icon: BarChart3 },
   ];
 
-  const scoreColor = (score: number, status: string) => {
-    if (status !== "complete") return "rgba(240,240,238,0.25)";
-    if (score <= 30) return "#ef4444";
-    if (score <= 60) return "#f59e0b";
-    return "#22c55e";
-  };
-
   return (
     <div className="max-w-[1080px] mx-auto space-y-6">
-      <SEO title="Dashboard — VEXLO" description="Manage your SEO proof reports." canonical="https://vexloai.com/dashboard" />
+      <SEO
+        title="Dashboard — VEXLO"
+        description="Manage your SEO proof reports."
+        canonical="https://vexloai.com/dashboard"
+      />
 
+      {/* Page Header */}
       <div className="mb-7">
-        <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: "#ffffff" }}>
-          Dashboard
-        </h1>
-        <p className="text-sm mt-1" style={{ color: "var(--text-dim)" }}>
-          {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · Sales Proof Intelligence
+        <h1 className="text-2xl font-extrabold tracking-tight text-text">Dashboard</h1>
+        <p className="text-sm mt-1 text-text-dim">
+          {new Date().toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}{" "}
+          · Sales Proof Intelligence
         </p>
       </div>
 
-      {/* Quick Action Card */}
-      <div
-        className="rounded-[12px] border border-[rgba(255,255,255,0.07)] p-8"
-        style={{ backgroundColor: "#0d0d0d" }}
-      >
-        <p className="font-body mb-1" style={{ fontSize: 15, color: "#f0f0ee" }}>
-          Generate New Proof
-        </p>
-        <p className="font-body font-light mb-5" style={{ fontSize: 13, color: "rgba(240,240,238,0.45)" }}>
-          Enter any domain + keyword. Get proof in 30 seconds.
-        </p>
-        <button
-          onClick={() => navigate("/dashboard/new")}
-          className="h-10 px-6 rounded-[100px] font-mono text-[10px] uppercase tracking-widest transition-all duration-200 hover:brightness-110 active:scale-[0.98]"
-          style={{
-            backgroundColor: "#f0f0ee",
-            color: "#080808",
-            boxShadow:
-              "0px 1.5px 2px -1px hsla(0,0%,100%,.2) inset, 0px 1.5px 1px 0px hsla(0,0%,100%,.06)",
-          }}
-        >
-          Start New Proof
-        </button>
-      </div>
+      {/* Quick Action */}
+      <QuickActionCard />
 
-      {/* Metrics row */}
+      {/* Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {metrics.map((m) => (
-          <div
-            key={m.label}
-            className="rounded-[12px] border border-[rgba(255,255,255,0.07)] p-5 transition-[border-color] duration-[250ms] hover:border-[rgba(255,255,255,0.13)]"
-            style={{ backgroundColor: "#0d0d0d" }}
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <m.icon className="w-3.5 h-3.5" style={{ color: "rgba(240,240,238,0.25)" }} />
-              <span
-                className="font-mono uppercase tracking-wide"
-                style={{ fontSize: 8.5, color: "rgba(240,240,238,0.25)" }}
-              >
-                {m.label}
-              </span>
-            </div>
-            <p className="font-headline" style={{ fontSize: 28, color: "#f0f0ee" }}>
-              {m.value}
-            </p>
-          </div>
+          <MetricCard key={m.label} label={m.label} value={m.value} icon={m.icon} />
         ))}
       </div>
 
       {/* Recent Proofs */}
       <div>
-        <h2
-          className="font-mono uppercase tracking-wide mb-4"
-          style={{ fontSize: 9, color: "rgba(240,240,238,0.25)" }}
-        >
+        <h2 className="font-mono uppercase tracking-wide mb-4 text-text-muted" style={{ fontSize: "9px" }}>
           Recent Proofs
         </h2>
-
-        {recentProofs.length === 0 ? (
-          <div
-            className="rounded-[12px] border border-[rgba(255,255,255,0.07)] p-12 text-center"
-            style={{ backgroundColor: "#0d0d0d" }}
-          >
-            <p className="font-body font-light" style={{ fontSize: 14, color: "rgba(240,240,238,0.45)" }}>
-              No proofs yet. Generate your first one.
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {recentProofs.map((proof) => {
-              const isComplete = proof.status === "complete";
-              const statusLabel = proof.status === "failed" ? "failed" : "processing";
-              return (
-                <div
-                  key={proof.id}
-                  className="rounded-[12px] border border-[rgba(255,255,255,0.07)] p-5 flex items-center justify-between gap-4 transition-[border-color] duration-[250ms] hover:border-[rgba(255,255,255,0.13)] cursor-pointer"
-                  style={{ backgroundColor: "#0d0d0d" }}
-                  onClick={() => navigate(`/dashboard/proof/${proof.id}`)}
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-body truncate" style={{ fontSize: 14, color: "#f0f0ee" }}>
-                      {proof.domain}
-                    </p>
-                    <p className="font-body font-light truncate" style={{ fontSize: 12, color: "rgba(240,240,238,0.45)" }}>
-                      {proof.keyword}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-4 shrink-0">
-                    {isComplete ? (
-                      <span className="font-headline" style={{ fontSize: 18, color: scoreColor(proof.score, proof.status) }}>
-                        {proof.score}
-                      </span>
-                    ) : (
-                      <span
-                        className="font-mono uppercase text-[9px] tracking-wider px-2 py-0.5 rounded-full"
-                        style={{
-                          color: proof.status === "failed" ? "#ef4444" : "rgba(240,240,238,0.25)",
-                          border: `1px solid ${proof.status === "failed" ? "rgba(239,68,68,0.25)" : "rgba(240,240,238,0.25)"}`,
-                        }}
-                      >
-                        {statusLabel}
-                      </span>
-                    )}
-
-                    {proof.current_rank !== null && (
-                      <span className="font-mono" style={{ fontSize: 11, color: "rgba(240,240,238,0.45)" }}>
-                        #{proof.current_rank}
-                      </span>
-                    )}
-
-                    <ExternalLink className="w-3.5 h-3.5" style={{ color: "rgba(240,240,238,0.25)" }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <RecentProofsTable proofs={recentProofs} />
       </div>
     </div>
   );
