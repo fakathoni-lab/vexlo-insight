@@ -44,6 +44,18 @@ function log(fields: Record<string, unknown>) {
   console.log(JSON.stringify({ ts: new Date().toISOString(), fn: "polar-webhook", ...fields }));
 }
 
+// Hardcoded plan→limit map until plans table exists (M7)
+function getPlanLimit(planName: string): number {
+  const normalized = planName.toLowerCase().replace(/[\s_-]+/g, "_");
+  const map: Record<string, number> = {
+    free: 5,
+    starter: 50,
+    agency_pro: 200,
+    agency_elite: 999999,
+  };
+  return map[normalized] ?? 5;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
