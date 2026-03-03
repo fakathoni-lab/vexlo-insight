@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
-import { usePolarCheckout } from "@/hooks/usePolarCheckout";
+import { usePolarCheckout, POLAR_PRODUCT_AGENCY_PRO } from "@/hooks/usePolarCheckout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SEO from "@/components/SEO";
@@ -420,7 +420,7 @@ const Settings = () => {
                 disabled={checkoutLoading}
                 className="rounded-[100px] font-mono text-[10px] uppercase tracking-widest bg-[var(--text)] text-[var(--bg)] hover:brightness-95 active:scale-[0.98] transition-all duration-200 h-8 px-5"
                 style={{ boxShadow: "var(--emboss-shadow), var(--inset-shadow)" }}
-                onClick={() => checkout()}
+                onClick={() => checkout(POLAR_PRODUCT_AGENCY_PRO)}
               >
                 {checkoutLoading ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
