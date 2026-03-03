@@ -1,9 +1,8 @@
 import { Award } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CategoryOwnership = () => {
-  const scrollTo = (id: string) => {
-    document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
-  };
+  const navigate = useNavigate();
 
   return (
     <section className="landing-section text-center">
