@@ -614,15 +614,22 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error("generate-proof error:", err);
 
-    // Mark as failed using service_role client
+    // Rollback credit + mark proof as failed
     if (proofId) {
       try {
         const svc = getServiceClient();
         const errorMsg = (err as Error).message === "TIMEOUT" ? "Request timed out" : "Data collection failed";
-        await svc.from("proofs").update({
-          status: "failed",
-          error_message: errorMsg,
-        }).eq("id", proofId);
+
+        await Promise.all([
+          svc.from("proofs").update({
+            status: "failed",
+            error_message: errorMsg,
+          }).eq("id", proofId),
+          // Rollback the credit consumed by attempt_proof_increment
+          creditConsumed
+            ? svc.rpc("rollback_proof_increment", { p_user_id: user!.id })
+            : Promise.resolve(),
+        ]);
       } catch { /* ignore cleanup error */ }
     }
 
