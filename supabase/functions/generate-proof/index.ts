@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { Redis } from "npm:@upstash/redis@1.34.3";
 import { z } from "npm:zod@3.23.8";
 
@@ -360,8 +360,10 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Capture proof_id early for error handler
+  // Capture for error handler
   let proofId: string | null = null;
+  let userId: string | null = null;
+  let creditConsumed = false;
 
   try {
     // ── Auth ──
@@ -393,6 +395,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    userId = user.id;
 
     // ── Parse + validate with Zod ──
     let rawBody: unknown;
@@ -439,24 +442,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── Plan enforcement: check proofs_used vs proofs_limit BEFORE DataForSEO ──
-    const { data: profile, error: profileError } = await serviceClient
-      .from("profiles")
-      .select("proofs_used, proofs_limit")
-      .eq("id", user.id)
-      .single();
+    // ── Plan enforcement: atomic check + increment via RPC ──
+    const { data: allowed, error: rpcError } = await serviceClient.rpc(
+      "attempt_proof_increment",
+      { p_user_id: user.id }
+    );
 
-    if (profileError || !profile) {
-      return new Response(JSON.stringify({ error: "Profile not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (rpcError) {
+      console.error("attempt_proof_increment RPC failed:", rpcError.message);
+      return new Response(
+        JSON.stringify({ error: "internal_error", message: "Usage check failed" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    const proofsUsed = profile.proofs_used ?? 0;
-    const proofsLimit = profile.proofs_limit ?? 3; // free plan default
-
-    if (proofsUsed >= proofsLimit) {
+    if (!allowed) {
       // Mark proof as failed so UI shows proper state
       await serviceClient.from("proofs").update({
         status: "failed",
@@ -467,12 +467,13 @@ Deno.serve(async (req) => {
         JSON.stringify({
           error: "plan_limit_reached",
           message: "You have reached your proof generation limit. Please upgrade your plan.",
-          proofs_used: proofsUsed,
-          proofs_limit: proofsLimit,
         }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Credit has been consumed — must rollback if DataForSEO fails
+    creditConsumed = true;
 
     // ── Mark as processing ──
     await serviceClient.from("proofs").update({ status: "processing" }).eq("id", proof_id);
@@ -504,11 +505,7 @@ Deno.serve(async (req) => {
         status: "complete",
       }).eq("id", proof_id);
 
-      // Increment proofs_used atomically
-      const { error: incErr } = await serviceClient.rpc("increment_proofs_used", { user_id_input: user.id });
-      if (incErr) {
-        console.error("increment_proofs_used RPC failed (cached path):", incErr.message);
-      }
+      // Credit already consumed by attempt_proof_increment — no extra increment needed
 
       return new Response(
         JSON.stringify({ proof_id, proof_score: cached.score, status: "complete", cached: true }),
@@ -602,11 +599,7 @@ Deno.serve(async (req) => {
       throw new Error(updateError.message);
     }
 
-    // Increment proofs_used atomically
-    const { error: incrementError } = await serviceClient.rpc("increment_proofs_used", { user_id_input: user.id });
-    if (incrementError) {
-      console.error("increment_proofs_used RPC failed:", incrementError.message);
-    }
+    // Credit already consumed by attempt_proof_increment — no extra increment needed
 
     // ── Cache result in Redis ──
     if (redis) {
@@ -624,15 +617,22 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error("generate-proof error:", err);
 
-    // Mark as failed using service_role client
+    // Rollback credit + mark proof as failed
     if (proofId) {
       try {
         const svc = getServiceClient();
         const errorMsg = (err as Error).message === "TIMEOUT" ? "Request timed out" : "Data collection failed";
-        await svc.from("proofs").update({
-          status: "failed",
-          error_message: errorMsg,
-        }).eq("id", proofId);
+
+        await Promise.all([
+          svc.from("proofs").update({
+            status: "failed",
+            error_message: errorMsg,
+          }).eq("id", proofId),
+          // Rollback the credit consumed by attempt_proof_increment
+          creditConsumed && userId
+            ? svc.rpc("rollback_proof_increment", { p_user_id: userId })
+            : Promise.resolve(),
+        ]);
       } catch { /* ignore cleanup error */ }
     }
 
