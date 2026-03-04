@@ -600,7 +600,7 @@ Deno.serve(async (req) => {
     const results = await Promise.race([
       Promise.allSettled([
         fetchOrganicAndSerpFeatures(cleanKeyword, cleanDomain, dfsHeaders),
-        fetchOrganicHistory(cleanKeyword, cleanDomain, dfsHeaders),
+        fetchRankedKeywordsDelta(cleanDomain, dfsHeaders),
       ]),
       new Promise<PromiseSettledResult<never>[]>((_, reject) =>
         setTimeout(() => reject(new Error("TIMEOUT")), 24000)
@@ -614,7 +614,7 @@ Deno.serve(async (req) => {
       serpFeatures: { ai_overview: false, featured_snippet: false, local_pack: false, knowledge_panel: false },
       aiImpactPercent: 0,
     };
-    let historyResult: { delta30d: number | null } = { delta30d: null };
+    let historyResult: RankedKeywordsResult = { delta30d: null, trendScore: 50 };
 
     if (results[0]?.status === "fulfilled") {
       organicAndSerpResult = results[0].value as OrganicAndSerpResult;
@@ -623,15 +623,15 @@ Deno.serve(async (req) => {
     }
 
     if (results[1]?.status === "fulfilled") {
-      historyResult = results[1].value as { delta30d: number | null };
+      historyResult = results[1].value as RankedKeywordsResult;
     } else {
-      console.error("Call 2 (history) failed:", (results[1] as PromiseRejectedResult)?.reason);
+      console.error("Call 2 (ranked_keywords delta) failed:", (results[1] as PromiseRejectedResult)?.reason);
     }
 
-    // ── Calculate score ──
-    const proofScore = calculateProofScore({
+    // ── Calculate score using pre-calculated trendScore ──
+    const proofScore = calculateProofScoreWithTrend({
       rankPosition: organicAndSerpResult.rankPosition,
-      delta30d: historyResult.delta30d,
+      trendScore: historyResult.trendScore,
       aiOverviewPresent: organicAndSerpResult.serpFeatures.ai_overview,
       aiImpactPercent: organicAndSerpResult.aiImpactPercent,
       kwDifficulty: organicAndSerpResult.kwDifficulty,
