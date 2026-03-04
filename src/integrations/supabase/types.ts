@@ -438,6 +438,10 @@ export type Database = {
         Args: { user_id_input: string }
         Returns: undefined
       }
+      rollback_proof_increment: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
