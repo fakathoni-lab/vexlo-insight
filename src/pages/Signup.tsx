@@ -20,8 +20,13 @@ type FormData = z.infer<typeof schema>;
 
 const Signup = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signUp } = useAuth();
   const [serverError, setServerError] = useState("");
+
+  const prefillDomain = (location.state as any)?.prefillDomain ?? null;
+  const prefillKeyword = (location.state as any)?.prefillKeyword ?? null;
+  const returnTo = (location.state as any)?.returnTo ?? "/onboarding";
 
   const {
     register,
@@ -36,7 +41,7 @@ const Signup = () => {
       setServerError(error.message);
       return;
     }
-    navigate("/onboarding");
+    navigate(returnTo);
   };
 
   return (
