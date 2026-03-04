@@ -566,7 +566,7 @@ Deno.serve(async (req) => {
       try {
         cachedData = await redis.get<string>(cacheKey);
       } catch (e) {
-        console.error("Redis GET failed:", e);
+        if (Deno.env.get("ENVIRONMENT") !== "production") console.error("Redis GET failed:", e);
       }
     }
 
