@@ -76,6 +76,6 @@ export async function trackProofView(proofId: string): Promise<void> {
       .from("proof_views" as any)
       .insert({ proof_id: proofId, viewer_ip_hash: ipHash, user_agent: userAgent } as any) as any);
   } catch (e) {
-    console.error("Failed to track view:", e);
+    if (import.meta.env.DEV) console.error("Failed to track view:", e);
   }
 }

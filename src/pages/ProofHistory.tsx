@@ -134,7 +134,7 @@ const ProofHistory = () => {
       }
     } catch (err: unknown) {
       toast.error("Failed to load proofs");
-      console.error(err);
+      if (import.meta.env.DEV) console.error(err);
     } finally {
       setIsLoading(false);
       setLoadingMore(false);
