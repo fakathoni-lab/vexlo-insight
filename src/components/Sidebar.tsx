@@ -20,6 +20,8 @@ interface SidebarProps {
   onToggle: () => void;
   activeItem: string;
   onNavClick: (id: string) => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 const LightningIcon = () => (
