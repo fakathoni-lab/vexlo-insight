@@ -189,86 +189,85 @@ async function fetchRankedKeywordsDelta(
 ): Promise<RankedKeywordsResult> {
   const DEFAULT: RankedKeywordsResult = { delta30d: null, trendScore: 50 };
 
-  // ── Current snapshot ──
-  const currentRes = await fetchWithRetry(
-    `${DATAFORSEO_BASE}/dataforseo_labs/google/ranked_keywords/live`,
-    {
-      method: "POST",
-      headers,
-      body: JSON.stringify([
-        {
-          target: domain,
-          location_code: 2840,
-          language_code: "en",
-          limit: 100,
-        },
-      ]),
-    }
-  );
+  try {
+    // Use historical_rank_overview to get monthly snapshots
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const dateTo = now.toISOString().split("T")[0];
+    const dateFrom = thirtyDaysAgo.toISOString().split("T")[0];
 
-  const currentData = await currentRes.json();
-  const currentItems =
-    currentData?.tasks?.[0]?.result?.[0]?.items ?? [];
+    const res = await fetchWithRetry(
+      `${DATAFORSEO_BASE}/dataforseo_labs/google/historical_rank_overview/live`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify([
+          {
+            target: domain,
+            location_code: 2840,
+            language_code: "en",
+            date_from: dateFrom,
+            date_to: dateTo,
+          },
+        ]),
+      }
+    );
 
-  if (currentItems.length === 0) return DEFAULT;
+    const data = await res.json();
+    const items = data?.tasks?.[0]?.result?.[0]?.items ?? [];
 
-  const avgPositionNow =
-    currentItems.reduce(
-      (sum: number, item: any) =>
-        sum +
-        (item?.ranked_serp_element?.serp_item?.rank_absolute ?? 0),
-      0
-    ) / currentItems.length;
+    if (items.length < 2) return DEFAULT;
 
-  // ── Historical snapshot (30 days ago) ──
-  const historicalRes = await fetchWithRetry(
-    `${DATAFORSEO_BASE}/dataforseo_labs/google/ranked_keywords/live`,
-    {
-      method: "POST",
-      headers,
-      body: JSON.stringify([
-        {
-          target: domain,
-          location_code: 2840,
-          language_code: "en",
-          limit: 100,
-          historical_serp_mode: "30_days_ago",
-        },
-      ]),
-    }
-  );
+    // Items are snapshots sorted by date; compare first vs last
+    // Each item has metrics.organic with pos_1, pos_2_3, pos_4_10, etc.
+    // We compute a weighted average position from the distribution
+    const getWeightedAvg = (item: any): number => {
+      const org = item?.metrics?.organic;
+      if (!org) return 50;
+      const counts: [number, number][] = [
+        [1, org.pos_1 ?? 0],
+        [2.5, org.pos_2_3 ?? 0],
+        [7, org.pos_4_10 ?? 0],
+        [15, org.pos_11_20 ?? 0],
+        [35, org.pos_21_30 ?? 0],
+        [55, org.pos_31_40 ?? 0],
+        [70, org.pos_41_50 ?? 0],
+        [85, org.pos_51_60 ?? 0],
+        [95, org.pos_61_100 ?? 0],
+      ];
+      let totalWeight = 0;
+      let totalCount = 0;
+      for (const [pos, count] of counts) {
+        totalWeight += pos * count;
+        totalCount += count;
+      }
+      return totalCount > 0 ? totalWeight / totalCount : 50;
+    };
 
-  const historicalData = await historicalRes.json();
-  const historicalItems =
-    historicalData?.tasks?.[0]?.result?.[0]?.items ?? [];
+    // Sort by date ascending
+    const sorted = [...items].sort(
+      (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
 
-  if (historicalItems.length === 0) {
-    // No historical data — use current snapshot only, neutral trend
-    return { delta30d: null, trendScore: 50 };
+    const oldAvg = getWeightedAvg(sorted[0]);
+    const newAvg = getWeightedAvg(sorted[sorted.length - 1]);
+
+    // delta = newAvg - oldAvg
+    // Negative = improved (average position went down = better rankings)
+    const delta = Math.round((newAvg - oldAvg) * 10) / 10;
+
+    let trendScore: number;
+    if (delta < -5) trendScore = 100;
+    else if (delta <= -1) trendScore = 75;
+    else if (delta > -1 && delta < 1) trendScore = 50;
+    else if (delta <= 5) trendScore = 25;
+    else trendScore = 0;
+
+    return { delta30d: delta, trendScore };
+  } catch (err) {
+    console.error("fetchRankedKeywordsDelta error:", (err as Error).message);
+    return DEFAULT;
   }
-
-  const avgPosition30d =
-    historicalItems.reduce(
-      (sum: number, item: any) =>
-        sum +
-        (item?.ranked_serp_element?.serp_item?.rank_absolute ?? 0),
-      0
-    ) / historicalItems.length;
-
-  // delta = now - 30d ago
-  // Negative = positions improved (rank number went down = better)
-  // Positive = positions worsened
-  const delta = Math.round((avgPositionNow - avgPosition30d) * 10) / 10;
-
-  // Map to 0-100 trend score
-  let trendScore: number;
-  if (delta < -5) trendScore = 100;
-  else if (delta <= -1) trendScore = 75;
-  else if (delta > -1 && delta < 1) trendScore = 50;
-  else if (delta <= 5) trendScore = 25;
-  else trendScore = 0;
-
-  return { delta30d: delta, trendScore };
 }
 
 // ── AI Narrative generation ──
