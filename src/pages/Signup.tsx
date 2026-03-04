@@ -57,9 +57,28 @@ const Signup = () => {
         <h1 className="font-headline text-2xl text-center mb-1" style={{ color: "#f0f0ee" }}>
           Create your account
         </h1>
-        <p className="text-center font-body text-sm mb-8" style={{ color: "rgba(240,240,238,0.45)" }}>
+        <p className="text-center font-body text-sm mb-6" style={{ color: "rgba(240,240,238,0.45)" }}>
           Start generating proof reports today
         </p>
+
+        {prefillDomain && (
+          <div
+            className="rounded-[8px] px-4 py-3 mb-6 text-center"
+            style={{
+              background: "rgba(255,99,8,0.08)",
+              border: "1px solid rgba(255,99,8,0.2)",
+            }}
+          >
+            <p className="font-sans text-sm" style={{ color: "var(--accent)" }}>
+              Generate proof for <strong>{prefillDomain}</strong> after signing up
+            </p>
+            {prefillKeyword && (
+              <p className="font-sans text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>
+                Keyword: {prefillKeyword}
+              </p>
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
