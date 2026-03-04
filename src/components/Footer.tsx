@@ -37,6 +37,13 @@ const footerLinks = [
       { label: "Contact", href: "mailto:sales@vexloai.com" },
     ],
   },
+  {
+    title: "Legal",
+    links: [
+      { label: "Privacy Policy", href: "/legal/privacy" },
+      { label: "Terms of Service", href: "/legal/terms" },
+    ],
+  },
 ];
 
 const Footer = () => {
