@@ -33,6 +33,16 @@ const PublicProof = () => {
   useEffect(() => {
     if (!slug) return;
 
+    // Fire-and-forget view tracking
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (supabaseUrl) {
+      fetch(`${supabaseUrl}/functions/v1/record-proof-view`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      }).catch(() => {});
+    }
+
     let pollInterval: ReturnType<typeof setInterval> | null = null;
     let pollCount = 0;
 

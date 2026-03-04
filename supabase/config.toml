@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.preview-proof]
 verify_jwt = false
+
+[functions.record-proof-view]
+verify_jwt = false
