@@ -265,7 +265,7 @@ async function fetchRankedKeywordsDelta(
 
     return { delta30d: delta, trendScore };
   } catch (err) {
-    console.error("fetchRankedKeywordsDelta error:", (err as Error).message);
+    if (Deno.env.get("ENVIRONMENT") !== "production") console.error("fetchRankedKeywordsDelta error:", (err as Error).message);
     return DEFAULT;
   }
 }
