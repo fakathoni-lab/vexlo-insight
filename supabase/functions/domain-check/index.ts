@@ -317,7 +317,7 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     log({ request_id: requestId, event: "unhandled_error", latency_ms: Date.now() - startMs });
-    console.error("domain-check error:", err);
+    if (Deno.env.get("ENVIRONMENT") !== "production") console.error("domain-check error:", err);
     return errResponse("INTERNAL_ERROR", "An unexpected error occurred.", 500);
   }
 });

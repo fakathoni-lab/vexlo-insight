@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    console.error("preview-proof error:", err);
+    if (Deno.env.get("ENVIRONMENT") !== "production") console.error("preview-proof error:", err);
     const msg = (err as Error).name === "AbortError" ? "Request timed out" : "Analysis failed";
     return new Response(
       JSON.stringify({ error: msg }),

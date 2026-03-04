@@ -685,7 +685,7 @@ Deno.serve(async (req) => {
       try {
         await redis.set(cacheKey, JSON.stringify(updatePayload), { ex: 86400 });
       } catch (e) {
-        console.error("Redis SET failed:", e);
+        if (Deno.env.get("ENVIRONMENT") !== "production") console.error("Redis SET failed:", e);
       }
     }
 
