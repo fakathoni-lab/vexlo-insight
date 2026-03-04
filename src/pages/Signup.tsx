@@ -20,19 +20,18 @@ type FormData = z.infer<typeof schema>;
 
 const Signup = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { signUp } = useAuth();
   const [serverError, setServerError] = useState("");
-
-  const prefillDomain = (location.state as any)?.prefillDomain ?? null;
-  const prefillKeyword = (location.state as any)?.prefillKeyword ?? null;
-  const returnTo = (location.state as any)?.returnTo ?? "/onboarding";
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
+
+  // Read prefill from sessionStorage (set by Hero preview)
+  const prefillRaw = sessionStorage.getItem('vexlo_prefill');
+  const prefill = prefillRaw ? JSON.parse(prefillRaw) as { domain: string; keyword: string } : null;
 
   const onSubmit = async (data: FormData) => {
     setServerError("");
@@ -41,7 +40,13 @@ const Signup = () => {
       setServerError(error.message);
       return;
     }
-    navigate(returnTo);
+    // If prefill exists, redirect to proof generation with domain/keyword
+    if (prefill?.domain) {
+      sessionStorage.removeItem('vexlo_prefill');
+      navigate(`/dashboard/new?domain=${encodeURIComponent(prefill.domain)}&keyword=${encodeURIComponent(prefill.keyword ?? '')}`);
+    } else {
+      navigate("/onboarding");
+    }
   };
 
   return (
