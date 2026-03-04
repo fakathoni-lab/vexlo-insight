@@ -596,11 +596,7 @@ Deno.serve(async (req) => {
       throw new Error(updateError.message);
     }
 
-    // Increment proofs_used atomically
-    const { error: incrementError } = await serviceClient.rpc("increment_proofs_used", { user_id_input: user.id });
-    if (incrementError) {
-      console.error("increment_proofs_used RPC failed:", incrementError.message);
-    }
+    // Credit already consumed by attempt_proof_increment — no extra increment needed
 
     // ── Cache result in Redis ──
     if (redis) {
