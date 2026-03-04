@@ -107,6 +107,18 @@ const ProofResult = () => {
     };
   }, [id, user]);
 
+  // Fetch view count when proof is loaded and has been shared
+  useEffect(() => {
+    if (!proof?.public_slug || !proof?.is_public) return;
+    supabase
+      .from("proof_views")
+      .select("*", { count: "exact", head: true })
+      .eq("proof_id", proof.id)
+      .then(({ count }) => {
+        setViewCount(count ?? 0);
+      });
+  }, [proof?.id, proof?.public_slug, proof?.is_public]);
+
   // Progressive loading step animation
   useEffect(() => {
     if (status !== "pending" && status !== "processing") return;
