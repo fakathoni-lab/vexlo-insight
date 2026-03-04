@@ -281,7 +281,7 @@ async function generateNarrative(params: {
 }): Promise<string | null> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
-    console.error("LOVABLE_API_KEY not configured, skipping narrative");
+    if (Deno.env.get("ENVIRONMENT") !== "production") console.error("LOVABLE_API_KEY not configured, skipping narrative");
     return null;
   }
 
