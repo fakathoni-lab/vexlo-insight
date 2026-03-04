@@ -14,8 +14,6 @@ async function verifyWebhookSignature(
   signature: string,
   secret: string
 ): Promise<boolean> {
-  // Polar uses standard webhooks: base64-decoded secret, HMAC-SHA256
-  // Secret format: "whsec_BASE64..."
   const secretBytes = Uint8Array.from(
     atob(secret.startsWith("whsec_") ? secret.slice(6) : secret),
     (c) => c.charCodeAt(0)
@@ -32,7 +30,6 @@ async function verifyWebhookSignature(
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signedContent));
   const expectedSig = btoa(String.fromCharCode(...new Uint8Array(sig)));
 
-  // Signature header can contain multiple sigs separated by spaces: "v1,BASE64 v1,BASE64"
   const signatures = signature.split(" ");
   return signatures.some((s) => {
     const [, sigValue] = s.split(",");
@@ -44,20 +41,40 @@ function log(fields: Record<string, unknown>) {
   console.log(JSON.stringify({ ts: new Date().toISOString(), fn: "polar-webhook", ...fields }));
 }
 
-// Query plans table for proofs_limit by plan name
-async function getPlanLimit(supabase: ReturnType<typeof createClient>, planName: string): Promise<number> {
-  const normalized = planName.toLowerCase().replace(/[\s_-]+/g, "_");
-  const { data, error } = await supabase
-    .from("plans")
-    .select("proofs_limit")
-    .eq("name", normalized)
-    .eq("is_active", true)
-    .single();
-  if (error || !data) {
-    log({ event: "plan_lookup_failed", plan: normalized, error: error?.message });
-    return 5; // fallback to free
+// Resolve plan by Polar product ID first, then fall back to product name
+async function resolvePlan(
+  supabase: ReturnType<typeof createClient>,
+  productId: string | undefined,
+  productName: string | undefined
+): Promise<{ name: string; proofs_limit: number }> {
+  const fallback = { name: "free", proofs_limit: 5 };
+
+  // Try by polar_product_id first (most reliable)
+  if (productId) {
+    const { data, error } = await supabase
+      .from("plans")
+      .select("name, proofs_limit")
+      .eq("polar_product_id", productId)
+      .eq("is_active", true)
+      .single();
+    if (data && !error) return data;
+    log({ event: "plan_lookup_by_product_id_failed", productId, error: error?.message });
   }
-  return data.proofs_limit;
+
+  // Fallback: match by normalized product name
+  if (productName) {
+    const normalized = productName.toLowerCase().replace(/[\s_-]+/g, "_");
+    const { data, error } = await supabase
+      .from("plans")
+      .select("name, proofs_limit")
+      .eq("name", normalized)
+      .eq("is_active", true)
+      .single();
+    if (data && !error) return data;
+    log({ event: "plan_lookup_by_name_failed", plan: normalized, error: error?.message });
+  }
+
+  return fallback;
 }
 
 Deno.serve(async (req) => {
@@ -73,7 +90,6 @@ Deno.serve(async (req) => {
 
   const body = await req.text();
 
-  // Verify signature
   const webhookId = req.headers.get("webhook-id") ?? "";
   const webhookTimestamp = req.headers.get("webhook-timestamp") ?? "";
   const webhookSignature = req.headers.get("webhook-signature") ?? "";
@@ -84,11 +100,7 @@ Deno.serve(async (req) => {
   }
 
   const valid = await verifyWebhookSignature(
-    body,
-    webhookId,
-    webhookTimestamp,
-    webhookSignature,
-    POLAR_WEBHOOK_SECRET
+    body, webhookId, webhookTimestamp, webhookSignature, POLAR_WEBHOOK_SECRET
   );
 
   if (!valid) {
@@ -116,13 +128,18 @@ Deno.serve(async (req) => {
           break;
         }
 
+        // Resolve plan using product ID → name fallback
+        const productId = sub.product?.id;
+        const productName = sub.product?.name;
+        const plan = await resolvePlan(supabaseAdmin, productId, productName);
+
         // Upsert subscription
         await supabaseAdmin.from("subscriptions").upsert(
           {
             user_id: userId,
-            plan: sub.product?.name ?? "premium",
+            plan: plan.name,
             status: sub.status,
-            stripe_subscription_id: sub.id, // reusing column for polar sub id
+            stripe_subscription_id: sub.id,
             stripe_price_id: sub.price?.id ?? null,
             current_period_start: sub.current_period_start,
             current_period_end: sub.current_period_end,
@@ -131,17 +148,15 @@ Deno.serve(async (req) => {
           { onConflict: "user_id" }
         );
 
-        // Update profile plan
-        const planName = sub.product?.name?.toLowerCase() ?? "premium";
-        const planLimit = await getPlanLimit(supabaseAdmin, planName);
+        // Update profile
         await supabaseAdmin.from("profiles").update({
-          plan: planName,
-          proofs_limit: planLimit,
+          plan: plan.name,
+          proofs_limit: plan.proofs_limit,
           plan_status: sub.status === "active" ? "active" : sub.status,
           updated_at: new Date().toISOString(),
         }).eq("id", userId);
 
-        log({ event: "subscription_synced", user_id: userId, status: sub.status, plan: planName, proofs_limit: planLimit });
+        log({ event: "subscription_synced", user_id: userId, status: sub.status, plan: plan.name, proofs_limit: plan.proofs_limit });
         break;
       }
 
