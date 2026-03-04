@@ -54,7 +54,7 @@ export async function getViewCount(proofId: string): Promise<number> {
     .eq("proof_id", proofId) as any);
 
   if (error) {
-    console.error("Failed to get view count:", error);
+    if (import.meta.env.DEV) console.error("Failed to get view count:", error);
     return 0;
   }
 
