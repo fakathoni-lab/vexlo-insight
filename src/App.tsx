@@ -12,6 +12,7 @@ import NewProof from "./pages/NewProof";
 import DomainSearch from "./pages/DomainSearch";
 import ProofReport from "./pages/ProofReport";
 import ProofResult from "./pages/ProofResult";
+import ProofHistory from "./pages/ProofHistory";
 import PublicProof from "./pages/PublicProof";
 import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
