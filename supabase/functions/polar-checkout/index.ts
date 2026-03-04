@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
 
     if (!polarRes.ok) {
       const errBody = await polarRes.text();
-      console.error(`Polar checkout error [${polarRes.status}]:`, errBody);
+      if (Deno.env.get("ENVIRONMENT") !== "production") console.error(`Polar checkout error [${polarRes.status}]:`, errBody);
       return new Response(
         JSON.stringify({ error: "Failed to create checkout session" }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
