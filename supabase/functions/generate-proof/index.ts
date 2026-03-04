@@ -528,7 +528,7 @@ Deno.serve(async (req) => {
     );
 
     if (rpcError) {
-      console.error("attempt_proof_increment RPC failed:", rpcError.message);
+      console.error("attempt_proof_increment RPC failed:", rpcError.message); // Critical: keep in production
       return new Response(
         JSON.stringify({ error: "internal_error", message: "Usage check failed" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
