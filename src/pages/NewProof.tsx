@@ -106,6 +106,17 @@ const NewProof = () => {
         <h2 className="font-headline mb-1" style={{ fontSize: 28, color: "var(--text)" }}>
           Generate Proof Report
         </h2>
+        {prefillDomain && (
+          <div
+            className="rounded-[8px] px-4 py-3 mb-6"
+            style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)" }}
+          >
+            <p className="font-sans text-sm" style={{ color: "var(--accent)" }}>
+              Generating proof for <strong>{prefillDomain}</strong> — you can start immediately below
+            </p>
+          </div>
+        )}
+
         <p className="font-body font-light mb-8" style={{ fontSize: 13, color: "var(--text-dim)" }}>
           Enter any prospect domain and target keyword below.
         </p>
