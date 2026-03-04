@@ -624,7 +624,7 @@ Deno.serve(async (req) => {
     if (results[1]?.status === "fulfilled") {
       historyResult = results[1].value as RankedKeywordsResult;
     } else {
-      console.error("Call 2 (ranked_keywords delta) failed:", (results[1] as PromiseRejectedResult)?.reason);
+      if (Deno.env.get("ENVIRONMENT") !== "production") console.error("Call 2 (ranked_keywords delta) failed:", (results[1] as PromiseRejectedResult)?.reason);
     }
 
     // ── Calculate score using pre-calculated trendScore ──
