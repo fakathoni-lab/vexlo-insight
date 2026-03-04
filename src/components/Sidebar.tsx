@@ -30,10 +30,11 @@ const LightningIcon = () => (
   </svg>
 );
 
-const Sidebar = ({ isOpen, onToggle, activeItem, onNavClick }: SidebarProps) => {
+const Sidebar = ({ isOpen, onToggle, activeItem, onNavClick, mobileOpen = false, onMobileClose }: SidebarProps) => {
   return (
     <aside
-      className="fixed left-0 top-0 bottom-0 z-50 flex flex-col overflow-hidden border-r transition-all duration-300"
+      className={`fixed left-0 top-0 bottom-0 z-50 flex flex-col overflow-hidden border-r transition-all duration-300
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
       style={{
         width: isOpen ? 220 : 60,
         background: "rgba(7,7,18,0.97)",
@@ -43,6 +44,16 @@ const Sidebar = ({ isOpen, onToggle, activeItem, onNavClick }: SidebarProps) => 
         transitionTimingFunction: "cubic-bezier(0.4,0,0.2,1)",
       }}
     >
+      {/* Mobile close button */}
+      {onMobileClose && (
+        <button
+          className="md:hidden absolute top-4 right-3 z-10 p-1 rounded-md"
+          onClick={onMobileClose}
+          style={{ color: "rgba(240,240,238,0.5)" }}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
       {/* Logo */}
       <div
         className="flex items-center gap-3 h-16 shrink-0 border-b px-3"
