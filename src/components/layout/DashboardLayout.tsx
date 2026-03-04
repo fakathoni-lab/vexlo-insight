@@ -155,16 +155,32 @@ const DashboardLayout = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {planLoading ? (
+            {currentPlan === null ? (
               <Skeleton className="h-5 w-12 rounded-full" />
             ) : (
-              <Badge
-                variant="outline"
-                className="font-mono uppercase tracking-widest rounded-[100px] border-[rgba(255,255,255,0.13)]"
-                style={{ fontSize: 8, color: "var(--text-dim)", padding: "2px 8px" }}
-              >
-                {plan ?? "free"}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <span
+                  className="font-mono uppercase tracking-widest rounded-[100px] inline-flex items-center"
+                  style={{
+                    fontSize: 8,
+                    color: badge.color,
+                    background: badge.bg,
+                    border: `1px solid ${badge.border}`,
+                    padding: "2px 8px",
+                  }}
+                >
+                  {badge.label}
+                </span>
+                {currentPlan === "free" && (
+                  <Link
+                    to="/pricing"
+                    className="font-mono uppercase tracking-wider transition-colors duration-150 hover:brightness-125"
+                    style={{ fontSize: 8, color: "var(--accent)" }}
+                  >
+                    Upgrade
+                  </Link>
+                )}
+              </div>
             )}
             <Avatar className="w-7 h-7">
               <AvatarFallback
