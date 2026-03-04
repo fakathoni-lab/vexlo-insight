@@ -177,55 +177,98 @@ async function fetchOrganicAndSerpFeatures(
   };
 }
 
-// ── Call 2: Organic history (30-day delta) ──
-async function fetchOrganicHistory(
-  keyword: string,
+// ── Call 2: Ranked keywords (30-day positional delta via Labs API) ──
+interface RankedKeywordsResult {
+  delta30d: number | null;
+  trendScore: number; // 0-100
+}
+
+async function fetchRankedKeywordsDelta(
   domain: string,
   headers: Record<string, string>
-): Promise<{ delta30d: number | null }> {
-  const now = new Date();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const dateTo = now.toISOString().split("T")[0];
-  const dateFrom = thirtyDaysAgo.toISOString().split("T")[0];
+): Promise<RankedKeywordsResult> {
+  const DEFAULT: RankedKeywordsResult = { delta30d: null, trendScore: 50 };
 
-  const res = await fetchWithRetry(
-    `${DATAFORSEO_BASE}/serp/google/organic/live/advanced`,
+  // ── Current snapshot ──
+  const currentRes = await fetchWithRetry(
+    `${DATAFORSEO_BASE}/dataforseo_labs/google/ranked_keywords/live`,
     {
       method: "POST",
       headers,
       body: JSON.stringify([
         {
-          keyword,
-          location_name: "United States",
+          target: domain,
+          location_code: 2840,
           language_code: "en",
-          device: "desktop",
-          os: "windows",
-          depth: 20,
-          date_from: dateFrom,
-          date_to: dateTo,
+          limit: 100,
         },
       ]),
     }
   );
 
-  const data = await res.json();
-  const items = data?.tasks?.[0]?.result?.[0]?.items ?? [];
+  const currentData = await currentRes.json();
+  const currentItems =
+    currentData?.tasks?.[0]?.result?.[0]?.items ?? [];
 
-  let earliestRank: number | null = null;
-  let latestRank: number | null = null;
+  if (currentItems.length === 0) return DEFAULT;
 
-  for (const item of items) {
-    if (item.type === "organic" && item.url?.includes(domain)) {
-      latestRank = item.rank_absolute;
-      if (earliestRank === null) earliestRank = item.rank_absolute;
+  const avgPositionNow =
+    currentItems.reduce(
+      (sum: number, item: any) =>
+        sum +
+        (item?.ranked_serp_element?.serp_item?.rank_absolute ?? 0),
+      0
+    ) / currentItems.length;
+
+  // ── Historical snapshot (30 days ago) ──
+  const historicalRes = await fetchWithRetry(
+    `${DATAFORSEO_BASE}/dataforseo_labs/google/ranked_keywords/live`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify([
+        {
+          target: domain,
+          location_code: 2840,
+          language_code: "en",
+          limit: 100,
+          historical_serp_mode: "30_days_ago",
+        },
+      ]),
     }
+  );
+
+  const historicalData = await historicalRes.json();
+  const historicalItems =
+    historicalData?.tasks?.[0]?.result?.[0]?.items ?? [];
+
+  if (historicalItems.length === 0) {
+    // No historical data — use current snapshot only, neutral trend
+    return { delta30d: null, trendScore: 50 };
   }
 
-  if (earliestRank !== null && latestRank !== null) {
-    return { delta30d: earliestRank - latestRank };
-  }
+  const avgPosition30d =
+    historicalItems.reduce(
+      (sum: number, item: any) =>
+        sum +
+        (item?.ranked_serp_element?.serp_item?.rank_absolute ?? 0),
+      0
+    ) / historicalItems.length;
 
-  return { delta30d: null };
+  // delta = now - 30d ago
+  // Negative = positions improved (rank number went down = better)
+  // Positive = positions worsened
+  const delta = Math.round((avgPositionNow - avgPosition30d) * 10) / 10;
+
+  // Map to 0-100 trend score
+  let trendScore: number;
+  if (delta < -5) trendScore = 100;
+  else if (delta <= -1) trendScore = 75;
+  else if (delta > -1 && delta < 1) trendScore = 50;
+  else if (delta <= 5) trendScore = 25;
+  else trendScore = 0;
+
+  return { delta30d: delta, trendScore };
 }
 
 // ── AI Narrative generation ──
@@ -343,6 +386,43 @@ function calculateProofScore(params: {
   else kdScore = 20;
 
   const final = Math.round(rankScore * 0.4 + trendScore * 0.3 + aiScore * 0.2 + kdScore * 0.1);
+  return Math.max(0, Math.min(100, final));
+}
+
+// Overload that accepts pre-calculated trendScore directly
+function calculateProofScoreWithTrend(params: {
+  rankPosition: number | null;
+  trendScore: number;
+  aiOverviewPresent: boolean;
+  aiImpactPercent: number;
+  kwDifficulty: number;
+}): number {
+  const { rankPosition, trendScore: trend, aiOverviewPresent, aiImpactPercent, kwDifficulty } = params;
+
+  let rankScore = 0;
+  if (rankPosition !== null && rankPosition > 0) {
+    if (rankPosition === 1) rankScore = 100;
+    else if (rankPosition === 2) rankScore = 97;
+    else if (rankPosition === 3) rankScore = 94;
+    else if (rankPosition <= 10) rankScore = Math.round(90 - ((rankPosition - 4) / 6) * 40);
+    else if (rankPosition <= 20) rankScore = Math.round(45 - ((rankPosition - 11) / 9) * 40);
+    else rankScore = 0;
+  }
+
+  let aiScore = 100;
+  if (aiOverviewPresent) {
+    if (aiImpactPercent < 20) aiScore = 70;
+    else if (aiImpactPercent <= 40) aiScore = 40;
+    else aiScore = 10;
+  }
+
+  let kdScore: number;
+  if (kwDifficulty < 30) kdScore = 100;
+  else if (kwDifficulty <= 50) kdScore = 70;
+  else if (kwDifficulty <= 70) kdScore = 40;
+  else kdScore = 20;
+
+  const final = Math.round(rankScore * 0.4 + trend * 0.3 + aiScore * 0.2 + kdScore * 0.1);
   return Math.max(0, Math.min(100, final));
 }
 
@@ -520,7 +600,7 @@ Deno.serve(async (req) => {
     const results = await Promise.race([
       Promise.allSettled([
         fetchOrganicAndSerpFeatures(cleanKeyword, cleanDomain, dfsHeaders),
-        fetchOrganicHistory(cleanKeyword, cleanDomain, dfsHeaders),
+        fetchRankedKeywordsDelta(cleanDomain, dfsHeaders),
       ]),
       new Promise<PromiseSettledResult<never>[]>((_, reject) =>
         setTimeout(() => reject(new Error("TIMEOUT")), 24000)
@@ -534,7 +614,7 @@ Deno.serve(async (req) => {
       serpFeatures: { ai_overview: false, featured_snippet: false, local_pack: false, knowledge_panel: false },
       aiImpactPercent: 0,
     };
-    let historyResult: { delta30d: number | null } = { delta30d: null };
+    let historyResult: RankedKeywordsResult = { delta30d: null, trendScore: 50 };
 
     if (results[0]?.status === "fulfilled") {
       organicAndSerpResult = results[0].value as OrganicAndSerpResult;
@@ -543,15 +623,15 @@ Deno.serve(async (req) => {
     }
 
     if (results[1]?.status === "fulfilled") {
-      historyResult = results[1].value as { delta30d: number | null };
+      historyResult = results[1].value as RankedKeywordsResult;
     } else {
-      console.error("Call 2 (history) failed:", (results[1] as PromiseRejectedResult)?.reason);
+      console.error("Call 2 (ranked_keywords delta) failed:", (results[1] as PromiseRejectedResult)?.reason);
     }
 
-    // ── Calculate score ──
-    const proofScore = calculateProofScore({
+    // ── Calculate score using pre-calculated trendScore ──
+    const proofScore = calculateProofScoreWithTrend({
       rankPosition: organicAndSerpResult.rankPosition,
-      delta30d: historyResult.delta30d,
+      trendScore: historyResult.trendScore,
       aiOverviewPresent: organicAndSerpResult.serpFeatures.ai_overview,
       aiImpactPercent: organicAndSerpResult.aiImpactPercent,
       kwDifficulty: organicAndSerpResult.kwDifficulty,
