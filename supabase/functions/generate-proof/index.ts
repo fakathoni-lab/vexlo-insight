@@ -618,7 +618,7 @@ Deno.serve(async (req) => {
     if (results[0]?.status === "fulfilled") {
       organicAndSerpResult = results[0].value as OrganicAndSerpResult;
     } else {
-      console.error("Call 1 (organic+serp) failed:", (results[0] as PromiseRejectedResult)?.reason);
+      if (Deno.env.get("ENVIRONMENT") !== "production") console.error("Call 1 (organic+serp) failed:", (results[0] as PromiseRejectedResult)?.reason);
     }
 
     if (results[1]?.status === "fulfilled") {
