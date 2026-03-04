@@ -360,8 +360,10 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Capture proof_id early for error handler
+  // Capture for error handler
   let proofId: string | null = null;
+  let userId: string | null = null;
+  let creditConsumed = false;
 
   try {
     // ── Auth ──
