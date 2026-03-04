@@ -167,10 +167,27 @@ const Hero = () => {
                 if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(); }
               }}
             />
-            {error && (
+            {error && error !== "rate_limited" && (
               <p className="font-sans text-center mt-2" style={{ fontSize: "13px", color: "var(--accent-danger)" }}>
                 {error}
               </p>
+            )}
+            {error === "rate_limited" && (
+              <div className="mt-3 text-center px-4 py-3 rounded-xl" style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)" }}>
+                <p className="font-sans text-sm font-medium" style={{ color: "var(--text)" }}>
+                  You've reached the preview limit.
+                </p>
+                <p className="font-sans text-xs mt-1" style={{ color: "var(--text-dim)" }}>
+                  Sign up for unlimited proofs — free, no card required.
+                </p>
+                <button
+                  onClick={() => navigate("/signup")}
+                  className="mt-2 px-5 py-2 text-sm font-semibold rounded-[var(--radii-inner)] transition-all duration-200"
+                  style={{ background: "var(--accent)", color: "#fff" }}
+                >
+                  Sign Up Free →
+                </button>
+              </div>
             )}
             <div className="search-actions">
               <div />
