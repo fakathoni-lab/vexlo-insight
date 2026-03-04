@@ -82,8 +82,25 @@ const Hero = () => {
         body: { domain, keyword },
       });
 
-      if (fnError) throw fnError;
-      if (data?.error) throw new Error(data.error);
+      if (fnError) {
+        // FunctionsHttpError stores the Response in .context
+        const ctx = (fnError as any)?.context;
+        if (ctx instanceof Response) {
+          const body = await ctx.json().catch(() => null);
+          if (ctx.status === 429 || body?.error?.includes("Too many requests")) {
+            setError("rate_limited");
+            return;
+          }
+        }
+        throw fnError;
+      }
+      if (data?.error) {
+        if (data.error.includes("Too many requests")) {
+          setError("rate_limited");
+          return;
+        }
+        throw new Error(data.error);
+      }
 
       setPreview({
         domain: data.domain,
@@ -93,12 +110,7 @@ const Hero = () => {
       });
     } catch (err: unknown) {
       console.error("Preview proof failed:", err);
-      const msg = (err as any)?.message ?? "";
-      if (msg.includes("Too many requests") || msg.includes("429")) {
-        setError("rate_limited");
-      } else {
-        setError("Analysis failed. Please try again.");
-      }
+      setError("Analysis failed. Please try again.");
     } finally {
       setLoading(false);
       setLoadingDomain("");
