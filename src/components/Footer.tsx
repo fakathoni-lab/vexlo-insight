@@ -37,6 +37,13 @@ const footerLinks = [
       { label: "Contact", href: "mailto:sales@vexloai.com" },
     ],
   },
+  {
+    title: "Legal",
+    links: [
+      { label: "Privacy Policy", href: "/legal/privacy" },
+      { label: "Terms of Service", href: "/legal/terms" },
+    ],
+  },
 ];
 
 const Footer = () => {
@@ -75,7 +82,7 @@ const Footer = () => {
         </div>
 
         {/* Links grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-16">
           {footerLinks.map((group) => (
             <div key={group.title}>
               <h4 className="font-mono text-[10px] uppercase tracking-widest mb-4" style={{ color: "var(--text)" }}>

@@ -7,6 +7,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Signup from "./pages/Signup";
 import PricingPage from "./pages/PricingPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import Dashboard from "./pages/Dashboard";
 import NewProof from "./pages/NewProof";
 import DomainSearch from "./pages/DomainSearch";
@@ -37,6 +39,8 @@ const App = () => (
         <Route path="/proof/:id" element={<ProofReport />} />
         <Route path="/p/:slug" element={<PublicProof />} />
         <Route path="/check" element={<DomainSearch />} />
+        <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+        <Route path="/legal/terms" element={<TermsOfService />} />
         <Route path="/webhook-success" element={<WebhookSuccess />} />
         <Route path="/webhook-cancel" element={<WebhookCancel />} />
         <Route element={<ProtectedRoute><DashboardLayoutNew /></ProtectedRoute>}>

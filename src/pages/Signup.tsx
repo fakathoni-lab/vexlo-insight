@@ -145,7 +145,18 @@ const Signup = () => {
           </Button>
         </form>
 
-        <p className="text-center font-body text-sm mt-6" style={{ color: "rgba(240,240,238,0.45)" }}>
+        <p className="text-center font-body text-xs mt-4" style={{ color: "rgba(240,240,238,0.35)" }}>
+          By creating an account, you agree to our{" "}
+          <Link to="/legal/terms" className="underline transition-colors duration-200 hover:text-[#f0f0ee]" style={{ color: "rgba(240,240,238,0.55)" }}>
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link to="/legal/privacy" className="underline transition-colors duration-200 hover:text-[#f0f0ee]" style={{ color: "rgba(240,240,238,0.55)" }}>
+            Privacy Policy
+          </Link>
+        </p>
+
+        <p className="text-center font-body text-sm mt-4" style={{ color: "rgba(240,240,238,0.45)" }}>
           Already have an account?{" "}
           <Link to="/login" className="transition-colors duration-200 hover:text-[#f0f0ee]" style={{ color: "hsl(263,84%,58%)" }}>
             Sign in
