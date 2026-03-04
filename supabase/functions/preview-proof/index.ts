@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { Redis } from "npm:@upstash/redis@1.34.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,6 +9,25 @@ const corsHeaders = {
 
 const DOMAIN_RE = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/;
 const DATAFORSEO_BASE = "https://api.dataforseo.com/v3";
+const RATE_LIMIT_WINDOW = 3600; // 1 hour in seconds
+const RATE_LIMIT_MAX = 5; // max 5 preview proofs per IP per hour
+
+function getRedis(): Redis {
+  return new Redis({
+    url: Deno.env.get("UPSTASH_REDIS_REST_URL")!,
+    token: Deno.env.get("UPSTASH_REDIS_REST_TOKEN")!,
+  });
+}
+
+async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining: number }> {
+  const redis = getRedis();
+  const key = `preview_proof_rl:${ip}`;
+  const current = await redis.incr(key);
+  if (current === 1) {
+    await redis.expire(key, RATE_LIMIT_WINDOW);
+  }
+  return { allowed: current <= RATE_LIMIT_MAX, remaining: Math.max(0, RATE_LIMIT_MAX - current) };
+}
 
 function cleanDomain(raw: string): string {
   return raw.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/+$/, "").toLowerCase().trim();
