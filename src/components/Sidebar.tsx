@@ -1,4 +1,4 @@
-import { LayoutGrid, Zap, Archive, Users, Globe, Link2, Settings } from "lucide-react";
+import { LayoutGrid, Zap, Archive, Users, Globe, Link2, Settings, X } from "lucide-react";
 
 interface NavItem {
   id: string;
