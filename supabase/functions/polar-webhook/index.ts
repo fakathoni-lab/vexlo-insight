@@ -6,7 +6,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, webhook-id, webhook-timestamp, webhook-signature",
 };
 
-// Verify Polar webhook signature using standard webhooks (HMAC-SHA256)
 async function verifyWebhookSignature(
   body: string,
   webhookId: string,
@@ -41,7 +40,6 @@ function log(fields: Record<string, unknown>) {
   console.log(JSON.stringify({ ts: new Date().toISOString(), fn: "polar-webhook", ...fields }));
 }
 
-// Resolve plan by Polar product ID first, then fall back to product name
 async function resolvePlan(
   supabase: ReturnType<typeof createClient>,
   productId: string | undefined,
@@ -49,7 +47,6 @@ async function resolvePlan(
 ): Promise<{ name: string; proofs_limit: number }> {
   const fallback = { name: "free", proofs_limit: 5 };
 
-  // Try by polar_product_id first (most reliable)
   if (productId) {
     const { data, error } = await supabase
       .from("plans")
@@ -61,7 +58,6 @@ async function resolvePlan(
     log({ event: "plan_lookup_by_product_id_failed", productId, error: error?.message });
   }
 
-  // Fallback: match by normalized product name
   if (productName) {
     const normalized = productName.toLowerCase().replace(/[\s_-]+/g, "_");
     const { data, error } = await supabase
@@ -77,10 +73,44 @@ async function resolvePlan(
   return fallback;
 }
 
+async function recordWebhookEvent(
+  supabase: ReturnType<typeof createClient>,
+  webhookId: string,
+  eventType: string,
+  payload: unknown,
+  userId: string | null,
+  startMs: number
+): Promise<boolean> {
+  // Check idempotency — if webhook_id already exists, skip
+  const { data: existing } = await supabase
+    .from("webhook_events")
+    .select("id")
+    .eq("webhook_id", webhookId)
+    .maybeSingle();
+
+  if (existing) {
+    log({ event: "duplicate_webhook", webhook_id: webhookId });
+    return false; // already processed
+  }
+
+  const processingMs = Date.now() - startMs;
+  await supabase.from("webhook_events").insert({
+    webhook_id: webhookId,
+    event_type: eventType,
+    payload: payload as Record<string, unknown>,
+    user_id: userId,
+    processing_ms: processingMs,
+  });
+
+  return true; // new event, proceed
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const startMs = Date.now();
 
   const POLAR_WEBHOOK_SECRET = Deno.env.get("POLAR_WEBHOOK_SECRET");
   if (!POLAR_WEBHOOK_SECRET) {
@@ -118,34 +148,49 @@ Deno.serve(async (req) => {
   );
 
   try {
+    // Extract user_id early for idempotency record
+    const sub = payload.data;
+    const userId: string | null = sub?.metadata?.supabase_user_id ?? null;
+    const polarCustomerId: string | null = sub?.customer_id ?? null;
+
+    // Idempotency check — skip if already processed
+    const isNew = await recordWebhookEvent(
+      supabaseAdmin, webhookId, eventType, payload, userId, startMs
+    );
+    if (!isNew) {
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     switch (eventType) {
       case "subscription.created":
       case "subscription.updated": {
-        const sub = payload.data;
-        const userId = sub.metadata?.supabase_user_id;
         if (!userId) {
           log({ event: "no_user_id", subscription_id: sub.id });
           break;
         }
 
-        // Resolve plan using product ID → name fallback
         const productId = sub.product?.id;
         const productName = sub.product?.name;
         const plan = await resolvePlan(supabaseAdmin, productId, productName);
 
-        // Upsert subscription
+        // Upsert subscription using polar_subscription_id as conflict key
         await supabaseAdmin.from("subscriptions").upsert(
           {
             user_id: userId,
+            polar_subscription_id: sub.id,
+            polar_product_id: productId ?? "",
             plan: plan.name,
             status: sub.status,
-            stripe_subscription_id: sub.id,
-            stripe_price_id: sub.price?.id ?? null,
             current_period_start: sub.current_period_start,
             current_period_end: sub.current_period_end,
             cancel_at_period_end: sub.cancel_at_period_end ?? false,
+            canceled_at: sub.canceled_at ?? null,
+            updated_at: new Date().toISOString(),
           },
-          { onConflict: "user_id" }
+          { onConflict: "polar_subscription_id" }
         );
 
         // Update profile
@@ -153,37 +198,51 @@ Deno.serve(async (req) => {
           plan: plan.name,
           proofs_limit: plan.proofs_limit,
           plan_status: sub.status === "active" ? "active" : sub.status,
+          proofs_used: 0,
+          period_reset_at: sub.current_period_start,
+          current_period_end: sub.current_period_end,
+          polar_customer_id: polarCustomerId,
           updated_at: new Date().toISOString(),
         }).eq("id", userId);
 
-        log({ event: "subscription_synced", user_id: userId, status: sub.status, plan: plan.name, proofs_limit: plan.proofs_limit });
+        log({
+          event: "subscription_synced",
+          user_id: userId,
+          status: sub.status,
+          plan: plan.name,
+          proofs_limit: plan.proofs_limit,
+          polar_subscription_id: sub.id,
+        });
         break;
       }
 
       case "subscription.canceled":
       case "subscription.revoked": {
-        const sub = payload.data;
-        const userId = sub.metadata?.supabase_user_id;
         if (!userId) break;
+
+        // Resolve free plan limits from DB
+        const freePlan = await resolvePlan(supabaseAdmin, undefined, "free");
 
         await supabaseAdmin.from("subscriptions").update({
           status: "canceled",
           cancel_at_period_end: true,
-        }).eq("user_id", userId);
+          canceled_at: sub.canceled_at ?? new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }).eq("polar_subscription_id", sub.id);
 
         await supabaseAdmin.from("profiles").update({
           plan: "free",
-          proofs_limit: 5,
+          proofs_limit: freePlan.proofs_limit,
           plan_status: "canceled",
           updated_at: new Date().toISOString(),
         }).eq("id", userId);
 
-        log({ event: "subscription_canceled", user_id: userId, proofs_limit: 5 });
+        log({ event: "subscription_canceled", user_id: userId, polar_subscription_id: sub.id });
         break;
       }
 
       case "order.created": {
-        log({ event: "order_created", order_id: payload.data?.id });
+        log({ event: "order_created", order_id: sub?.id });
         break;
       }
 
