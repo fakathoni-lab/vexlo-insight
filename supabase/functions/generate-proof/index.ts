@@ -265,7 +265,7 @@ async function fetchRankedKeywordsDelta(
 
     return { delta30d: delta, trendScore };
   } catch (err) {
-    console.error("fetchRankedKeywordsDelta error:", (err as Error).message);
+    if (Deno.env.get("ENVIRONMENT") !== "production") console.error("fetchRankedKeywordsDelta error:", (err as Error).message);
     return DEFAULT;
   }
 }
@@ -281,7 +281,7 @@ async function generateNarrative(params: {
 }): Promise<string | null> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
-    console.error("LOVABLE_API_KEY not configured, skipping narrative");
+    if (Deno.env.get("ENVIRONMENT") !== "production") console.error("LOVABLE_API_KEY not configured, skipping narrative");
     return null;
   }
 
@@ -329,7 +329,7 @@ Write the proof paragraph now.`;
     clearTimeout(timeout);
 
     if (!res.ok) {
-      console.error(`AI gateway error: ${res.status}`);
+      if (Deno.env.get("ENVIRONMENT") !== "production") console.error(`AI gateway error: ${res.status}`);
       return null;
     }
 
@@ -337,7 +337,7 @@ Write the proof paragraph now.`;
     const content = data?.choices?.[0]?.message?.content;
     return typeof content === "string" && content.length > 10 ? content.trim() : null;
   } catch (err) {
-    console.error("Narrative generation failed:", (err as Error).message);
+    if (Deno.env.get("ENVIRONMENT") !== "production") console.error("Narrative generation failed:", (err as Error).message);
     return null;
   }
 }
@@ -528,7 +528,7 @@ Deno.serve(async (req) => {
     );
 
     if (rpcError) {
-      console.error("attempt_proof_increment RPC failed:", rpcError.message);
+      console.error("attempt_proof_increment RPC failed:", rpcError.message); // Critical: keep in production
       return new Response(
         JSON.stringify({ error: "internal_error", message: "Usage check failed" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -566,7 +566,7 @@ Deno.serve(async (req) => {
       try {
         cachedData = await redis.get<string>(cacheKey);
       } catch (e) {
-        console.error("Redis GET failed:", e);
+        if (Deno.env.get("ENVIRONMENT") !== "production") console.error("Redis GET failed:", e);
       }
     }
 
@@ -618,13 +618,13 @@ Deno.serve(async (req) => {
     if (results[0]?.status === "fulfilled") {
       organicAndSerpResult = results[0].value as OrganicAndSerpResult;
     } else {
-      console.error("Call 1 (organic+serp) failed:", (results[0] as PromiseRejectedResult)?.reason);
+      if (Deno.env.get("ENVIRONMENT") !== "production") console.error("Call 1 (organic+serp) failed:", (results[0] as PromiseRejectedResult)?.reason);
     }
 
     if (results[1]?.status === "fulfilled") {
       historyResult = results[1].value as RankedKeywordsResult;
     } else {
-      console.error("Call 2 (ranked_keywords delta) failed:", (results[1] as PromiseRejectedResult)?.reason);
+      if (Deno.env.get("ENVIRONMENT") !== "production") console.error("Call 2 (ranked_keywords delta) failed:", (results[1] as PromiseRejectedResult)?.reason);
     }
 
     // ── Calculate score using pre-calculated trendScore ──
@@ -685,7 +685,7 @@ Deno.serve(async (req) => {
       try {
         await redis.set(cacheKey, JSON.stringify(updatePayload), { ex: 86400 });
       } catch (e) {
-        console.error("Redis SET failed:", e);
+        if (Deno.env.get("ENVIRONMENT") !== "production") console.error("Redis SET failed:", e);
       }
     }
 
@@ -694,7 +694,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    console.error("generate-proof error:", err);
+    console.error("generate-proof critical error:", (err as Error).message); // Critical: keep in production
 
     // Rollback credit + mark proof as failed
     if (proofId) {

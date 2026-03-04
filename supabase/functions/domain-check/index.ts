@@ -37,7 +37,9 @@ function hashToUuid(hex: string): string {
 }
 
 function log(fields: Record<string, unknown>) {
-  console.log(JSON.stringify({ ts: new Date().toISOString(), fn: "domain-check", ...fields }));
+  if (Deno.env.get("ENVIRONMENT") !== "production") {
+    console.log(JSON.stringify({ ts: new Date().toISOString(), fn: "domain-check", ...fields }));
+  }
 }
 
 function errResponse(code: string, message: string, status: number): Response {
@@ -177,7 +179,7 @@ Deno.serve(async (req) => {
     // ── Dynadot API call ──
     const apiKey = Deno.env.get("DYNADOT_API_KEY");
     if (!apiKey) {
-      console.error("DYNADOT_API_KEY not configured");
+      if (Deno.env.get("ENVIRONMENT") !== "production") console.error("DYNADOT_API_KEY not configured");
       return errResponse("SERVICE_UNAVAILABLE", "Domain lookup service temporarily unavailable.", 503);
     }
 
@@ -315,7 +317,7 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     log({ request_id: requestId, event: "unhandled_error", latency_ms: Date.now() - startMs });
-    console.error("domain-check error:", err);
+    if (Deno.env.get("ENVIRONMENT") !== "production") console.error("domain-check error:", err);
     return errResponse("INTERNAL_ERROR", "An unexpected error occurred.", 500);
   }
 });

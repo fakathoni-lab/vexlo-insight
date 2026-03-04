@@ -77,7 +77,7 @@ const ProofResult = () => {
         supabase.functions.invoke("generate-proof", {
           body: { domain: data.domain, keyword: data.keyword, proof_id: data.id },
         }).catch((err) => {
-          console.error("Edge function invocation failed:", err);
+          if (import.meta.env.DEV) console.error("Edge function invocation failed:", err);
         });
       }
     };

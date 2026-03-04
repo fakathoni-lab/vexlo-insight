@@ -109,7 +109,7 @@ const Hero = () => {
         rank: data.rank,
       });
     } catch (err: unknown) {
-      console.error("Preview proof failed:", err);
+      if (import.meta.env.DEV) console.error("Preview proof failed:", err);
       setError("Analysis failed. Please try again.");
     } finally {
       setLoading(false);
