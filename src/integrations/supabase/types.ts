@@ -141,12 +141,15 @@ export type Database = {
           brand_color: string | null
           brand_logo_url: string | null
           created_at: string | null
+          current_period_end: string | null
           email: string | null
           full_name: string | null
           id: string
           onboarding_completed: boolean
+          period_reset_at: string | null
           plan: string | null
           plan_status: string | null
+          polar_customer_id: string | null
           proofs_limit: number | null
           proofs_used: number | null
           stripe_id: string | null
@@ -158,12 +161,15 @@ export type Database = {
           brand_color?: string | null
           brand_logo_url?: string | null
           created_at?: string | null
+          current_period_end?: string | null
           email?: string | null
           full_name?: string | null
           id: string
           onboarding_completed?: boolean
+          period_reset_at?: string | null
           plan?: string | null
           plan_status?: string | null
+          polar_customer_id?: string | null
           proofs_limit?: number | null
           proofs_used?: number | null
           stripe_id?: string | null
@@ -175,12 +181,15 @@ export type Database = {
           brand_color?: string | null
           brand_logo_url?: string | null
           created_at?: string | null
+          current_period_end?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           onboarding_completed?: boolean
+          period_reset_at?: string | null
           plan?: string | null
           plan_status?: string | null
+          polar_customer_id?: string | null
           proofs_limit?: number | null
           proofs_used?: number | null
           stripe_id?: string | null
@@ -282,42 +291,45 @@ export type Database = {
       }
       subscriptions: {
         Row: {
-          cancel_at_period_end: boolean | null
+          cancel_at_period_end: boolean
+          canceled_at: string | null
           created_at: string
-          current_period_end: string | null
-          current_period_start: string | null
+          current_period_end: string
+          current_period_start: string
           id: string
           plan: string
+          polar_product_id: string
+          polar_subscription_id: string
           status: string
-          stripe_price_id: string | null
-          stripe_subscription_id: string | null
-          updated_at: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
-          cancel_at_period_end?: boolean | null
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
           created_at?: string
-          current_period_end?: string | null
-          current_period_start?: string | null
+          current_period_end: string
+          current_period_start: string
           id?: string
           plan: string
-          status?: string
-          stripe_price_id?: string | null
-          stripe_subscription_id?: string | null
-          updated_at?: string | null
+          polar_product_id: string
+          polar_subscription_id: string
+          status: string
+          updated_at?: string
           user_id: string
         }
         Update: {
-          cancel_at_period_end?: boolean | null
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
           created_at?: string
-          current_period_end?: string | null
-          current_period_start?: string | null
+          current_period_end?: string
+          current_period_start?: string
           id?: string
           plan?: string
+          polar_product_id?: string
+          polar_subscription_id?: string
           status?: string
-          stripe_price_id?: string | null
-          stripe_subscription_id?: string | null
-          updated_at?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -377,6 +389,44 @@ export type Database = {
           source?: string | null
         }
         Relationships: []
+      }
+      webhook_events: {
+        Row: {
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string
+          processing_ms: number | null
+          user_id: string | null
+          webhook_id: string
+        }
+        Insert: {
+          event_type: string
+          id?: string
+          payload: Json
+          processed_at?: string
+          processing_ms?: number | null
+          user_id?: string | null
+          webhook_id: string
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string
+          processing_ms?: number | null
+          user_id?: string | null
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
