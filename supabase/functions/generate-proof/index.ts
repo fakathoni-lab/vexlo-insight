@@ -389,6 +389,43 @@ function calculateProofScore(params: {
   return Math.max(0, Math.min(100, final));
 }
 
+// Overload that accepts pre-calculated trendScore directly
+function calculateProofScoreWithTrend(params: {
+  rankPosition: number | null;
+  trendScore: number;
+  aiOverviewPresent: boolean;
+  aiImpactPercent: number;
+  kwDifficulty: number;
+}): number {
+  const { rankPosition, trendScore: trend, aiOverviewPresent, aiImpactPercent, kwDifficulty } = params;
+
+  let rankScore = 0;
+  if (rankPosition !== null && rankPosition > 0) {
+    if (rankPosition === 1) rankScore = 100;
+    else if (rankPosition === 2) rankScore = 97;
+    else if (rankPosition === 3) rankScore = 94;
+    else if (rankPosition <= 10) rankScore = Math.round(90 - ((rankPosition - 4) / 6) * 40);
+    else if (rankPosition <= 20) rankScore = Math.round(45 - ((rankPosition - 11) / 9) * 40);
+    else rankScore = 0;
+  }
+
+  let aiScore = 100;
+  if (aiOverviewPresent) {
+    if (aiImpactPercent < 20) aiScore = 70;
+    else if (aiImpactPercent <= 40) aiScore = 40;
+    else aiScore = 10;
+  }
+
+  let kdScore: number;
+  if (kwDifficulty < 30) kdScore = 100;
+  else if (kwDifficulty <= 50) kdScore = 70;
+  else if (kwDifficulty <= 70) kdScore = 40;
+  else kdScore = 20;
+
+  const final = Math.round(rankScore * 0.4 + trend * 0.3 + aiScore * 0.2 + kdScore * 0.1);
+  return Math.max(0, Math.min(100, final));
+}
+
 // ── Service-role client helper ──
 function getServiceClient() {
   const url = Deno.env.get("SUPABASE_URL");
