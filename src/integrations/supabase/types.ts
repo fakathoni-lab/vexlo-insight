@@ -438,8 +438,33 @@ export type Database = {
         Args: { user_id_input: string }
         Returns: undefined
       }
+      reset_proofs_for_period: {
+        Args: {
+          p_current_period_end: string
+          p_current_period_start: string
+          p_polar_subscription_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       rollback_proof_increment: {
         Args: { p_user_id: string }
+        Returns: undefined
+      }
+      sync_subscription: {
+        Args: {
+          p_cancel_at_period_end?: boolean
+          p_canceled_at?: string
+          p_current_period_end: string
+          p_current_period_start: string
+          p_plan: string
+          p_polar_customer_id?: string
+          p_polar_product_id: string
+          p_polar_subscription_id: string
+          p_proofs_limit: number
+          p_status: string
+          p_user_id: string
+        }
         Returns: undefined
       }
     }
