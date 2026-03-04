@@ -395,6 +395,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    userId = user.id;
 
     // ── Parse + validate with Zod ──
     let rawBody: unknown;
