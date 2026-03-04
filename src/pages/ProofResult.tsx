@@ -263,15 +263,30 @@ const ProofResult = () => {
             Keyword: {proof.keyword} · {formattedDate}
           </p>
         </div>
-        <div
-          className="shrink-0 rounded-full px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest"
-          style={{
-            backgroundColor: proof.score >= 70 ? "rgba(34,197,94,0.12)" : proof.score >= 40 ? "rgba(245,158,11,0.12)" : "rgba(239,68,68,0.12)",
-            color: proof.score >= 70 ? "#22c55e" : proof.score >= 40 ? "#f59e0b" : "#ef4444",
-            border: `1px solid ${proof.score >= 70 ? "rgba(34,197,94,0.25)" : proof.score >= 40 ? "rgba(245,158,11,0.25)" : "rgba(239,68,68,0.25)"}`,
-          }}
-        >
-          Score: {proof.score}/100
+        <div className="flex items-center gap-3 shrink-0">
+          {proof.public_slug && viewCount !== null && (
+            <div
+              className="flex items-center gap-1.5 rounded-full px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest"
+              style={{
+                backgroundColor: "rgba(255,255,255,0.04)",
+                color: "var(--text-muted)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <Eye size={12} />
+              <span>{viewCount} {viewCount === 1 ? "view" : "views"}</span>
+            </div>
+          )}
+          <div
+            className="rounded-full px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest"
+            style={{
+              backgroundColor: proof.score >= 70 ? "rgba(34,197,94,0.12)" : proof.score >= 40 ? "rgba(245,158,11,0.12)" : "rgba(239,68,68,0.12)",
+              color: proof.score >= 70 ? "#22c55e" : proof.score >= 40 ? "#f59e0b" : "#ef4444",
+              border: `1px solid ${proof.score >= 70 ? "rgba(34,197,94,0.25)" : proof.score >= 40 ? "rgba(245,158,11,0.25)" : "rgba(239,68,68,0.25)"}`,
+            }}
+          >
+            Score: {proof.score}/100
+          </div>
         </div>
       </div>
 
