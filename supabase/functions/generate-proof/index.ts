@@ -337,7 +337,7 @@ Write the proof paragraph now.`;
     const content = data?.choices?.[0]?.message?.content;
     return typeof content === "string" && content.length > 10 ? content.trim() : null;
   } catch (err) {
-    console.error("Narrative generation failed:", (err as Error).message);
+    if (Deno.env.get("ENVIRONMENT") !== "production") console.error("Narrative generation failed:", (err as Error).message);
     return null;
   }
 }
