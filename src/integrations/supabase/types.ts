@@ -108,6 +108,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          polar_product_id: string | null
           price_monthly: number
           proofs_limit: number
         }
@@ -117,6 +118,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          polar_product_id?: string | null
           price_monthly?: number
           proofs_limit: number
         }
@@ -126,6 +128,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          polar_product_id?: string | null
           price_monthly?: number
           proofs_limit?: number
         }

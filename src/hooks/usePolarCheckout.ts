@@ -2,9 +2,9 @@ import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 // Polar product IDs — replace with real IDs from Polar dashboard
-export const POLAR_PRODUCT_STARTER = "PLACEHOLDER_STARTER_PRODUCT_ID"; // [PLACEHOLDER] Replace with Polar Starter product ID
-export const POLAR_PRODUCT_AGENCY_PRO = "PLACEHOLDER_AGENCY_PRO_PRODUCT_ID"; // [PLACEHOLDER] Replace with Polar Agency Pro product ID
-export const POLAR_PRODUCT_AGENCY_ELITE = "PLACEHOLDER_AGENCY_ELITE_PRODUCT_ID"; // [PLACEHOLDER] Replace with Polar Agency Elite product ID
+export const POLAR_PRODUCT_STARTER = "48594d7c-4b3b-4d03-9db6-2bc2657b5d4f";
+export const POLAR_PRODUCT_AGENCY_PRO = "c24835d7-bf2c-4aeb-9cc9-91836d0d1344";
+export const POLAR_PRODUCT_AGENCY_ELITE = "455ba481-8440-48e2-aff9-508f4445dd01";
 
 export function usePolarCheckout() {
   const [isLoading, setIsLoading] = useState(false);
