@@ -694,7 +694,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    console.error("generate-proof error:", err);
+    console.error("generate-proof critical error:", (err as Error).message); // Critical: keep in production
 
     // Rollback credit + mark proof as failed
     if (proofId) {
