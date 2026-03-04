@@ -36,6 +36,16 @@ const Login = () => {
       setServerError(error.message);
       return;
     }
+    // Check for prefill from Hero preview
+    const prefillRaw = sessionStorage.getItem('vexlo_prefill');
+    if (prefillRaw) {
+      const prefill = JSON.parse(prefillRaw) as { domain: string; keyword: string };
+      if (prefill.domain) {
+        sessionStorage.removeItem('vexlo_prefill');
+        navigate(`/dashboard/new?domain=${encodeURIComponent(prefill.domain)}&keyword=${encodeURIComponent(prefill.keyword ?? '')}`);
+        return;
+      }
+    }
     const next = searchParams.get("next") || "/dashboard";
     navigate(next);
   };

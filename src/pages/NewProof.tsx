@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,6 +28,10 @@ type FormData = z.infer<typeof schema>;
 const NewProof = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const prefillDomain = searchParams.get('domain') ?? '';
+  const prefillKeyword = searchParams.get('keyword') ?? '';
+  const submitRef = useRef<HTMLButtonElement>(null);
   const [submitting, setSubmitting] = useState(false);
   const [credits, setCredits] = useState<{ used: number; limit: number } | null>(null);
 
@@ -50,7 +54,17 @@ const NewProof = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({ resolver: zodResolver(schema) });
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { domain: prefillDomain, keyword: prefillKeyword },
+  });
+
+  // Auto-focus submit button when prefill is present
+  useEffect(() => {
+    if (prefillDomain && submitRef.current) {
+      submitRef.current.focus();
+    }
+  }, [prefillDomain]);
 
   const onSubmit = async (data: FormData) => {
     if (!user) {
@@ -92,6 +106,17 @@ const NewProof = () => {
         <h2 className="font-headline mb-1" style={{ fontSize: 28, color: "var(--text)" }}>
           Generate Proof Report
         </h2>
+        {prefillDomain && (
+          <div
+            className="rounded-[8px] px-4 py-3 mb-6"
+            style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)" }}
+          >
+            <p className="font-sans text-sm" style={{ color: "var(--accent)" }}>
+              Generating proof for <strong>{prefillDomain}</strong> — you can start immediately below
+            </p>
+          </div>
+        )}
+
         <p className="font-body font-light mb-8" style={{ fontSize: 13, color: "var(--text-dim)" }}>
           Enter any prospect domain and target keyword below.
         </p>
@@ -147,6 +172,7 @@ const NewProof = () => {
           </div>
 
           <Button
+            ref={submitRef}
             type="submit"
             disabled={submitting || isExhausted}
             className="w-full h-10 rounded-full font-mono text-[10px] uppercase tracking-widest transition-all duration-200 hover:brightness-110 active:scale-[0.98]"

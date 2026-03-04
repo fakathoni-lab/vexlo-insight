@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,19 +20,18 @@ type FormData = z.infer<typeof schema>;
 
 const Signup = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { signUp } = useAuth();
   const [serverError, setServerError] = useState("");
-
-  const prefillDomain = (location.state as any)?.prefillDomain ?? null;
-  const prefillKeyword = (location.state as any)?.prefillKeyword ?? null;
-  const returnTo = (location.state as any)?.returnTo ?? "/onboarding";
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
+
+  // Read prefill from sessionStorage (set by Hero preview)
+  const prefillRaw = sessionStorage.getItem('vexlo_prefill');
+  const prefill = prefillRaw ? JSON.parse(prefillRaw) as { domain: string; keyword: string } : null;
 
   const onSubmit = async (data: FormData) => {
     setServerError("");
@@ -41,7 +40,13 @@ const Signup = () => {
       setServerError(error.message);
       return;
     }
-    navigate(returnTo);
+    // If prefill exists, redirect to proof generation with domain/keyword
+    if (prefill?.domain) {
+      sessionStorage.removeItem('vexlo_prefill');
+      navigate(`/dashboard/new?domain=${encodeURIComponent(prefill.domain)}&keyword=${encodeURIComponent(prefill.keyword ?? '')}`);
+    } else {
+      navigate("/onboarding");
+    }
   };
 
   return (
@@ -61,7 +66,7 @@ const Signup = () => {
           Start generating proof reports today
         </p>
 
-        {prefillDomain && (
+        {prefill?.domain && (
           <div
             className="rounded-[8px] px-4 py-3 mb-6 text-center"
             style={{
@@ -70,11 +75,11 @@ const Signup = () => {
             }}
           >
             <p className="font-sans text-sm" style={{ color: "var(--accent)" }}>
-              Generate proof for <strong>{prefillDomain}</strong> after signing up
+              Generate proof for <strong>{prefill.domain}</strong> after signing up
             </p>
-            {prefillKeyword && (
+            {prefill.keyword && (
               <p className="font-sans text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>
-                Keyword: {prefillKeyword}
+                Keyword: {prefill.keyword}
               </p>
             )}
           </div>
