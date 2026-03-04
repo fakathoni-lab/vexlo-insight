@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { LayoutDashboard, Plus, History, Settings, LogOut, Menu, X, Globe } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const navItems = [
@@ -24,8 +22,15 @@ const pageTitles: Record<string, string> = {
   "/settings": "Settings",
 };
 
+const PLAN_BADGE: Record<string, { label: string; bg: string; color: string; border: string }> = {
+  starter: { label: "STARTER", bg: "rgba(59,130,246,0.15)", color: "#60a5fa", border: "rgba(59,130,246,0.3)" },
+  agency_pro: { label: "PRO", bg: "rgba(124,58,237,0.15)", color: "#a78bfa", border: "rgba(124,58,237,0.3)" },
+  agency_elite: { label: "ELITE", bg: "rgba(245,158,11,0.15)", color: "#fbbf24", border: "rgba(245,158,11,0.3)" },
+  free: { label: "FREE", bg: "rgba(255,255,255,0.06)", color: "var(--text-dim)", border: "rgba(255,255,255,0.13)" },
+};
+
 const DashboardLayout = () => {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -37,21 +42,8 @@ const DashboardLayout = () => {
     .toUpperCase()
     .slice(0, 2) ?? user?.email?.slice(0, 2).toUpperCase() ?? "U";
 
-  const [plan, setPlan] = useState<string | null>(null);
-  const [planLoading, setPlanLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("profiles")
-      .select("plan")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        setPlan(data?.plan ?? "free");
-        setPlanLoading(false);
-      });
-  }, [user]);
+  const currentPlan = profile?.plan ?? null;
+  const badge = PLAN_BADGE[currentPlan ?? "free"] ?? PLAN_BADGE.free;
 
   const sidebarContent = (
     <>
@@ -163,16 +155,32 @@ const DashboardLayout = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {planLoading ? (
+            {currentPlan === null ? (
               <Skeleton className="h-5 w-12 rounded-full" />
             ) : (
-              <Badge
-                variant="outline"
-                className="font-mono uppercase tracking-widest rounded-[100px] border-[rgba(255,255,255,0.13)]"
-                style={{ fontSize: 8, color: "var(--text-dim)", padding: "2px 8px" }}
-              >
-                {plan ?? "free"}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <span
+                  className="font-mono uppercase tracking-widest rounded-[100px] inline-flex items-center"
+                  style={{
+                    fontSize: 8,
+                    color: badge.color,
+                    background: badge.bg,
+                    border: `1px solid ${badge.border}`,
+                    padding: "2px 8px",
+                  }}
+                >
+                  {badge.label}
+                </span>
+                {currentPlan === "free" && (
+                  <Link
+                    to="/pricing"
+                    className="font-mono uppercase tracking-wider transition-colors duration-150 hover:brightness-125"
+                    style={{ fontSize: 8, color: "var(--accent)" }}
+                  >
+                    Upgrade
+                  </Link>
+                )}
+              </div>
             )}
             <Avatar className="w-7 h-7">
               <AvatarFallback
