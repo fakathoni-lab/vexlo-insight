@@ -502,11 +502,7 @@ Deno.serve(async (req) => {
         status: "complete",
       }).eq("id", proof_id);
 
-      // Increment proofs_used atomically
-      const { error: incErr } = await serviceClient.rpc("increment_proofs_used", { user_id_input: user.id });
-      if (incErr) {
-        console.error("increment_proofs_used RPC failed (cached path):", incErr.message);
-      }
+      // Credit already consumed by attempt_proof_increment — no extra increment needed
 
       return new Response(
         JSON.stringify({ proof_id, proof_score: cached.score, status: "complete", cached: true }),
