@@ -439,24 +439,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── Plan enforcement: check proofs_used vs proofs_limit BEFORE DataForSEO ──
-    const { data: profile, error: profileError } = await serviceClient
-      .from("profiles")
-      .select("proofs_used, proofs_limit")
-      .eq("id", user.id)
-      .single();
+    // ── Plan enforcement: atomic check + increment via RPC ──
+    const { data: allowed, error: rpcError } = await serviceClient.rpc(
+      "attempt_proof_increment",
+      { p_user_id: user.id }
+    );
 
-    if (profileError || !profile) {
-      return new Response(JSON.stringify({ error: "Profile not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (rpcError) {
+      console.error("attempt_proof_increment RPC failed:", rpcError.message);
+      return new Response(
+        JSON.stringify({ error: "internal_error", message: "Usage check failed" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    const proofsUsed = profile.proofs_used ?? 0;
-    const proofsLimit = profile.proofs_limit ?? 3; // free plan default
-
-    if (proofsUsed >= proofsLimit) {
+    if (!allowed) {
       // Mark proof as failed so UI shows proper state
       await serviceClient.from("proofs").update({
         status: "failed",
@@ -467,12 +464,13 @@ Deno.serve(async (req) => {
         JSON.stringify({
           error: "plan_limit_reached",
           message: "You have reached your proof generation limit. Please upgrade your plan.",
-          proofs_used: proofsUsed,
-          proofs_limit: proofsLimit,
         }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Credit has been consumed — must rollback if DataForSEO fails
+    let creditConsumed = true;
 
     // ── Mark as processing ──
     await serviceClient.from("proofs").update({ status: "processing" }).eq("id", proof_id);
