@@ -67,6 +67,27 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Rate limiting by IP
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      ?? req.headers.get("cf-connecting-ip")
+      ?? "unknown";
+
+    const { allowed, remaining } = await checkRateLimit(ip);
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again later." }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Retry-After": String(RATE_LIMIT_WINDOW),
+            "X-RateLimit-Remaining": "0",
+          },
+        }
+      );
+    }
+
     const { domain: rawDomain, keyword } = await req.json();
 
     if (!rawDomain || !keyword) {
