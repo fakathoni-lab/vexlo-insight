@@ -329,7 +329,7 @@ Write the proof paragraph now.`;
     clearTimeout(timeout);
 
     if (!res.ok) {
-      console.error(`AI gateway error: ${res.status}`);
+      if (Deno.env.get("ENVIRONMENT") !== "production") console.error(`AI gateway error: ${res.status}`);
       return null;
     }
 
