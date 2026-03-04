@@ -47,6 +47,7 @@ const ProofResult = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState(0);
+  const [viewCount, setViewCount] = useState<number | null>(null);
   const edgeFunctionInvoked = useRef(false);
 
   const status = proof?.status ?? "loading";
