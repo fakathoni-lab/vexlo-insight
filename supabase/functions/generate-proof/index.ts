@@ -629,8 +629,8 @@ Deno.serve(async (req) => {
             error_message: errorMsg,
           }).eq("id", proofId),
           // Rollback the credit consumed by attempt_proof_increment
-          creditConsumed
-            ? svc.rpc("rollback_proof_increment", { p_user_id: user!.id })
+          creditConsumed && userId
+            ? svc.rpc("rollback_proof_increment", { p_user_id: userId })
             : Promise.resolve(),
         ]);
       } catch { /* ignore cleanup error */ }
