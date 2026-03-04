@@ -22,8 +22,15 @@ const pageTitles: Record<string, string> = {
   "/settings": "Settings",
 };
 
+const PLAN_BADGE: Record<string, { label: string; bg: string; color: string; border: string }> = {
+  starter: { label: "STARTER", bg: "rgba(59,130,246,0.15)", color: "#60a5fa", border: "rgba(59,130,246,0.3)" },
+  agency_pro: { label: "PRO", bg: "rgba(124,58,237,0.15)", color: "#a78bfa", border: "rgba(124,58,237,0.3)" },
+  agency_elite: { label: "ELITE", bg: "rgba(245,158,11,0.15)", color: "#fbbf24", border: "rgba(245,158,11,0.3)" },
+  free: { label: "FREE", bg: "rgba(255,255,255,0.06)", color: "var(--text-dim)", border: "rgba(255,255,255,0.13)" },
+};
+
 const DashboardLayout = () => {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -35,21 +42,8 @@ const DashboardLayout = () => {
     .toUpperCase()
     .slice(0, 2) ?? user?.email?.slice(0, 2).toUpperCase() ?? "U";
 
-  const [plan, setPlan] = useState<string | null>(null);
-  const [planLoading, setPlanLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("profiles")
-      .select("plan")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        setPlan(data?.plan ?? "free");
-        setPlanLoading(false);
-      });
-  }, [user]);
+  const currentPlan = profile?.plan ?? null;
+  const badge = PLAN_BADGE[currentPlan ?? "free"] ?? PLAN_BADGE.free;
 
   const sidebarContent = (
     <>
