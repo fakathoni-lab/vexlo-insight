@@ -473,7 +473,7 @@ Deno.serve(async (req) => {
     }
 
     // Credit has been consumed — must rollback if DataForSEO fails
-    let creditConsumed = true;
+    creditConsumed = true;
 
     // ── Mark as processing ──
     await serviceClient.from("proofs").update({ status: "processing" }).eq("id", proof_id);
