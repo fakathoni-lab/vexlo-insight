@@ -433,6 +433,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      attempt_proof_increment: { Args: { p_user_id: string }; Returns: boolean }
       increment_proofs_used: {
         Args: { user_id_input: string }
         Returns: undefined
