@@ -93,7 +93,12 @@ const Hero = () => {
       });
     } catch (err: unknown) {
       console.error("Preview proof failed:", err);
-      setError("Analysis failed. Please try again.");
+      const msg = (err as any)?.message ?? "";
+      if (msg.includes("Too many requests") || msg.includes("429")) {
+        setError("rate_limited");
+      } else {
+        setError("Analysis failed. Please try again.");
+      }
     } finally {
       setLoading(false);
       setLoadingDomain("");
