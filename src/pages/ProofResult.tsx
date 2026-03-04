@@ -8,7 +8,7 @@ import AIOverviewBadge from "@/components/proof/AIOverviewBadge";
 import TrendDelta from "@/components/proof/TrendDelta";
 import SalesNarrative from "@/components/proof/SalesNarrative";
 import ProofActions from "@/components/proof/ProofActions";
-import { Loader2, AlertTriangle, Check } from "lucide-react";
+import { Loader2, AlertTriangle, Check, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Proof {
