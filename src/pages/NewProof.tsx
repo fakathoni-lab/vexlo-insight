@@ -54,7 +54,17 @@ const NewProof = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({ resolver: zodResolver(schema) });
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { domain: prefillDomain, keyword: prefillKeyword },
+  });
+
+  // Auto-focus submit button when prefill is present
+  useEffect(() => {
+    if (prefillDomain && submitRef.current) {
+      submitRef.current.focus();
+    }
+  }, [prefillDomain]);
 
   const onSubmit = async (data: FormData) => {
     if (!user) {
