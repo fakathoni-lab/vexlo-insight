@@ -28,6 +28,10 @@ type FormData = z.infer<typeof schema>;
 const NewProof = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const prefillDomain = searchParams.get('domain') ?? '';
+  const prefillKeyword = searchParams.get('keyword') ?? '';
+  const submitRef = useRef<HTMLButtonElement>(null);
   const [submitting, setSubmitting] = useState(false);
   const [credits, setCredits] = useState<{ used: number; limit: number } | null>(null);
 
