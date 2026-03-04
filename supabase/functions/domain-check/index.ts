@@ -37,7 +37,9 @@ function hashToUuid(hex: string): string {
 }
 
 function log(fields: Record<string, unknown>) {
-  console.log(JSON.stringify({ ts: new Date().toISOString(), fn: "domain-check", ...fields }));
+  if (Deno.env.get("ENVIRONMENT") !== "production") {
+    console.log(JSON.stringify({ ts: new Date().toISOString(), fn: "domain-check", ...fields }));
+  }
 }
 
 function errResponse(code: string, message: string, status: number): Response {
