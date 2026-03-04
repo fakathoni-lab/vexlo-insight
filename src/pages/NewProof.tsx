@@ -172,6 +172,7 @@ const NewProof = () => {
           </div>
 
           <Button
+            ref={submitRef}
             type="submit"
             disabled={submitting || isExhausted}
             className="w-full h-10 rounded-full font-mono text-[10px] uppercase tracking-widest transition-all duration-200 hover:brightness-110 active:scale-[0.98]"

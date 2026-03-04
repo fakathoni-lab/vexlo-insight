@@ -119,13 +119,11 @@ const Hero = () => {
 
   const handleSeeFullProof = () => {
     if (!preview) return;
-    navigate("/signup", {
-      state: {
-        returnTo: "/dashboard",
-        prefillDomain: preview.domain,
-        prefillKeyword: preview.keyword,
-      },
-    });
+    sessionStorage.setItem('vexlo_prefill', JSON.stringify({
+      domain: preview.domain,
+      keyword: preview.keyword,
+    }));
+    navigate("/signup");
   };
 
   const handleDismiss = () => {

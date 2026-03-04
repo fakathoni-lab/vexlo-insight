@@ -66,7 +66,7 @@ const Signup = () => {
           Start generating proof reports today
         </p>
 
-        {prefillDomain && (
+        {prefill?.domain && (
           <div
             className="rounded-[8px] px-4 py-3 mb-6 text-center"
             style={{
@@ -75,11 +75,11 @@ const Signup = () => {
             }}
           >
             <p className="font-sans text-sm" style={{ color: "var(--accent)" }}>
-              Generate proof for <strong>{prefillDomain}</strong> after signing up
+              Generate proof for <strong>{prefill.domain}</strong> after signing up
             </p>
-            {prefillKeyword && (
+            {prefill.keyword && (
               <p className="font-sans text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>
-                Keyword: {prefillKeyword}
+                Keyword: {prefill.keyword}
               </p>
             )}
           </div>
