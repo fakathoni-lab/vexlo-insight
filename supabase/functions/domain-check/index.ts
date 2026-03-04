@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
     // ── Dynadot API call ──
     const apiKey = Deno.env.get("DYNADOT_API_KEY");
     if (!apiKey) {
-      console.error("DYNADOT_API_KEY not configured");
+      if (Deno.env.get("ENVIRONMENT") !== "production") console.error("DYNADOT_API_KEY not configured");
       return errResponse("SERVICE_UNAVAILABLE", "Domain lookup service temporarily unavailable.", 503);
     }
 
