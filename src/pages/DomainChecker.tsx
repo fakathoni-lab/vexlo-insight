@@ -247,7 +247,6 @@ const DomainChecker = () => {
             style={{
               background: "rgba(255,255,255,0.04)",
               borderColor: "rgba(255,255,255,0.08)",
-              divideColor: "rgba(255,255,255,0.06)",
             }}
           >
             {history.map((h) => (
