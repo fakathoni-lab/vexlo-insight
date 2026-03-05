@@ -1,18 +1,20 @@
 import { LayoutGrid, Zap, Archive, Users, Globe, Link2, Settings, X } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface NavItem {
   id: string;
   label: string;
   Icon: typeof LayoutGrid;
+  path: string;
 }
 
 const navItems: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", Icon: LayoutGrid },
-  { id: "proofs", label: "Proof Engine", Icon: Zap },
-  { id: "archive", label: "Pitch Archive", Icon: Archive },
-  { id: "clients", label: "Clients", Icon: Users },
-  { id: "domains", label: "Domains", Icon: Globe },
-  { id: "links", label: "Proof Links", Icon: Link2 },
+  { id: "dashboard", label: "Dashboard", Icon: LayoutGrid, path: "/dashboard" },
+  { id: "proofs", label: "Proof Engine", Icon: Zap, path: "/dashboard/new" },
+  { id: "archive", label: "Pitch Archive", Icon: Archive, path: "/dashboard/history" },
+  { id: "clients", label: "Clients", Icon: Users, path: "/dashboard" },
+  { id: "domains", label: "Domains", Icon: Globe, path: "/dashboard/domains" },
+  { id: "links", label: "Proof Links", Icon: Link2, path: "/dashboard/history" },
 ];
 
 interface SidebarProps {
@@ -30,7 +32,32 @@ const LightningIcon = () => (
   </svg>
 );
 
-const Sidebar = ({ isOpen, onToggle, activeItem, onNavClick, mobileOpen = false, onMobileClose }: SidebarProps) => {
+function pathToId(pathname: string): string {
+  if (pathname === "/dashboard") return "dashboard";
+  if (pathname === "/dashboard/new") return "proofs";
+  if (pathname === "/dashboard/history") return "archive";
+  if (pathname === "/dashboard/domains") return "domains";
+  if (pathname === "/settings") return "settings";
+  return "dashboard";
+}
+
+const Sidebar = ({ isOpen, onToggle, activeItem: _activeItem, onNavClick, mobileOpen = false, onMobileClose }: SidebarProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const activeItem = pathToId(location.pathname);
+
+  const handleNav = (item: NavItem) => {
+    onNavClick(item.id);
+    navigate(item.path);
+    onMobileClose?.();
+  };
+
+  const handleSettings = () => {
+    onNavClick("settings");
+    navigate("/settings");
+    onMobileClose?.();
+  };
+
   return (
     <aside
       className={`fixed left-0 top-0 bottom-0 z-50 flex flex-col overflow-hidden border-r transition-all duration-300
@@ -87,7 +114,7 @@ const Sidebar = ({ isOpen, onToggle, activeItem, onNavClick, mobileOpen = false,
           return (
             <button
               key={item.id}
-              onClick={() => onNavClick(item.id)}
+              onClick={() => handleNav(item)}
               className="relative flex items-center gap-3 rounded-[10px] transition-colors duration-200 group"
               style={{
                 padding: isOpen ? "10px 12px" : "10px",
@@ -101,7 +128,6 @@ const Sidebar = ({ isOpen, onToggle, activeItem, onNavClick, mobileOpen = false,
                 if (!active) e.currentTarget.style.background = "transparent";
               }}
             >
-              {/* Active indicator bar */}
               {active && (
                 <span
                   className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-sm animate-sidebar-glow"
@@ -132,7 +158,7 @@ const Sidebar = ({ isOpen, onToggle, activeItem, onNavClick, mobileOpen = false,
       {/* Settings pinned bottom */}
       <div className="px-2 pb-3">
         <button
-          onClick={() => onNavClick("settings")}
+          onClick={handleSettings}
           className="relative flex items-center gap-3 rounded-[10px] w-full transition-colors duration-200"
           style={{
             padding: isOpen ? "10px 12px" : "10px",

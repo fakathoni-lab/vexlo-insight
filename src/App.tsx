@@ -12,6 +12,7 @@ import TermsOfService from "./pages/TermsOfService";
 import Dashboard from "./pages/Dashboard";
 import NewProof from "./pages/NewProof";
 import DomainSearch from "./pages/DomainSearch";
+import DomainChecker from "./pages/DomainChecker";
 import ProofReport from "./pages/ProofReport";
 import ProofResult from "./pages/ProofResult";
 import ProofHistory from "./pages/ProofHistory";
@@ -46,7 +47,7 @@ const App = () => (
         <Route element={<ProtectedRoute><DashboardLayoutNew /></ProtectedRoute>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/new" element={<NewProof />} />
-          <Route path="/dashboard/domains" element={<DomainSearch />} />
+          <Route path="/dashboard/domains" element={<DomainChecker />} />
           <Route path="/dashboard/proof/:id" element={<ProofResult />} />
           <Route path="/dashboard/history" element={<ProofHistory />} />
           <Route path="/settings" element={<Settings />} />
