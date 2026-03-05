@@ -12,6 +12,7 @@ import TermsOfService from "./pages/TermsOfService";
 import Dashboard from "./pages/Dashboard";
 import NewProof from "./pages/NewProof";
 import DomainSearch from "./pages/DomainSearch";
+import DomainChecker from "./pages/DomainChecker";
 import ProofReport from "./pages/ProofReport";
 import ProofResult from "./pages/ProofResult";
 import ProofHistory from "./pages/ProofHistory";
