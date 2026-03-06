@@ -101,6 +101,93 @@ export type Database = {
         }
         Relationships: []
       }
+      domain_orders: {
+        Row: {
+          amount: number | null
+          created_at: string
+          currency: string
+          domain_name: string
+          dynadot_order_id: string | null
+          id: string
+          order_type: string
+          status: string
+          user_id: string
+          years: number
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          currency?: string
+          domain_name: string
+          dynadot_order_id?: string | null
+          id?: string
+          order_type?: string
+          status?: string
+          user_id: string
+          years?: number
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          currency?: string
+          domain_name?: string
+          dynadot_order_id?: string | null
+          id?: string
+          order_type?: string
+          status?: string
+          user_id?: string
+          years?: number
+        }
+        Relationships: []
+      }
+      domains: {
+        Row: {
+          auto_renew: boolean
+          created_at: string
+          domain_name: string
+          dynadot_domain_id: string | null
+          expires_at: string | null
+          id: string
+          purchase_price: number | null
+          registered_at: string
+          registration_years: number
+          status: string
+          tld: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_renew?: boolean
+          created_at?: string
+          domain_name: string
+          dynadot_domain_id?: string | null
+          expires_at?: string | null
+          id?: string
+          purchase_price?: number | null
+          registered_at?: string
+          registration_years?: number
+          status?: string
+          tld: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_renew?: boolean
+          created_at?: string
+          domain_name?: string
+          dynadot_domain_id?: string | null
+          expires_at?: string | null
+          id?: string
+          purchase_price?: number | null
+          registered_at?: string
+          registration_years?: number
+          status?: string
+          tld?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       plans: {
         Row: {
           created_at: string
