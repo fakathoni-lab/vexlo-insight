@@ -23,9 +23,8 @@ import NotFound from "./pages/NotFound";
 import WebhookSuccess from "./pages/WebhookSuccess";
 import WebhookCancel from "./pages/WebhookCancel";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import DashboardLayoutLegacy from "@/components/layout/DashboardLayout";
-import DashboardLayoutNew from "@/layouts/DashboardLayout";
-// ...existing routes kept
+import DashboardLayout from "@/components/layout/DashboardLayout";
+
 const App = () => (
   <BrowserRouter>
     <AuthProvider>
@@ -44,7 +43,7 @@ const App = () => (
         <Route path="/legal/terms" element={<TermsOfService />} />
         <Route path="/webhook-success" element={<WebhookSuccess />} />
         <Route path="/webhook-cancel" element={<WebhookCancel />} />
-        <Route element={<ProtectedRoute><DashboardLayoutNew /></ProtectedRoute>}>
+        <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/new" element={<NewProof />} />
           <Route path="/dashboard/domains" element={<DomainChecker />} />
