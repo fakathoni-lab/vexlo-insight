@@ -228,6 +228,44 @@ Deno.serve(async (req) => {
         break;
       }
 
+      // ── Subscription past_due — IMMEDIATELY downgrade to free ──
+      case "subscription.past_due": {
+        if (!userId) {
+          log({ event: "no_user_id", type: eventType });
+          break;
+        }
+
+        // Get free plan limit
+        const { data: freePlanRow } = await supabase
+          .from("plans")
+          .select("proofs_limit")
+          .eq("name", "free")
+          .eq("is_active", true)
+          .single();
+
+        const freePlanLimit = freePlanRow?.proofs_limit ?? 5;
+
+        // Immediately downgrade to free tier to stop revenue leak
+        const { error: pastDueErr } = await supabase.rpc("sync_subscription", {
+          p_user_id: userId,
+          p_polar_subscription_id: sub.id,
+          p_polar_product_id: sub.product?.id ?? "",
+          p_plan: "free",
+          p_status: "past_due",
+          p_proofs_limit: freePlanLimit,
+          p_current_period_start: sub.current_period_start ?? new Date().toISOString(),
+          p_current_period_end: sub.current_period_end ?? new Date().toISOString(),
+          p_cancel_at_period_end: false,
+          p_canceled_at: null,
+          p_polar_customer_id: polarCustomerId,
+        });
+
+        if (pastDueErr) throw pastDueErr;
+
+        log({ event: "subscription_past_due_downgraded", user_id: userId });
+        break;
+      }
+
       // ── Subscription canceled / revoked ──
       case "subscription.canceled":
       case "subscription.revoked": {

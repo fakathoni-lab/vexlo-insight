@@ -38,9 +38,9 @@ const ResetPassword = () => {
     if (hash.includes("type=recovery") || hash.includes("access_token")) {
       setValidToken(true);
     } else {
-      // Also check if user has an active session from recovery flow
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setValidToken(!!session);
+      // Use getUser() for server-validated identity check per ADR-002
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        setValidToken(!!user);
       });
     }
   }, []);

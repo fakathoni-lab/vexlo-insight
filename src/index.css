@@ -16,8 +16,8 @@
 :root {
   color-scheme: dark;
 
-  /* Colors */
-  --bg:               #03040a;
+  /* Colors — ADR-008 Compliant */
+  --bg:               #080808;
   --bg-raised:        #0f0f0f;
   --bg-card:          #0d0d0d;
   --border:           rgba(255,255,255,0.10);
