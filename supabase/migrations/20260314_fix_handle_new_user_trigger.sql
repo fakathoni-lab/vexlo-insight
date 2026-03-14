@@ -76,3 +76,84 @@ UPDATE profiles
 SET period_reset_at = date_trunc('month', created_at)
 WHERE plan = 'free' 
   AND period_reset_at IS NULL;
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- FIX: handle_new_user() trigger - explicitly set ALL columns including onboarding_completed
+-- This ensures new signups work correctly regardless of which trigger version was deployed
+-- ══════════════════════════════════════════════════════════════════════════════
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_email      TEXT;
+  v_free_limit INTEGER;
+BEGIN
+  -- Extract email from auth.users record (prefer email field, fallback to metadata)
+  v_email := COALESCE(NEW.email, NEW.raw_user_meta_data->>'email');
+
+  -- Fetch the free plan's proofs_limit from plans table
+  SELECT proofs_limit INTO v_free_limit
+  FROM public.plans
+  WHERE name = 'free' AND is_active = true
+  LIMIT 1;
+
+  -- Default to 5 if no free plan found
+  v_free_limit := COALESCE(v_free_limit, 5);
+
+  -- Insert new profile with ALL required columns explicitly set
+  INSERT INTO public.profiles (
+    id,
+    email,
+    full_name,
+    avatar_url,
+    plan,
+    plan_status,
+    proofs_used,
+    proofs_limit,
+    period_reset_at,
+    current_period_end,
+    polar_customer_id,
+    stripe_id,
+    agency_name,
+    brand_color,
+    brand_logo_url,
+    onboarding_completed,
+    created_at,
+    updated_at
+  ) VALUES (
+    NEW.id,                                                    -- id (from auth.users)
+    v_email,                                                   -- email
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NULL),      -- full_name (from OAuth if available)
+    COALESCE(NEW.raw_user_meta_data->>'avatar_url', NULL),     -- avatar_url (from OAuth if available)
+    'free',                                                    -- plan (default free tier)
+    'active',                                                  -- plan_status
+    0,                                                         -- proofs_used (start at 0)
+    v_free_limit,                                              -- proofs_limit (from plans table)
+    DATE_TRUNC('month', NOW()),                                -- period_reset_at (start of current month)
+    NULL,                                                      -- current_period_end (NULL for free tier)
+    NULL,                                                      -- polar_customer_id (set on first checkout)
+    NULL,                                                      -- stripe_id (legacy, unused)
+    NULL,                                                      -- agency_name (set in onboarding)
+    NULL,                                                      -- brand_color (set in settings)
+    NULL,                                                      -- brand_logo_url (set in settings)
+    false,                                                     -- onboarding_completed (EXPLICIT)
+    NOW(),                                                     -- created_at
+    NOW()                                                      -- updated_at
+  )
+  ON CONFLICT (id) DO NOTHING;
+
+  RETURN NEW;
+END;
+$$;
+
+-- Ensure the trigger is attached to auth.users (recreate to guarantee latest version)
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user();
