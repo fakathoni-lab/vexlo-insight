@@ -143,10 +143,10 @@ const dimensions: Dimension[] = [
       },
       {
         id: "C2",
-        title: "Pricing CTA buttons href='#waitlist'",
+        title: "Pricing CTA triggers Polar checkout",
         severity: "critical",
         file: "src/components/Pricing.tsx",
-        description: "Revenue-blocking bug. Actually FIXED - Pricing.tsx uses checkout() correctly.",
+        description: "FIXED: Free tier goes to /signup, paid tiers trigger Polar checkout with productId. Buttons use rounded-[100px] and bg-[#FF6308].",
         status: "fixed",
       },
     ],
@@ -725,7 +725,7 @@ const AuditDashboard = () => {
           >
 {`┌─────────────────────────────────────────────────────────────────────────┐
 │                POLAR SUBSCRIPTION STATE MACHINE (FIXED)                  │
-├─────────────────────────────────────────────────────────────────────────┤
+├───────────────────────────────────────────���─────────────────────────────┤
 │                                                                          │
 │  ┌──────────┐  subscription.created    ┌────────────┐                   │
 │  │   FREE   │─────────────────────────▶│   ACTIVE   │                   │

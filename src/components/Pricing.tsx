@@ -23,6 +23,22 @@ interface Tier {
 
 const tiers: Tier[] = [
   {
+    name: "Free",
+    price: "$0",
+    desc: "Try it out",
+    planKey: "free",
+    productId: "",
+    features: [
+      { label: "5 proof reports / mo", included: true },
+      { label: "Branded share links", included: false },
+      { label: "Proof Score", included: true },
+      { label: "AI narrative", included: false },
+      { label: "White-label branding", included: false },
+      { label: "API access", included: false },
+    ],
+    cta: "Get Started",
+  },
+  {
     name: "Starter",
     price: "$39",
     desc: "Solo Freelancer",
@@ -95,13 +111,19 @@ const Pricing = () => {
   }, [user]);
 
   const handleTierClick = (tier: Tier) => {
+    // Free tier always goes to signup
+    if (tier.planKey === "free") {
+      navigate("/signup");
+      return;
+    }
+    // Not logged in → go to signup first
     if (!user) {
       navigate("/signup");
       return;
     }
     // Same plan → do nothing (button is disabled)
     if (currentPlan === tier.planKey) return;
-    // Free or different plan → checkout
+    // Paid plan → trigger Polar checkout
     checkout(tier.productId);
   };
 
@@ -131,7 +153,7 @@ const Pricing = () => {
         <span className="italic" style={{ color: "var(--text-dim)" }}>Locked in forever.</span>
       </h2>
 
-      <div className="grid sm:grid-cols-3 gap-6 mb-8">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {tiers.map((tier) => {
           const { disabled, label } = getButtonState(tier);
           const isTierLoading = isLoading && loadingProductId === tier.productId;
@@ -181,8 +203,14 @@ const Pricing = () => {
               <button
                 onClick={() => handleTierClick(tier)}
                 disabled={disabled || isTierLoading}
-                className={tier.featured ? "btn-primary w-full text-center" : "btn-ghost w-full text-center"}
-                style={{ opacity: disabled ? 0.5 : 1, cursor: disabled ? "not-allowed" : "pointer" }}
+                className="w-full text-center py-3 px-6 font-medium text-sm transition-colors duration-200 rounded-[100px]"
+                style={{
+                  backgroundColor: tier.featured ? "#FF6308" : "transparent",
+                  color: tier.featured ? "#fff" : "var(--text)",
+                  border: tier.featured ? "none" : "1px solid var(--border)",
+                  opacity: disabled ? 0.5 : 1,
+                  cursor: disabled ? "not-allowed" : "pointer",
+                }}
               >
                 {isTierLoading ? (
                   <span className="flex items-center justify-center gap-2">
