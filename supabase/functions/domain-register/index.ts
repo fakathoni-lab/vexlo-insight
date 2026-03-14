@@ -16,9 +16,7 @@ function errResponse(code: string, message: string, status: number): Response {
 }
 
 function log(fields: Record<string, unknown>) {
-  if (Deno.env.get("ENVIRONMENT") !== "production") {
-    console.log(JSON.stringify({ ts: new Date().toISOString(), fn: "domain-register", ...fields }));
-  }
+  // Logging disabled in production
 }
 
 Deno.serve(async (req) => {

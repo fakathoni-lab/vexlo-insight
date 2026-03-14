@@ -3,11 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 // ─── Helpers ─────────────────────────────────────────────────
 
 function log(fields: Record<string, unknown>) {
-  if (Deno.env.get("ENVIRONMENT") !== "production") {
-    console.log(
-      JSON.stringify({ ts: new Date().toISOString(), fn: "polar-webhook", ...fields })
-    );
-  }
+  // Logging disabled in production — use logError() for critical errors only
 }
 
 function logError(fields: Record<string, unknown>) {
