@@ -33,6 +33,61 @@ function getRedis(): Redis | null {
   return new Redis({ url, token });
 }
 
+// ── Rate limit configuration per tier ──
+type PlanTier = "free" | "starter" | "pro" | "elite";
+
+const RATE_LIMITS: Record<Exclude<PlanTier, "elite">, number> = {
+  free: 3,
+  starter: 10,
+  pro: 50,
+};
+
+interface RateLimitResult {
+  allowed: boolean;
+  currentCount: number;
+  limit: number;
+  resetAt: number; // Unix timestamp in seconds
+}
+
+async function checkRateLimit(
+  redis: Redis,
+  userId: string,
+  tier: PlanTier
+): Promise<RateLimitResult> {
+  // Elite tier has no rate limit
+  if (tier === "elite") {
+    return { allowed: true, currentCount: 0, limit: Infinity, resetAt: 0 };
+  }
+
+  const limit = RATE_LIMITS[tier];
+  const currentHourEpoch = Math.floor(Date.now() / 1000 / 3600);
+  const key = `rate:proof:${userId}:${currentHourEpoch}`;
+  const resetAt = (currentHourEpoch + 1) * 3600; // Next hour boundary
+
+  try {
+    // Atomic increment with TTL
+    const currentCount = await redis.incr(key);
+    
+    // Set TTL on first request (when count becomes 1)
+    if (currentCount === 1) {
+      await redis.expire(key, 3600);
+    }
+
+    return {
+      allowed: currentCount <= limit,
+      currentCount,
+      limit,
+      resetAt,
+    };
+  } catch (err) {
+    // On Redis error, allow the request (fail-open)
+    if (Deno.env.get("ENVIRONMENT") !== "production") {
+      console.error("Rate limit check failed:", (err as Error).message);
+    }
+    return { allowed: true, currentCount: 0, limit, resetAt };
+  }
+}
+
 // ── DataForSEO helpers ──
 function getDataForSEOAuth(): { authHeader: string } {
   const login = Deno.env.get("DATAFORSEO_LOGIN");
@@ -554,17 +609,61 @@ Deno.serve(async (req) => {
     // Credit has been consumed — must rollback if DataForSEO fails
     creditConsumed = true;
 
+    // ── Per-user per-hour burst rate limit (before expensive API calls) ──
+    const redis = getRedis();
+    if (redis) {
+      // Fetch user's plan tier
+      const { data: profileRow } = await serviceClient
+        .from("profiles")
+        .select("plan")
+        .eq("id", user.id)
+        .single();
+
+      const userTier = (profileRow?.plan ?? "free") as PlanTier;
+
+      const rateLimitResult = await checkRateLimit(redis, user.id, userTier);
+
+      if (!rateLimitResult.allowed) {
+        // Rollback the credit since we're rejecting the request
+        await serviceClient.rpc("rollback_proof_increment", { p_user_id: user.id });
+        creditConsumed = false;
+
+        // Mark proof as failed
+        await serviceClient.from("proofs").update({
+          status: "failed",
+          error_message: `Rate limit exceeded. ${rateLimitResult.limit} requests/hour for ${userTier} tier.`,
+        }).eq("id", proof_id);
+
+        return new Response(
+          JSON.stringify({
+            error: "rate_limit_exceeded",
+            tier: userTier,
+            limit: rateLimitResult.limit,
+            reset_at: rateLimitResult.resetAt,
+          }),
+          {
+            status: 429,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json",
+              "Retry-After": String(rateLimitResult.resetAt - Math.floor(Date.now() / 1000)),
+            },
+          }
+        );
+      }
+    }
+
     // ── Mark as processing ──
     await serviceClient.from("proofs").update({ status: "processing" }).eq("id", proof_id);
 
     // ── Check Redis cache ──
-    const redis = getRedis();
+    const redisClient = redis ?? getRedis(); // Reuse from rate limit check if available
     const cacheKey = `proof:${cleanDomain}:${cleanKeyword}`;
     let cachedData: string | null = null;
 
-    if (redis) {
+    if (redisClient) {
       try {
-        cachedData = await redis.get<string>(cacheKey);
+        cachedData = await redisClient.get<string>(cacheKey);
       } catch (e) {
         if (Deno.env.get("ENVIRONMENT") !== "production") console.error("Redis GET failed:", e);
       }
@@ -681,9 +780,9 @@ Deno.serve(async (req) => {
     // Credit already consumed by attempt_proof_increment — no extra increment needed
 
     // ── Cache result in Redis ──
-    if (redis) {
+    if (redisClient) {
       try {
-        await redis.set(cacheKey, JSON.stringify(updatePayload), { ex: 86400 });
+        await redisClient.set(cacheKey, JSON.stringify(updatePayload), { ex: 86400 });
       } catch (e) {
         if (Deno.env.get("ENVIRONMENT") !== "production") console.error("Redis SET failed:", e);
       }
