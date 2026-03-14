@@ -13,25 +13,28 @@ interface ShareResult {
 export async function shareProof(proofId: string, existingSlug: string | null): Promise<ShareResult> {
   if (existingSlug) {
     // Already has a slug — just ensure is_public=true
-    await (supabase.from("proofs").update({ is_public: true } as any).eq("id", proofId) as any);
+    await supabase
+      .from("proofs")
+      .update({ is_public: true })
+      .eq("id", proofId);
     const url = `${window.location.origin}/p/${existingSlug}`;
     return { slug: existingSlug, url };
   }
 
   // Generate new slug with collision retry
   const slug = generateSlug();
-  const { error } = await (supabase
+  const { error } = await supabase
     .from("proofs")
-    .update({ public_slug: slug, is_public: true } as any)
-    .eq("id", proofId) as any);
+    .update({ public_slug: slug, is_public: true })
+    .eq("id", proofId);
 
   if (error?.code === "23505") {
     // Unique constraint violation — retry once
     const retrySlug = generateSlug();
-    const { error: retryError } = await (supabase
+    const { error: retryError } = await supabase
       .from("proofs")
-      .update({ public_slug: retrySlug, is_public: true } as any)
-      .eq("id", proofId) as any);
+      .update({ public_slug: retrySlug, is_public: true })
+      .eq("id", proofId);
 
     if (retryError) throw new Error("Failed to generate share link");
     const url = `${window.location.origin}/p/${retrySlug}`;
@@ -48,10 +51,10 @@ export async function shareProof(proofId: string, existingSlug: string | null): 
  * Get the view count for a proof from proof_views table.
  */
 export async function getViewCount(proofId: string): Promise<number> {
-  const { count, error } = await (supabase
-    .from("proof_views" as any)
+  const { count, error } = await supabase
+    .from("proof_views")
     .select("*", { count: "exact", head: true })
-    .eq("proof_id", proofId) as any);
+    .eq("proof_id", proofId);
 
   if (error) {
     if (import.meta.env.DEV) console.error("Failed to get view count:", error);
@@ -72,9 +75,9 @@ export async function trackProofView(proofId: string): Promise<void> {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const ipHash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 64);
 
-    await (supabase
-      .from("proof_views" as any)
-      .insert({ proof_id: proofId, viewer_ip_hash: ipHash, user_agent: userAgent } as any) as any);
+    await supabase
+      .from("proof_views")
+      .insert({ proof_id: proofId, viewer_ip_hash: ipHash, user_agent: userAgent });
   } catch (e) {
     if (import.meta.env.DEV) console.error("Failed to track view:", e);
   }

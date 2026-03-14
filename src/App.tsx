@@ -40,7 +40,9 @@ const App = () => (
         <Route path="/proof/:id" element={<ProofReport />} />
         <Route path="/p/:slug" element={<PublicProof />} />
         <Route path="/check" element={<ProtectedRoute><DomainSearch /></ProtectedRoute>} />
-        <Route path="/audit" element={<AuditDashboard />} />
+        {import.meta.env.VITE_DEV_AUDIT === "true" && (
+          <Route path="/audit" element={<AuditDashboard />} />
+        )}
         <Route path="/legal/privacy" element={<PrivacyPolicy />} />
         <Route path="/legal/terms" element={<TermsOfService />} />
         <Route path="/webhook-success" element={<WebhookSuccess />} />
