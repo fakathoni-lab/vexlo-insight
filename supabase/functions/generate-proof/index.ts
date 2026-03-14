@@ -609,7 +609,7 @@ Deno.serve(async (req) => {
     // Credit has been consumed — must rollback if DataForSEO fails
     creditConsumed = true;
 
-    // ── Per-user per-hour burst rate limit (before expensive API calls) ──
+    // RATE LIMIT BLOCK — DO NOT MOVE BELOW AUTH CHECK
     const redis = getRedis();
     if (redis) {
       // Fetch user's plan tier
@@ -636,10 +636,10 @@ Deno.serve(async (req) => {
 
         return new Response(
           JSON.stringify({
-            error: "rate_limit_exceeded",
-            tier: userTier,
+            error: "Rate limit exceeded",
             limit: rateLimitResult.limit,
-            reset_at: rateLimitResult.resetAt,
+            reset_in: "1 hour",
+            upgrade_url: "/pricing",
           }),
           {
             status: 429,
